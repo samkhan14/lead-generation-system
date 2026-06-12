@@ -2,7 +2,9 @@
 
 ## Purpose
 
-This project is a Laravel-based web application intended to grow from a clean foundation into a production-ready, maintainable business system.
+This project is a Laravel + Inertia + Vue CRM application focused first on **Lead Intelligence** — capturing leads, scoring them, and supporting sales workflows — before expanding into deals, clients, and projects.
+
+The application should grow from a clean foundation into a production-ready, maintainable business system without premature module sprawl.
 
 Phase 0 defines the project baseline before feature implementation begins. The goal is to prevent duplicated business logic, premature abstractions, unclear ownership, and undocumented architectural decisions.
 

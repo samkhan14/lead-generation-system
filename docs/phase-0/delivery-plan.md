@@ -22,18 +22,49 @@ Deliverables:
 
 Exit gate: approval of Phase 0 documentation.
 
-## Phase 1: First Vertical Slice
+## Setup Phase (Before / During Phase 1)
 
-Goal: implement one complete, approved workflow from route to persistence and tests.
+Goal: rules + base structure.
+
+Tasks:
+
+- Laravel install (done).
+- Inertia + Vue setup.
+- Define folder architecture.
+- Setup base layout.
+- Setup `.env` config.
+- Setup logging.
+- Setup queue (optional but prepared).
+
+See `docs/phase-1/README.md` for detail.
+
+## Phase 1: Core Database (CRM + Lead Intelligence)
+
+Goal: lean core persistence only — not the full CRM database.
+
+Approved tables:
+
+- `users` (existing Laravel baseline).
+- Roles and permissions (Spatie).
+- `leads`.
+- Lead score fields on `leads`, or `lead_scores` if score history is approved.
+
+Not allowed in Phase 1:
+
+- Deals (full system).
+- Clients (full system).
+- Projects (full system).
 
 Expected deliverables:
 
-- Feature specification with acceptance criteria.
-- Minimal database changes required for the workflow.
-- Routes, controllers, requests, policies, models, views, and tests as needed.
-- No speculative abstractions.
+- Migrations, models, factories, seeders, and policies for in-scope tables.
+- Spatie roles/permissions seeded.
+- Focused tests for schema, authorization, and relationships.
+- Optional minimal Inertia UI only if explicitly approved.
 
-Exit gate: the first workflow is usable, tested, and reviewed.
+Exit gate: core tables migrated, seeded, tested; no out-of-scope modules.
+
+Full plan: `docs/phase-1/README.md`.
 
 ## Phase 2: Core Domain Expansion
 
