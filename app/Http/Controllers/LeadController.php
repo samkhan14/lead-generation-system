@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLeadRequest;
 use App\Models\Lead;
+use App\Models\LeadScore;
 use App\Services\LeadScoringService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,18 +94,10 @@ class LeadController extends Controller
                 'assigned_to' => $lead->assignedTo?->name,
                 'created_by' => $lead->createdBy?->name,
                 'created_at' => $lead->created_at?->toIso8601String(),
-                'latest_score' => $lead->latestScore ? [
-                    'score' => $lead->latestScore->score,
-                    'score_grade' => $lead->latestScore->score_grade,
-                    'temperature' => $lead->latestScore->temperature,
-                    'factors' => $lead->latestScore->factors,
-                ] : null,
+                'latest_score' => $lead->latestScore ? $this->formatScore($lead->latestScore) : null,
                 'scores' => $lead->scores->map(fn ($score) => [
+                    ...$this->formatScore($score),
                     'id' => $score->id,
-                    'score' => $score->score,
-                    'score_grade' => $score->score_grade,
-                    'temperature' => $score->temperature,
-                    'factors' => $score->factors,
                     'calculated_at' => $score->calculated_at?->toIso8601String(),
                 ]),
             ],
@@ -133,13 +126,26 @@ class LeadController extends Controller
             'company' => $lead->company,
             'source' => $lead->source,
             'assigned_to' => $lead->assignedTo?->name,
-            'latest_score' => $lead->latestScore ? [
-                'score' => $lead->latestScore->score,
-                'score_grade' => $lead->latestScore->score_grade,
-                'temperature' => $lead->latestScore->temperature,
-                'calculated_at' => $lead->latestScore->calculated_at?->toIso8601String(),
-            ] : null,
+            'latest_score' => $lead->latestScore ? $this->formatScore($lead->latestScore) : null,
             'created_at' => $lead->created_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatScore(LeadScore $score): array
+    {
+        return [
+            'score' => $score->score,
+            'intent_score' => $score->intent_score,
+            'opportunity_score' => $score->opportunity_score,
+            'authenticity_score' => $score->authenticity_score,
+            'scoring_version' => $score->scoring_version,
+            'score_grade' => $score->score_grade,
+            'temperature' => $score->temperature,
+            'factors' => $score->factors,
+            'calculated_at' => $score->calculated_at?->toIso8601String(),
         ];
     }
 }

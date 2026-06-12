@@ -136,13 +136,13 @@ test('hot filter returns only hot leads', function () {
     $agent = createAgent();
 
     $hotLead = createLead([
-        'email' => 'hot@example.com',
-        'phone' => '111',
+        'email' => 'ceo@hot.com',
+        'phone' => '5550001111',
         'website' => 'hot.com',
         'company' => 'Hot Co',
         'job_title' => 'CEO',
         'source' => 'api',
-        'notes' => 'Ready',
+        'notes' => 'Interested in pricing demo urgent',
     ]);
 
     $coldLead = createLead([
@@ -167,9 +167,12 @@ test('warm filter returns only warm leads', function () {
     $agent = createAgent();
 
     $warmLead = createLead([
-        'email' => 'warm@example.com',
-        'phone' => '222',
+        'email' => 'person@warmco.com',
+        'phone' => '5550002222',
+        'company' => 'Warm Co',
+        'job_title' => 'Manager',
         'source' => 'manual',
+        'notes' => 'Looking for more info',
     ]);
 
     createLead(['email' => 'cold@example.com']);
@@ -214,20 +217,21 @@ test('scoring engine marks complete leads as hot', function () {
     $this->actingAs($agent)->post(route('leads.store'), [
         'first_name' => 'Jane',
         'last_name' => 'Doe',
-        'email' => 'complete@example.com',
+        'email' => 'jane@acme.com',
         'phone' => '5551234567',
-        'website' => 'example.com',
+        'website' => 'acme.com',
         'company' => 'Acme',
         'job_title' => 'CEO',
         'source' => 'api',
-        'notes' => 'High intent',
+        'notes' => 'Interested in pricing demo urgent',
     ]);
 
-    $lead = Lead::query()->where('email', 'complete@example.com')->first();
+    $lead = Lead::query()->where('email', 'jane@acme.com')->first();
 
     expect($lead->latestScore->score)->toBeGreaterThanOrEqual(70)
         ->and($lead->latestScore->temperature)->toBe('hot')
-        ->and($lead->latestScore->factors)->toHaveKeys(['completeness', 'source_quality', 'contact_richness']);
+        ->and($lead->latestScore->scoring_version)->toBe('v2')
+        ->and($lead->latestScore->factors)->toHaveKeys(['intent', 'opportunity', 'authenticity', 'final']);
 });
 
 test('scoring engine marks minimal leads below hot threshold', function () {

@@ -1,6 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
+import IntelligenceScoreCard from '@/Components/Admin/IntelligenceScoreCard.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -21,11 +22,7 @@ const deleteLead = () => {
     }
 };
 
-const factorLabels = {
-    completeness: 'Completeness',
-    source_quality: 'Source quality',
-    contact_richness: 'Contact richness',
-};
+const intelligence = () => props.lead.latest_score?.factors ?? {};
 </script>
 
 <template>
@@ -49,17 +46,45 @@ const factorLabels = {
 
         <div class="mx-auto max-w-5xl space-y-6">
             <div v-if="lead.latest_score" class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <h3 class="text-lg font-medium text-slate-900">Lead score</h3>
-                <div class="mt-2 flex items-baseline gap-3">
-                    <span class="text-3xl font-bold text-slate-900">{{ lead.latest_score.score }}</span>
-                    <span class="text-sm text-slate-500">Grade {{ lead.latest_score.score_grade }}</span>
-                </div>
-                <dl v-if="lead.latest_score.factors" class="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div v-for="(value, key) in lead.latest_score.factors" :key="key" class="rounded-lg bg-slate-50 p-3">
-                        <dt class="text-xs text-slate-500">{{ factorLabels[key] ?? key }}</dt>
-                        <dd class="text-lg font-semibold text-slate-900">{{ value }}</dd>
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-medium text-slate-900">Lead intelligence</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Engine {{ lead.latest_score.scoring_version ?? 'v2' }} — weighted final score
+                        </p>
                     </div>
-                </dl>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-slate-900">{{ lead.latest_score.score }}</div>
+                        <div class="text-sm text-slate-500">Grade {{ lead.latest_score.score_grade }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid gap-4 lg:grid-cols-3">
+                    <IntelligenceScoreCard
+                        title="Intent"
+                        :score="lead.latest_score.intent_score ?? intelligence().intent?.score ?? 0"
+                        :signals="intelligence().intent?.signals ?? []"
+                        accent="indigo"
+                    />
+                    <IntelligenceScoreCard
+                        title="Opportunity"
+                        :score="lead.latest_score.opportunity_score ?? intelligence().opportunity?.score ?? 0"
+                        :signals="intelligence().opportunity?.signals ?? []"
+                        accent="emerald"
+                    />
+                    <IntelligenceScoreCard
+                        title="Authenticity"
+                        :score="lead.latest_score.authenticity_score ?? intelligence().authenticity?.score ?? 0"
+                        :signals="intelligence().authenticity?.signals ?? []"
+                        accent="sky"
+                    />
+                </div>
+
+                <div v-if="intelligence().final?.weights" class="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                    Final = (Intent × {{ intelligence().final.weights.intent }})
+                    + (Opportunity × {{ intelligence().final.weights.opportunity }})
+                    + (Authenticity × {{ intelligence().final.weights.authenticity }})
+                </div>
             </div>
 
             <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -110,14 +135,21 @@ const factorLabels = {
                     No scores recorded yet.
                 </div>
                 <ul v-else class="mt-4 divide-y divide-slate-200">
-                    <li v-for="score in lead.scores" :key="score.id" class="flex items-center justify-between py-3">
-                        <div class="flex items-center gap-3">
-                            <span class="font-medium text-slate-900">
-                                {{ score.score }} ({{ score.score_grade }})
-                            </span>
-                            <TemperatureBadge :temperature="score.temperature" />
+                    <li v-for="score in lead.scores" :key="score.id" class="py-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center gap-3">
+                                <span class="font-medium text-slate-900">
+                                    {{ score.score }} ({{ score.score_grade }})
+                                </span>
+                                <TemperatureBadge :temperature="score.temperature" />
+                            </div>
+                            <span class="text-sm text-slate-500">{{ score.calculated_at }}</span>
                         </div>
-                        <span class="text-sm text-slate-500">{{ score.calculated_at }}</span>
+                        <div v-if="score.intent_score !== undefined" class="mt-2 flex gap-3 text-xs text-slate-500">
+                            <span>Intent {{ score.intent_score }}</span>
+                            <span>Opportunity {{ score.opportunity_score }}</span>
+                            <span>Authenticity {{ score.authenticity_score }}</span>
+                        </div>
                     </li>
                 </ul>
             </div>

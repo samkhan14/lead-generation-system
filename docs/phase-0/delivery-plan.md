@@ -89,7 +89,15 @@ Full plan: `docs/phase-3/README.md`.
 
 Exit gate: agents can create leads, see scores/temperature, filter HOT/WARM, and duplicates are blocked.
 
-## Phase 4: Core Domain Expansion
+## Phase 4: Lead Intelligence Engine
+
+Goal: make the system smart with multi-dimensional scoring.
+
+Full plan: `docs/phase-4/README.md`.
+
+Exit gate: intent, opportunity, and authenticity scores drive a weighted final score with UI breakdown.
+
+## Phase 5: Core Domain Expansion
 
 Goal: expand the core domain with additional approved workflows.
 

@@ -4,77 +4,255 @@ namespace App\Services;
 
 use App\Models\Lead;
 use App\Models\LeadScore;
+use App\Support\LeadIdentifiers;
 
 class LeadScoringService
 {
     /**
-     * @return array<string, int>
+     * @return array{
+     *     intent_score: int,
+     *     opportunity_score: int,
+     *     authenticity_score: int,
+     *     final_score: int,
+     *     factors: array<string, mixed>
+     * }
      */
-    public function calculateFactors(Lead $lead): array
+    public function evaluate(Lead $lead): array
     {
-        $completeness = 0;
+        $intent = $this->calculateIntentScore($lead);
+        $opportunity = $this->calculateOpportunityScore($lead);
+        $authenticity = $this->calculateAuthenticityScore($lead);
 
-        if ($lead->email) {
-            $completeness += 10;
-        }
-
-        if ($lead->phone) {
-            $completeness += 10;
-        }
-
-        if ($lead->website) {
-            $completeness += 10;
-        }
-
-        if ($lead->company) {
-            $completeness += 5;
-        }
-
-        if ($lead->job_title) {
-            $completeness += 5;
-        }
-
-        $sourceQuality = match (strtolower((string) $lead->source)) {
-            'api' => 25,
-            'scraper' => 20,
-            'import' => 15,
-            'manual' => 10,
-            default => $lead->source ? 8 : 0,
-        };
-
-        $contactRichness = 0;
-
-        if ($lead->email && $lead->phone) {
-            $contactRichness += 15;
-        }
-
-        if ($lead->website) {
-            $contactRichness += 10;
-        }
-
-        if ($lead->notes) {
-            $contactRichness += 5;
-        }
+        $finalScore = $this->calculateFinalScore(
+            $intent['score'],
+            $opportunity['score'],
+            $authenticity['score'],
+        );
 
         return [
-            'completeness' => $completeness,
-            'source_quality' => $sourceQuality,
-            'contact_richness' => $contactRichness,
+            'intent_score' => $intent['score'],
+            'opportunity_score' => $opportunity['score'],
+            'authenticity_score' => $authenticity['score'],
+            'final_score' => $finalScore,
+            'factors' => [
+                'intent' => $intent,
+                'opportunity' => $opportunity,
+                'authenticity' => $authenticity,
+                'final' => [
+                    'score' => $finalScore,
+                    'weights' => config('lead_scoring.weights'),
+                    'version' => config('lead_scoring.version'),
+                ],
+            ],
         ];
     }
 
     public function score(Lead $lead): LeadScore
     {
-        $factors = $this->calculateFactors($lead);
-        $score = min(100, array_sum($factors));
+        $evaluation = $this->evaluate($lead);
 
         return LeadScore::query()->create([
             'lead_id' => $lead->id,
-            'score' => $score,
-            'score_grade' => LeadScore::gradeForScore($score),
-            'temperature' => LeadScore::temperatureForScore($score),
-            'factors' => $factors,
+            'score' => $evaluation['final_score'],
+            'intent_score' => $evaluation['intent_score'],
+            'opportunity_score' => $evaluation['opportunity_score'],
+            'authenticity_score' => $evaluation['authenticity_score'],
+            'scoring_version' => config('lead_scoring.version'),
+            'score_grade' => LeadScore::gradeForScore($evaluation['final_score']),
+            'temperature' => LeadScore::temperatureForScore($evaluation['final_score']),
+            'factors' => $evaluation['factors'],
             'calculated_at' => now(),
         ]);
+    }
+
+    /**
+     * @return array{score: int, signals: array<int, string>}
+     */
+    public function calculateIntentScore(Lead $lead): array
+    {
+        $config = config('lead_scoring.intent');
+        $score = 0;
+        $signals = [];
+
+        $notes = strtolower($lead->notes ?? '');
+        $keywordMatches = 0;
+
+        foreach ($config['keywords'] as $keyword) {
+            if ($notes !== '' && str_contains($notes, $keyword)) {
+                $keywordMatches++;
+                $signals[] = "Intent keyword: {$keyword}";
+            }
+        }
+
+        if ($keywordMatches > 0) {
+            $keywordScore = min($config['keyword_cap'], $keywordMatches * $config['keyword_points']);
+            $score += $keywordScore;
+        }
+
+        $metadataLevel = strtolower((string) data_get($lead->metadata, 'intent_level', ''));
+        if ($metadataLevel !== '' && isset($config['metadata_levels'][$metadataLevel])) {
+            $score += $config['metadata_levels'][$metadataLevel];
+            $signals[] = "Metadata intent level: {$metadataLevel}";
+        }
+
+        $source = strtolower((string) $lead->source);
+        if ($source !== '' && isset($config['source'][$source])) {
+            $score += $config['source'][$source];
+            $signals[] = "Source intent signal: {$source}";
+        }
+
+        if ($lead->last_contacted_at?->greaterThanOrEqualTo(now()->subDays($config['recent_contact_days']))) {
+            $score += $config['recent_contact_points'];
+            $signals[] = 'Recently contacted';
+        }
+
+        return [
+            'score' => $this->clampScore($score),
+            'signals' => $signals,
+        ];
+    }
+
+    /**
+     * @return array{score: int, signals: array<int, string>}
+     */
+    public function calculateOpportunityScore(Lead $lead): array
+    {
+        $config = config('lead_scoring.opportunity');
+        $score = 0;
+        $signals = [];
+
+        if ($lead->company) {
+            $score += $config['company_points'];
+            $signals[] = 'Company identified';
+        }
+
+        $jobTitle = strtolower((string) $lead->job_title);
+        foreach ($config['decision_maker_titles'] as $title) {
+            if ($jobTitle !== '' && str_contains($jobTitle, $title)) {
+                $score += $config['decision_maker_points'];
+                $signals[] = 'Decision-maker title detected';
+                break;
+            }
+        }
+
+        if ($lead->email && $lead->phone && $lead->website) {
+            $score += $config['full_contact_bundle_points'];
+            $signals[] = 'Full contact bundle present';
+        }
+
+        $emailDomain = $this->emailDomain($lead->email);
+        if ($emailDomain && ! $this->isFreeEmailDomain($emailDomain)) {
+            $score += $config['corporate_email_points'];
+            $signals[] = 'Corporate email domain';
+        }
+
+        if ($emailDomain && $lead->website_normalized && $this->domainsMatch($emailDomain, $lead->website_normalized)) {
+            $score += $config['domain_match_points'];
+            $signals[] = 'Email domain matches website';
+        }
+
+        return [
+            'score' => $this->clampScore($score),
+            'signals' => $signals,
+        ];
+    }
+
+    /**
+     * @return array{score: int, signals: array<int, string>}
+     */
+    public function calculateAuthenticityScore(Lead $lead): array
+    {
+        $config = config('lead_scoring.authenticity');
+        $score = 0;
+        $signals = [];
+
+        $phoneDigits = LeadIdentifiers::normalizePhone($lead->phone);
+        if ($phoneDigits && strlen($phoneDigits) >= $config['min_phone_digits']) {
+            $score += $config['phone_points'];
+            $signals[] = 'Valid phone number length';
+        }
+
+        $emailDomain = $this->emailDomain($lead->email);
+        if ($emailDomain && ! $this->isFreeEmailDomain($emailDomain)) {
+            $score += $config['corporate_email_points'];
+            $signals[] = 'Non-free email provider';
+        }
+
+        if ($lead->website) {
+            $score += $config['website_points'];
+            $signals[] = 'Website provided';
+        }
+
+        if (! $this->isGenericName($lead->first_name, $lead->last_name)) {
+            $score += $config['name_points'];
+            $signals[] = 'Name appears genuine';
+        } else {
+            $score -= $config['generic_name_penalty'];
+            $signals[] = 'Generic name detected';
+        }
+
+        $source = strtolower((string) $lead->source);
+        if ($source !== '' && in_array($source, $config['trusted_sources'], true)) {
+            $score += $config['trusted_source_points'];
+            $signals[] = "Trusted source: {$source}";
+        }
+
+        if ($emailDomain && $this->isFreeEmailDomain($emailDomain) && ! $lead->company) {
+            $score -= $config['free_email_no_company_penalty'];
+            $signals[] = 'Free email without company context';
+        }
+
+        return [
+            'score' => $this->clampScore($score),
+            'signals' => $signals,
+        ];
+    }
+
+    public function calculateFinalScore(int $intentScore, int $opportunityScore, int $authenticityScore): int
+    {
+        $weights = config('lead_scoring.weights');
+
+        $weighted = ($intentScore * $weights['intent'])
+            + ($opportunityScore * $weights['opportunity'])
+            + ($authenticityScore * $weights['authenticity']);
+
+        return $this->clampScore((int) round($weighted));
+    }
+
+    private function clampScore(int $score): int
+    {
+        return max(0, min(100, $score));
+    }
+
+    private function emailDomain(?string $email): ?string
+    {
+        if (! $email || ! str_contains($email, '@')) {
+            return null;
+        }
+
+        return strtolower(trim(substr($email, strrpos($email, '@') + 1)));
+    }
+
+    private function isFreeEmailDomain(string $domain): bool
+    {
+        return in_array($domain, config('lead_scoring.authenticity.free_email_domains'), true);
+    }
+
+    private function domainsMatch(string $emailDomain, string $websiteNormalized): bool
+    {
+        return $emailDomain === $websiteNormalized
+            || str_ends_with($emailDomain, '.'.$websiteNormalized)
+            || str_ends_with($websiteNormalized, '.'.$emailDomain);
+    }
+
+    private function isGenericName(string $firstName, string $lastName): bool
+    {
+        $genericNames = config('lead_scoring.authenticity.generic_names');
+        $first = strtolower(trim($firstName));
+        $last = strtolower(trim($lastName));
+
+        return in_array($first, $genericNames, true)
+            || in_array($last, $genericNames, true)
+            || in_array(trim("{$first} {$last}"), $genericNames, true);
     }
 }

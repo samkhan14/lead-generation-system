@@ -96,9 +96,14 @@ const isActive = (temperature) => props.filters.temperature === temperature;
                             <td class="px-4 py-3 text-sm text-slate-700">{{ lead.company || '—' }}</td>
                             <td class="px-4 py-3 text-sm text-slate-700">{{ lead.source || '—' }}</td>
                             <td class="px-4 py-3 text-sm text-slate-700">
-                                <span v-if="lead.latest_score">
-                                    {{ lead.latest_score.score }} ({{ lead.latest_score.score_grade }})
-                                </span>
+                                <div v-if="lead.latest_score">
+                                    <div>{{ lead.latest_score.score }} ({{ lead.latest_score.score_grade }})</div>
+                                    <div class="text-xs text-slate-500">
+                                        I{{ lead.latest_score.intent_score ?? '—' }}
+                                        O{{ lead.latest_score.opportunity_score ?? '—' }}
+                                        A{{ lead.latest_score.authenticity_score ?? '—' }}
+                                    </div>
+                                </div>
                                 <span v-else>—</span>
                             </td>
                             <td class="px-4 py-3 text-sm">

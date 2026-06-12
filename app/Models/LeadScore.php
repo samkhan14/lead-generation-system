@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'lead_id',
     'score',
+    'intent_score',
+    'opportunity_score',
+    'authenticity_score',
+    'scoring_version',
     'score_grade',
     'temperature',
     'factors',
