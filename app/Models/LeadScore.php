@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'lead_id',
     'score',
     'score_grade',
+    'temperature',
     'factors',
     'calculated_at',
 ])]
@@ -35,6 +36,15 @@ class LeadScore extends Model
             $score >= 60 => 'B',
             $score >= 40 => 'C',
             default => 'D',
+        };
+    }
+
+    public static function temperatureForScore(int $score): string
+    {
+        return match (true) {
+            $score >= 70 => 'hot',
+            $score >= 40 => 'warm',
+            default => 'cold',
         };
     }
 }

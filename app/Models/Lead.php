@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Support\LeadIdentifiers;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,7 +19,11 @@ use Illuminate\Support\Str;
     'first_name',
     'last_name',
     'email',
+    'email_normalized',
     'phone',
+    'phone_normalized',
+    'website',
+    'website_normalized',
     'company',
     'job_title',
     'source',
@@ -45,6 +51,38 @@ class Lead extends Model
                 $lead->uuid = (string) Str::uuid();
             }
         });
+
+        static::saving(function (Lead $lead): void {
+            $lead->email_normalized = LeadIdentifiers::normalizeEmail($lead->email);
+            $lead->phone_normalized = LeadIdentifiers::normalizePhone($lead->phone);
+            $lead->website_normalized = LeadIdentifiers::normalizeWebsite($lead->website);
+        });
+    }
+
+    public static function findDuplicate(?string $email, ?string $phone, ?string $website): ?self
+    {
+        $identifiers = collect([
+            'email_normalized' => LeadIdentifiers::normalizeEmail($email),
+            'phone_normalized' => LeadIdentifiers::normalizePhone($phone),
+            'website_normalized' => LeadIdentifiers::normalizeWebsite($website),
+        ])->filter();
+
+        if ($identifiers->isEmpty()) {
+            return null;
+        }
+
+        return static::query()
+            ->where(function (Builder $query) use ($identifiers): void {
+                foreach ($identifiers as $column => $value) {
+                    $query->orWhere($column, $value);
+                }
+            })
+            ->first();
+    }
+
+    public function scopeWithTemperature(Builder $query, string $temperature): Builder
+    {
+        return $query->whereHas('latestScore', fn (Builder $scoreQuery) => $scoreQuery->where('temperature', $temperature));
     }
 
     public function assignedTo(): BelongsTo

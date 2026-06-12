@@ -4,44 +4,42 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLeadRequest;
 use App\Models\Lead;
-use App\Models\LeadScore;
+use App\Services\LeadScoringService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LeadController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private LeadScoringService $scoringService,
+    ) {
         $this->middleware('permission:leads.view')->only(['index', 'show']);
         $this->middleware('permission:leads.create')->only(['create', 'store']);
         $this->middleware('permission:leads.delete')->only('destroy');
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $temperature = $request->query('temperature');
+
         $leads = Lead::query()
             ->with(['latestScore', 'assignedTo'])
+            ->when(
+                in_array($temperature, ['hot', 'warm'], true),
+                fn ($query) => $query->withTemperature($temperature),
+            )
             ->latest()
             ->paginate(15)
-            ->through(fn (Lead $lead) => [
-                'id' => $lead->id,
-                'uuid' => $lead->uuid,
-                'full_name' => $lead->full_name,
-                'email' => $lead->email,
-                'company' => $lead->company,
-                'source' => $lead->source,
-                'assigned_to' => $lead->assignedTo?->name,
-                'latest_score' => $lead->latestScore ? [
-                    'score' => $lead->latestScore->score,
-                    'score_grade' => $lead->latestScore->score_grade,
-                    'calculated_at' => $lead->latestScore->calculated_at?->toIso8601String(),
-                ] : null,
-                'created_at' => $lead->created_at?->toIso8601String(),
-            ]);
+            ->withQueryString()
+            ->through(fn (Lead $lead) => $this->formatLeadListItem($lead));
 
         return Inertia::render('Leads/Index', [
             'leads' => $leads,
+            'filters' => [
+                'temperature' => in_array($temperature, ['hot', 'warm'], true) ? $temperature : null,
+            ],
         ]);
     }
 
@@ -53,21 +51,22 @@ class LeadController extends Controller
     public function store(StoreLeadRequest $request): RedirectResponse
     {
         $lead = Lead::query()->create([
-            ...$request->safe()->except('score'),
+            ...$request->safe()->only([
+                'first_name',
+                'last_name',
+                'email',
+                'phone',
+                'website',
+                'company',
+                'job_title',
+                'source',
+                'notes',
+            ]),
             'created_by' => $request->user()->id,
             'assigned_to' => $request->user()->id,
         ]);
 
-        if ($request->filled('score')) {
-            $score = (int) $request->input('score');
-
-            LeadScore::query()->create([
-                'lead_id' => $lead->id,
-                'score' => $score,
-                'score_grade' => LeadScore::gradeForScore($score),
-                'calculated_at' => now(),
-            ]);
-        }
+        $this->scoringService->score($lead);
 
         return redirect()->route('leads.show', $lead);
     }
@@ -85,6 +84,7 @@ class LeadController extends Controller
                 'last_name' => $lead->last_name,
                 'email' => $lead->email,
                 'phone' => $lead->phone,
+                'website' => $lead->website,
                 'company' => $lead->company,
                 'job_title' => $lead->job_title,
                 'source' => $lead->source,
@@ -93,10 +93,17 @@ class LeadController extends Controller
                 'assigned_to' => $lead->assignedTo?->name,
                 'created_by' => $lead->createdBy?->name,
                 'created_at' => $lead->created_at?->toIso8601String(),
-                'scores' => $lead->scores->map(fn (LeadScore $score) => [
+                'latest_score' => $lead->latestScore ? [
+                    'score' => $lead->latestScore->score,
+                    'score_grade' => $lead->latestScore->score_grade,
+                    'temperature' => $lead->latestScore->temperature,
+                    'factors' => $lead->latestScore->factors,
+                ] : null,
+                'scores' => $lead->scores->map(fn ($score) => [
                     'id' => $score->id,
                     'score' => $score->score,
                     'score_grade' => $score->score_grade,
+                    'temperature' => $score->temperature,
                     'factors' => $score->factors,
                     'calculated_at' => $score->calculated_at?->toIso8601String(),
                 ]),
@@ -109,5 +116,30 @@ class LeadController extends Controller
         $lead->delete();
 
         return redirect()->route('leads.index');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatLeadListItem(Lead $lead): array
+    {
+        return [
+            'id' => $lead->id,
+            'uuid' => $lead->uuid,
+            'full_name' => $lead->full_name,
+            'email' => $lead->email,
+            'phone' => $lead->phone,
+            'website' => $lead->website,
+            'company' => $lead->company,
+            'source' => $lead->source,
+            'assigned_to' => $lead->assignedTo?->name,
+            'latest_score' => $lead->latestScore ? [
+                'score' => $lead->latestScore->score,
+                'score_grade' => $lead->latestScore->score_grade,
+                'temperature' => $lead->latestScore->temperature,
+                'calculated_at' => $lead->latestScore->calculated_at?->toIso8601String(),
+            ] : null,
+            'created_at' => $lead->created_at?->toIso8601String(),
+        ];
     }
 }

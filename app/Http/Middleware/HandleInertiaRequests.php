@@ -43,6 +43,9 @@ class HandleInertiaRequests extends Middleware
                     'is_super_admin' => $user->hasRole('super_admin'),
                 ] : null,
             ],
+            'flash' => [
+                'duplicate_lead_id' => fn () => $request->session()->get('duplicate_lead_id'),
+            ],
         ];
     }
 }

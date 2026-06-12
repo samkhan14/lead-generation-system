@@ -81,7 +81,15 @@ Full plan: `docs/phase-2/README.md`.
 
 Exit gate: authenticated users can log in, see dashboard, and navigate via admin sidebar.
 
-## Phase 3: Core Domain Expansion
+## Phase 3: Lead Core Module
+
+Goal: manual lead system + scoring working — first real product milestone.
+
+Full plan: `docs/phase-3/README.md`.
+
+Exit gate: agents can create leads, see scores/temperature, filter HOT/WARM, and duplicates are blocked.
+
+## Phase 4: Core Domain Expansion
 
 Goal: expand the core domain with additional approved workflows.
 
