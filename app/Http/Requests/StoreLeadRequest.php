@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Lead;
+use App\Services\LeadIngestionService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -38,10 +38,11 @@ class StoreLeadRequest extends FormRequest
                 return;
             }
 
-            $duplicate = Lead::findDuplicate(
-                $this->input('email'),
-                $this->input('phone'),
-                $this->input('website'),
+            $duplicate = app(LeadIngestionService::class)->findDuplicate(
+                app(LeadIngestionService::class)->normalizePayload([
+                    ...$this->validated(),
+                    'source' => $this->input('source', 'manual'),
+                ]),
             );
 
             if ($duplicate) {

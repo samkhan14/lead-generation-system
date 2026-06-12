@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreLeadRequest;
 use App\Models\Lead;
 use App\Models\LeadScore;
-use App\Services\LeadScoringService;
+use App\Services\LeadIngestionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +14,7 @@ use Inertia\Response;
 class LeadController extends Controller
 {
     public function __construct(
-        private LeadScoringService $scoringService,
+        private LeadIngestionService $ingestionService,
     ) {
         $this->middleware('permission:leads.view')->only(['index', 'show']);
         $this->middleware('permission:leads.create')->only(['create', 'store']);
@@ -51,25 +51,21 @@ class LeadController extends Controller
 
     public function store(StoreLeadRequest $request): RedirectResponse
     {
-        $lead = Lead::query()->create([
-            ...$request->safe()->only([
-                'first_name',
-                'last_name',
-                'email',
-                'phone',
-                'website',
-                'company',
-                'job_title',
-                'source',
-                'notes',
-            ]),
+        $result = $this->ingestionService->ingest([
+            ...$request->validated(),
+            'source' => $request->input('source', 'manual'),
             'created_by' => $request->user()->id,
             'assigned_to' => $request->user()->id,
         ]);
 
-        $this->scoringService->score($lead);
+        if ($result->status === 'duplicate') {
+            return redirect()
+                ->route('leads.create')
+                ->withErrors(['duplicate' => 'A lead with this email, phone, or website already exists.'])
+                ->with('duplicate_lead_id', $result->duplicateLead?->id);
+        }
 
-        return redirect()->route('leads.show', $lead);
+        return redirect()->route('leads.show', $result->lead);
     }
 
     public function show(Lead $lead): Response
@@ -91,6 +87,7 @@ class LeadController extends Controller
                 'source' => $lead->source,
                 'status' => $lead->status,
                 'notes' => $lead->notes,
+                'metadata' => $lead->metadata,
                 'assigned_to' => $lead->assignedTo?->name,
                 'created_by' => $lead->createdBy?->name,
                 'created_at' => $lead->created_at?->toIso8601String(),
@@ -119,7 +116,7 @@ class LeadController extends Controller
         return [
             'id' => $lead->id,
             'uuid' => $lead->uuid,
-            'full_name' => $lead->full_name,
+            'full_name' => $lead->company ?: $lead->full_name,
             'email' => $lead->email,
             'phone' => $lead->phone,
             'website' => $lead->website,

@@ -18,6 +18,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'leads.create',
             'leads.update',
             'leads.delete',
+            'scraper.view',
+            'scraper.run',
         ];
 
         foreach ($permissions as $permission) {

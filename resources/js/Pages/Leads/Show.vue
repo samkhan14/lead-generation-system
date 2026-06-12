@@ -114,6 +114,17 @@ const intelligence = () => props.lead.latest_score?.factors ?? {};
                         <dt class="text-sm text-slate-500">Source</dt>
                         <dd class="text-sm text-slate-900">{{ lead.source || '—' }}</dd>
                     </div>
+                    <div v-if="lead.metadata?.address">
+                        <dt class="text-sm text-slate-500">Address</dt>
+                        <dd class="text-sm text-slate-900">{{ lead.metadata.address }}</dd>
+                    </div>
+                    <div v-if="lead.metadata?.rating">
+                        <dt class="text-sm text-slate-500">Google rating</dt>
+                        <dd class="text-sm text-slate-900">
+                            {{ lead.metadata.rating }}
+                            <span v-if="lead.metadata.review_count">({{ lead.metadata.review_count }} reviews)</span>
+                        </dd>
+                    </div>
                     <div>
                         <dt class="text-sm text-slate-500">Assigned to</dt>
                         <dd class="text-sm text-slate-900">{{ lead.assigned_to || '—' }}</dd>

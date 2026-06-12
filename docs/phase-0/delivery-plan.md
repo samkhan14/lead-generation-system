@@ -97,7 +97,15 @@ Full plan: `docs/phase-4/README.md`.
 
 Exit gate: intent, opportunity, and authenticity scores drive a weighted final score with UI breakdown.
 
-## Phase 5: Core Domain Expansion
+## Phase 5: Google Maps Ingestion Pipeline
+
+Goal: one external source → automated → integrated with existing lead pipeline.
+
+Full plan: `docs/phase-5/README.md`.
+
+Exit gate: external `srp-service` scrapes Google Maps and sends results to `/api/leads/ingest`; leads appear scored in CRM.
+
+## Phase 6: Core Domain Expansion
 
 Goal: expand the core domain with additional approved workflows.
 

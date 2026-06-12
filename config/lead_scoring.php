@@ -34,6 +34,7 @@ return [
         ],
         'source' => [
             'api' => 15,
+            'google_maps' => 12,
             'scraper' => 10,
             'import' => 8,
             'manual' => 5,
@@ -60,7 +61,7 @@ return [
         'website_points' => 20,
         'name_points' => 15,
         'trusted_source_points' => 15,
-        'trusted_sources' => ['manual', 'api'],
+        'trusted_sources' => ['manual', 'api', 'google_maps'],
         'free_email_domains' => [
             'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com',
         ],
