@@ -66,7 +66,22 @@ Exit gate: core tables migrated, seeded, tested; no out-of-scope modules.
 
 Full plan: `docs/phase-1/README.md`.
 
-## Phase 2: Core Domain Expansion
+## Phase 2: Auth + Admin Foundation
+
+Goal: system usable internally.
+
+Deliverables:
+
+- Admin layout with sidebar
+- Basic dashboard with lead stats
+- Shared auth context (roles, permissions) for frontend
+- Internal-only access (no public registration)
+
+Full plan: `docs/phase-2/README.md`.
+
+Exit gate: authenticated users can log in, see dashboard, and navigate via admin sidebar.
+
+## Phase 3: Core Domain Expansion
 
 Goal: expand the core domain with additional approved workflows.
 

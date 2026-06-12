@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -27,16 +27,12 @@ const submit = () => {
 <template>
     <Head title="Create Lead" />
 
-    <AuthenticatedLayout>
+    <AdminLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Create Lead
-            </h2>
+            <h1 class="text-xl font-semibold text-slate-900">Create Lead</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+        <div class="mx-auto max-w-3xl rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
                     <form @submit.prevent="submit" class="space-y-6">
                         <div class="grid gap-6 sm:grid-cols-2">
                             <div>
@@ -155,8 +151,6 @@ const submit = () => {
                             </Link>
                         </div>
                     </form>
-                </div>
-            </div>
         </div>
-    </AuthenticatedLayout>
+    </AdminLayout>
 </template>
