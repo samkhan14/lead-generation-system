@@ -6,6 +6,8 @@ use App\Http\Requests\StoreLeadRequest;
 use App\Models\Lead;
 use App\Models\LeadScore;
 use App\Services\LeadIngestionService;
+use App\Services\LeadPitchService;
+use App\Support\LeadQueryFilters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +17,7 @@ class LeadController extends Controller
 {
     public function __construct(
         private LeadIngestionService $ingestionService,
+        private LeadPitchService $pitchService,
     ) {
         $this->middleware('permission:leads.view')->only(['index', 'show']);
         $this->middleware('permission:leads.create')->only(['create', 'store']);
@@ -23,23 +26,74 @@ class LeadController extends Controller
 
     public function index(Request $request): Response
     {
-        $temperature = $request->query('temperature');
+        $filters = [
+            'temperature' => $request->query('temperature'),
+            'q' => trim((string) $request->query('q', '')),
+            'country' => trim((string) $request->query('country', '')),
+            'city' => trim((string) $request->query('city', '')),
+            'area' => trim((string) $request->query('area', '')),
+            'keyword' => trim((string) $request->query('keyword', '')),
+            'source' => $request->query('source'),
+            'pitch_type' => $request->query('pitch_type'),
+            'has_website' => $request->query('has_website'),
+            'sort' => $request->query('sort', 'created_desc'),
+            'per_page' => (int) $request->query('per_page', 15),
+        ];
+
+        $perPage = in_array($filters['per_page'], [10, 15, 25, 50], true) ? $filters['per_page'] : 15;
+        $filters['per_page'] = $perPage;
+
+        if (! in_array($filters['temperature'], ['hot', 'warm', 'cold'], true)) {
+            $filters['temperature'] = null;
+        }
+
+        if (! in_array($filters['has_website'], ['yes', 'no'], true)) {
+            $filters['has_website'] = null;
+        }
 
         $leads = Lead::query()
             ->with(['latestScore', 'assignedTo'])
-            ->when(
-                in_array($temperature, ['hot', 'warm'], true),
-                fn ($query) => $query->withTemperature($temperature),
-            )
-            ->latest()
-            ->paginate(15)
+            ->tap(fn ($query) => LeadQueryFilters::apply($query, $filters))
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (Lead $lead) => $this->formatLeadListItem($lead));
 
+        $dbCountries = LeadQueryFilters::distinctMetadataValues('scrape_country');
+
         return Inertia::render('Leads/Index', [
             'leads' => $leads,
-            'filters' => [
-                'temperature' => in_array($temperature, ['hot', 'warm'], true) ? $temperature : null,
+            'filters' => array_map(
+                fn ($value) => $value === '' ? null : $value,
+                $filters,
+            ),
+            'filterOptions' => [
+                'countries' => collect(config('countries.list', []))
+                    ->merge($dbCountries)
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->all(),
+                'cities' => LeadQueryFilters::distinctMetadataValues('scrape_city'),
+                'areas' => LeadQueryFilters::distinctMetadataValues('scrape_area'),
+                'keywords' => LeadQueryFilters::distinctMetadataValues('scrape_keyword'),
+                'sources' => [
+                    ['value' => 'google_maps', 'label' => 'Google Maps'],
+                    ['value' => 'manual', 'label' => 'Manual'],
+                    ['value' => 'api', 'label' => 'API'],
+                    ['value' => 'import', 'label' => 'Import'],
+                    ['value' => 'scraper', 'label' => 'Scraper'],
+                ],
+                'pitch_types' => LeadPitchService::pitchTypeOptions(),
+                'sorts' => [
+                    ['value' => 'created_desc', 'label' => 'Newest first'],
+                    ['value' => 'created_asc', 'label' => 'Oldest first'],
+                    ['value' => 'score_desc', 'label' => 'Score: high to low'],
+                    ['value' => 'score_asc', 'label' => 'Score: low to high'],
+                    ['value' => 'rating_desc', 'label' => 'Rating: high to low'],
+                    ['value' => 'rating_asc', 'label' => 'Rating: low to high'],
+                    ['value' => 'company_asc', 'label' => 'Company: A–Z'],
+                    ['value' => 'company_desc', 'label' => 'Company: Z–A'],
+                ],
             ],
         ]);
     }
@@ -92,6 +146,7 @@ class LeadController extends Controller
                 'created_by' => $lead->createdBy?->name,
                 'created_at' => $lead->created_at?->toIso8601String(),
                 'latest_score' => $lead->latestScore ? $this->formatScore($lead->latestScore) : null,
+                'pitch_recommendations' => $this->pitchService->recommendations($lead),
                 'scores' => $lead->scores->map(fn ($score) => [
                     ...$this->formatScore($score),
                     'id' => $score->id,
@@ -122,6 +177,14 @@ class LeadController extends Controller
             'website' => $lead->website,
             'company' => $lead->company,
             'source' => $lead->source,
+            'address' => data_get($lead->metadata, 'address'),
+            'scrape_country' => data_get($lead->metadata, 'scrape_country'),
+            'scrape_city' => data_get($lead->metadata, 'scrape_city'),
+            'scrape_area' => data_get($lead->metadata, 'scrape_area'),
+            'scrape_keyword' => data_get($lead->metadata, 'scrape_keyword'),
+            'rating' => data_get($lead->metadata, 'rating'),
+            'review_count' => data_get($lead->metadata, 'review_count'),
+            'pitch_summary' => $this->pitchService->primaryRecommendation($lead),
             'assigned_to' => $lead->assignedTo?->name,
             'latest_score' => $lead->latestScore ? $this->formatScore($lead->latestScore) : null,
             'created_at' => $lead->created_at?->toIso8601String(),

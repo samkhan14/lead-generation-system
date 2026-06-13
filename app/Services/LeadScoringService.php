@@ -90,7 +90,7 @@ class LeadScoringService
         }
 
         $metadataLevel = strtolower((string) data_get($lead->metadata, 'intent_level', ''));
-        if ($metadataLevel !== '' && isset($config['metadata_levels'][$metadataLevel])) {
+        if (! $this->isGoogleMapsLead($lead) && $metadataLevel !== '' && isset($config['metadata_levels'][$metadataLevel])) {
             $score += $config['metadata_levels'][$metadataLevel];
             $signals[] = "Metadata intent level: {$metadataLevel}";
         }
@@ -151,6 +151,12 @@ class LeadScoringService
             $signals[] = 'Email domain matches website';
         }
 
+        if ($this->isGoogleMapsLead($lead)) {
+            $googleSignals = $this->googleMapsOpportunitySignals($lead, $config['google_maps']);
+            $score += $googleSignals['score'];
+            $signals = array_merge($signals, $googleSignals['signals']);
+        }
+
         return [
             'score' => $this->clampScore($score),
             'signals' => $signals,
@@ -183,7 +189,10 @@ class LeadScoringService
             $signals[] = 'Website provided';
         }
 
-        if (! $this->isGenericName($lead->first_name, $lead->last_name)) {
+        if ($this->isGoogleMapsLead($lead) && $lead->company) {
+            $score += $config['name_points'];
+            $signals[] = 'Business name identified';
+        } elseif (! $this->isGenericName($lead->first_name, $lead->last_name)) {
             $score += $config['name_points'];
             $signals[] = 'Name appears genuine';
         } else {
@@ -200,6 +209,12 @@ class LeadScoringService
         if ($emailDomain && $this->isFreeEmailDomain($emailDomain) && ! $lead->company) {
             $score -= $config['free_email_no_company_penalty'];
             $signals[] = 'Free email without company context';
+        }
+
+        if ($this->isGoogleMapsLead($lead)) {
+            $googleSignals = $this->googleMapsAuthenticitySignals($lead, $config['google_maps']);
+            $score += $googleSignals['score'];
+            $signals = array_merge($signals, $googleSignals['signals']);
         }
 
         return [
@@ -254,5 +269,106 @@ class LeadScoringService
         return in_array($first, $genericNames, true)
             || in_array($last, $genericNames, true)
             || in_array(trim("{$first} {$last}"), $genericNames, true);
+    }
+
+    private function isGoogleMapsLead(Lead $lead): bool
+    {
+        return strtolower((string) $lead->source) === 'google_maps';
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function googleMapsOpportunitySignals(Lead $lead, array $config): array
+    {
+        $score = 0;
+        $signals = [];
+        $rating = data_get($lead->metadata, 'rating');
+        $reviewCount = data_get($lead->metadata, 'review_count');
+
+        if ($lead->website) {
+            $score += $config['website_points'];
+            $signals[] = 'Website exists (audit/SEO pitch possible)';
+        } else {
+            $score += $config['no_website_points'];
+            $signals[] = 'No website found (website pitch opportunity)';
+        }
+
+        if ($lead->phone) {
+            $score += $config['phone_points'];
+            $signals[] = 'Business has reachable phone';
+        }
+
+        if (! $lead->email) {
+            $score += $config['no_email_points'];
+            $signals[] = 'No public email found (phone-first outreach)';
+        }
+
+        if (! $lead->website && is_numeric($reviewCount)) {
+            foreach ($config['proven_demand_no_website_points'] as $threshold => $points) {
+                if ((int) $reviewCount >= (int) $threshold) {
+                    $score += $points;
+                    $signals[] = "Strong demand without website ({$reviewCount} reviews)";
+                    break;
+                }
+            }
+        }
+
+        if (is_numeric($reviewCount) && (int) $reviewCount < $config['low_review_count_threshold']) {
+            $score += $config['low_review_count_points'];
+            $signals[] = 'Low review count (reputation pitch opportunity)';
+        }
+
+        if (is_numeric($rating) && (float) $rating < $config['low_rating_threshold']) {
+            $score += $config['low_rating_points'];
+            $signals[] = 'Below-average rating (reputation pitch opportunity)';
+        }
+
+        return ['score' => $score, 'signals' => $signals];
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function googleMapsAuthenticitySignals(Lead $lead, array $config): array
+    {
+        $score = 0;
+        $signals = [];
+        $rating = data_get($lead->metadata, 'rating');
+        $reviewCount = data_get($lead->metadata, 'review_count');
+
+        if (data_get($lead->metadata, 'google_place_id')) {
+            $score += $config['place_id_points'];
+            $signals[] = 'Google place ID present';
+        }
+
+        if (data_get($lead->metadata, 'address')) {
+            $score += $config['address_points'];
+            $signals[] = 'Physical address found';
+        }
+
+        if (is_numeric($rating)) {
+            foreach ($config['rating_points'] as $threshold => $points) {
+                if ((float) $rating >= (float) $threshold) {
+                    $score += $points;
+                    $signals[] = "Verified Google rating: {$rating}";
+                    break;
+                }
+            }
+        }
+
+        if (is_numeric($reviewCount)) {
+            foreach ($config['review_count_points'] as $threshold => $points) {
+                if ((int) $reviewCount >= (int) $threshold) {
+                    $score += $points;
+                    $signals[] = "Review volume: {$reviewCount}";
+                    break;
+                }
+            }
+        }
+
+        return ['score' => $score, 'signals' => $signals];
     }
 }

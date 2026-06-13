@@ -2,6 +2,7 @@
 
 use App\Models\Lead;
 use App\Models\User;
+use App\Services\LeadPitchService;
 use App\Services\LeadScoringService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 
@@ -32,7 +33,7 @@ test('intelligence engine calculates intent opportunity and authenticity scores'
 
     $score = app(LeadScoringService::class)->score($lead);
 
-    expect($score->scoring_version)->toBe('v2')
+    expect($score->scoring_version)->toBe('v5')
         ->and($score->intent_score)->toBeGreaterThan(0)
         ->and($score->opportunity_score)->toBeGreaterThan(0)
         ->and($score->authenticity_score)->toBeGreaterThan(0)
@@ -155,6 +156,68 @@ test('lead show page exposes intelligence breakdown', function () {
             ->has('lead.latest_score.intent_score')
             ->has('lead.latest_score.opportunity_score')
             ->has('lead.latest_score.authenticity_score')
-            ->where('lead.latest_score.scoring_version', 'v2')
+            ->where('lead.latest_score.scoring_version', 'v5')
+            ->has('lead.pitch_recommendations')
         );
+});
+
+test('google maps scoring separates pitch opportunity from business authenticity', function () {
+    $service = app(LeadScoringService::class);
+
+    $weakPresence = Lead::query()->make([
+        'first_name' => 'Dental',
+        'last_name' => 'Clinic',
+        'company' => 'Dental Clinic',
+        'source' => 'google_maps',
+        'phone' => '5551112222',
+        'metadata' => [
+            'google_place_id' => 'abc123',
+            'address' => 'Karachi, Pakistan',
+            'rating' => 3.8,
+            'review_count' => 8,
+        ],
+    ]);
+
+    $strongPresence = Lead::query()->make([
+        'first_name' => 'Dental',
+        'last_name' => 'Clinic',
+        'company' => 'Dental Clinic',
+        'source' => 'google_maps',
+        'phone' => '5551112222',
+        'website' => 'https://dental.example',
+        'metadata' => [
+            'google_place_id' => 'xyz789',
+            'address' => 'Karachi, Pakistan',
+            'rating' => 4.8,
+            'review_count' => 300,
+        ],
+    ]);
+
+    expect($service->calculateOpportunityScore($weakPresence)['score'])
+        ->toBeGreaterThan($service->calculateOpportunityScore($strongPresence)['score'])
+        ->and($service->calculateAuthenticityScore($strongPresence)['score'])
+        ->toBeGreaterThan($service->calculateAuthenticityScore($weakPresence)['score']);
+});
+
+test('pitch service recommends services based on lead gaps', function () {
+    $lead = Lead::query()->make([
+        'first_name' => 'Dental',
+        'last_name' => 'Clinic',
+        'company' => 'Dental Clinic',
+        'source' => 'google_maps',
+        'phone' => '5551112222',
+        'metadata' => [
+            'rating' => 3.7,
+            'review_count' => 9,
+        ],
+    ]);
+
+    $recommendations = app(LeadPitchService::class)->recommendations($lead);
+
+    expect($recommendations)
+        ->not->toBeEmpty()
+        ->and(collect($recommendations)->pluck('service')->all())
+        ->toContain('Website or landing page build')
+        ->toContain('Google reviews and reputation growth')
+        ->toContain('Reputation repair and customer feedback workflow');
 });

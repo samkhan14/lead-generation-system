@@ -58,7 +58,11 @@ class LeadIngestionService
                 'rating' => isset($payload['rating']) ? (float) $payload['rating'] : null,
                 'review_count' => isset($payload['review_count']) ? (int) $payload['review_count'] : null,
                 'scrape_keyword' => $payload['scrape_keyword'] ?? null,
+                'scrape_country' => $payload['scrape_country'] ?? null,
                 'scrape_city' => $payload['scrape_city'] ?? null,
+                'scrape_area' => $payload['scrape_area'] ?? null,
+                'scrape_industry' => $payload['scrape_industry'] ?? null,
+                'scrape_job_uuid' => $payload['scrape_job_uuid'] ?? null,
                 'intent_level' => $this->intentLevelFromRating($payload['rating'] ?? null),
             ], fn ($value) => $value !== null && $value !== ''),
         );

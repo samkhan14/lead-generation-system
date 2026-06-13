@@ -30,7 +30,11 @@ class IngestLeadRequest extends FormRequest
             'google_place_id' => ['nullable', 'string', 'max:255'],
             'source' => ['nullable', 'string', 'max:255'],
             'scrape_keyword' => ['nullable', 'string', 'max:255'],
+            'scrape_country' => ['nullable', 'string', 'max:255'],
             'scrape_city' => ['nullable', 'string', 'max:255'],
+            'scrape_area' => ['nullable', 'string', 'max:255'],
+            'scrape_industry' => ['nullable', 'string', 'max:255'],
+            'scrape_job_uuid' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
         ];

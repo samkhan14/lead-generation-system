@@ -230,8 +230,141 @@ test('scoring engine marks complete leads as hot', function () {
 
     expect($lead->latestScore->score)->toBeGreaterThanOrEqual(70)
         ->and($lead->latestScore->temperature)->toBe('hot')
-        ->and($lead->latestScore->scoring_version)->toBe('v2')
+        ->and($lead->latestScore->scoring_version)->toBe('v5')
         ->and($lead->latestScore->factors)->toHaveKeys(['intent', 'opportunity', 'authenticity', 'final']);
+});
+
+test('leads index supports search and per page filters', function () {
+    $agent = createAgent();
+
+    $matchingLead = createLead([
+        'email' => 'match@example.com',
+        'company' => 'Karachi Dental Studio',
+        'phone' => '5550003333',
+    ]);
+
+    createLead([
+        'email' => 'other@example.com',
+        'company' => 'Other Company',
+        'phone' => '5550004444',
+    ]);
+
+    $this->actingAs($agent)
+        ->get(route('leads.index', ['q' => 'Dental', 'per_page' => 10]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.q', 'Dental')
+            ->where('filters.per_page', 10)
+            ->has('leads.data', 1)
+            ->where('leads.data.0.id', $matchingLead->id)
+            ->has('leads.data.0.pitch_summary')
+            ->has('filterOptions.countries')
+            ->has('filterOptions.pitch_types')
+        );
+});
+
+test('leads index filters by pitch type and source', function () {
+    $agent = createAgent();
+
+    $websitePitchLead = createLead([
+        'email' => 'maps@example.com',
+        'phone' => '5550005555',
+        'source' => 'google_maps',
+        'website' => null,
+        'metadata' => [
+            'rating' => 4.5,
+            'review_count' => 30,
+            'scrape_country' => 'Pakistan',
+            'scrape_city' => 'Karachi',
+            'scrape_area' => 'Clifton',
+            'scrape_keyword' => 'dentist',
+        ],
+    ]);
+
+    createLead([
+        'email' => 'manual@example.com',
+        'phone' => '5550006666',
+        'source' => 'manual',
+        'website' => 'https://has-site.com',
+    ]);
+
+    $this->actingAs($agent)
+        ->get(route('leads.index', [
+            'pitch_type' => 'website_build',
+            'source' => 'google_maps',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.pitch_type', 'website_build')
+            ->where('filters.source', 'google_maps')
+            ->has('leads.data', 1)
+            ->where('leads.data.0.id', $websitePitchLead->id)
+        );
+});
+
+test('leads index filters by city area and country metadata', function () {
+    $agent = createAgent();
+
+    $karachiLead = createLead([
+        'email' => 'karachi@example.com',
+        'phone' => '5550007777',
+        'metadata' => [
+            'scrape_country' => 'Pakistan',
+            'scrape_city' => 'Karachi',
+            'scrape_area' => 'DHA Phase 5',
+        ],
+    ]);
+
+    createLead([
+        'email' => 'lahore@example.com',
+        'phone' => '5550008888',
+        'metadata' => [
+            'scrape_country' => 'Pakistan',
+            'scrape_city' => 'Lahore',
+            'scrape_area' => 'Gulberg',
+        ],
+    ]);
+
+    $this->actingAs($agent)
+        ->get(route('leads.index', [
+            'country' => 'Pakistan',
+            'city' => 'Karachi',
+            'area' => 'DHA',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.id', $karachiLead->id)
+        );
+});
+
+test('leads index supports cold filter and score sorting', function () {
+    $agent = createAgent();
+
+    $coldLead = createLead(['email' => 'cold@example.com']);
+
+    $hotLead = createLead([
+        'email' => 'ceo@hot.com',
+        'phone' => '5550001111',
+        'website' => 'hot.com',
+        'company' => 'Hot Co',
+        'job_title' => 'CEO',
+        'source' => 'api',
+        'notes' => 'Interested in pricing demo urgent',
+    ]);
+
+    expect($coldLead->latestScore->temperature)->toBe('cold')
+        ->and($hotLead->latestScore->temperature)->toBe('hot');
+
+    $this->actingAs($agent)
+        ->get(route('leads.index', ['temperature' => 'cold', 'sort' => 'score_desc']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.temperature', 'cold')
+            ->where('filters.sort', 'score_desc')
+            ->has('leads.data', 1)
+            ->where('leads.data.0.id', $coldLead->id)
+        );
 });
 
 test('scoring engine marks minimal leads below hot threshold', function () {

@@ -23,6 +23,11 @@ const deleteLead = () => {
 };
 
 const intelligence = () => props.lead.latest_score?.factors ?? {};
+const priorityClasses = {
+    high: 'bg-red-50 text-red-700 ring-red-100',
+    medium: 'bg-amber-50 text-amber-700 ring-amber-100',
+    low: 'bg-slate-50 text-slate-700 ring-slate-100',
+};
 </script>
 
 <template>
@@ -50,7 +55,7 @@ const intelligence = () => props.lead.latest_score?.factors ?? {};
                     <div>
                         <h3 class="text-lg font-medium text-slate-900">Lead intelligence</h3>
                         <p class="mt-1 text-sm text-slate-500">
-                            Engine {{ lead.latest_score.scoring_version ?? 'v2' }} — weighted final score
+                            Engine {{ lead.latest_score.scoring_version ?? 'current' }} — weighted final score
                         </p>
                     </div>
                     <div class="text-right">
@@ -137,6 +142,52 @@ const intelligence = () => props.lead.latest_score?.factors ?? {};
                 <div v-if="lead.notes" class="mt-4">
                     <dt class="text-sm text-slate-500">Notes</dt>
                     <dd class="mt-1 whitespace-pre-wrap text-sm text-slate-900">{{ lead.notes }}</dd>
+                </div>
+            </div>
+
+            <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-medium text-slate-900">What to pitch</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Suggested services based on lead gaps, Google profile signals, and available contact details.
+                        </p>
+                    </div>
+                    <span
+                        v-if="lead.latest_score?.temperature"
+                        class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase text-slate-600"
+                    >
+                        {{ lead.latest_score.temperature }} lead
+                    </span>
+                </div>
+
+                <div v-if="lead.pitch_recommendations?.length" class="mt-5 grid gap-4">
+                    <div
+                        v-for="recommendation in lead.pitch_recommendations"
+                        :key="recommendation.service"
+                        class="rounded-lg border border-slate-200 p-4"
+                    >
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h4 class="font-medium text-slate-900">{{ recommendation.service }}</h4>
+                            <span
+                                class="rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1"
+                                :class="priorityClasses[recommendation.priority] ?? priorityClasses.low"
+                            >
+                                {{ recommendation.priority }} priority
+                            </span>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-600">{{ recommendation.reason }}</p>
+                        <div class="mt-3 rounded-lg bg-slate-50 p-3">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Suggested opener
+                            </div>
+                            <p class="mt-1 text-sm text-slate-700">{{ recommendation.opener }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="mt-5 rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
+                    No pitch recommendation available yet. Add contact, website, or Google profile data to improve suggestions.
                 </div>
             </div>
 
