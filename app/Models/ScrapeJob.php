@@ -14,6 +14,10 @@ class ScrapeJob extends Model
     use HasFactory;
     protected $fillable = [
         'uuid',
+        'source_channel',
+        'is_watch',
+        'watch_interval_hours',
+        'last_dispatched_at',
         'keyword',
         'industry',
         'country',
@@ -34,6 +38,9 @@ class ScrapeJob extends Model
 
     protected $casts = [
         'status' => ScrapeJobStatus::class,
+        'is_watch' => 'boolean',
+        'watch_interval_hours' => 'integer',
+        'last_dispatched_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
         'max_results' => 'integer',
@@ -63,6 +70,26 @@ class ScrapeJob extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(ScrapeRunLog::class);
+    }
+
+    public function scopeWatches($query)
+    {
+        return $query->where('is_watch', true);
+    }
+
+    public function isWatchDue(): bool
+    {
+        if (! $this->is_watch) {
+            return false;
+        }
+
+        if ($this->last_dispatched_at === null) {
+            return true;
+        }
+
+        $interval = $this->watch_interval_hours ?: (int) config('reddit.watch_interval_hours', 12);
+
+        return $this->last_dispatched_at->lte(now()->subHours($interval));
     }
 
     public function durationSeconds(): ?int

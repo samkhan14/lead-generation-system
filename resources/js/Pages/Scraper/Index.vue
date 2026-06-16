@@ -3,17 +3,20 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import ScraperNotification from '@/Components/Admin/ScraperNotification.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useForm, router, Link } from '@inertiajs/vue3';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 
 const props = defineProps({
     jobs: { type: Object, default: () => ({ data: [], links: [] }) },
     countries: { type: Array, default: () => [] },
+    channels: { type: Array, default: () => [] },
+    default_channel: { type: String, default: 'google_maps' },
 });
 
 const { can } = useAuth();
 
 const form = useForm({
+    source_channel: props.default_channel,
     keyword: '',
     industry: '',
     country: '',
@@ -22,8 +25,15 @@ const form = useForm({
     max_results: 20,
 });
 
+const activeChannel = computed(
+    () => props.channels.find((c) => c.value === form.source_channel) ?? props.channels[0] ?? {},
+);
+
+const channelLabel = (value) =>
+    props.channels.find((c) => c.value === value)?.label ?? value;
+
 const submit = () => {
-    form.post(route('scraper.store'));
+    form.post(route('scraper.store'), { preserveScroll: true });
 };
 
 // Notification for any recently completed running job
@@ -94,12 +104,31 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">
-                                Keyword <span class="text-red-500">*</span>
+                                Lead Source <span class="text-red-500">*</span>
+                            </label>
+                            <select
+                                v-model="form.source_channel"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                                <option
+                                    v-for="channel in channels"
+                                    :key="channel.value"
+                                    :value="channel.value"
+                                >
+                                    {{ channel.label }}
+                                </option>
+                            </select>
+                            <p v-if="form.errors.source_channel" class="mt-1 text-xs text-red-600">{{ form.errors.source_channel }}</p>
+                        </div>
+
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700">
+                                {{ activeChannel.keyword_label ?? 'Keyword' }} <span class="text-red-500">*</span>
                             </label>
                             <input
                                 v-model="form.keyword"
                                 type="text"
-                                placeholder="e.g. dentist, restaurant"
+                                :placeholder="activeChannel.keyword_placeholder ?? 'e.g. dentist, restaurant'"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 required
                             />
@@ -108,24 +137,31 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">
-                                Industry <span class="text-slate-400 text-xs font-normal">(optional)</span>
+                                <template v-if="form.source_channel === 'reddit'">Subreddits</template>
+                                <template v-else>Industry</template>
+                                <span class="text-slate-400 text-xs font-normal">(optional)</span>
                             </label>
                             <input
                                 v-model="form.industry"
                                 type="text"
-                                placeholder="e.g. healthcare, F&B"
+                                :placeholder="form.source_channel === 'reddit' ? 'e.g. smallbusiness, entrepreneur' : 'e.g. healthcare, F&B'"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
+                            <p v-if="form.source_channel === 'reddit'" class="mt-1 text-xs text-slate-400">
+                                Leave empty to use default subreddit packs.
+                            </p>
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">
-                                Country <span class="text-red-500">*</span>
+                                Country
+                                <span v-if="activeChannel.requires_location" class="text-red-500">*</span>
+                                <span v-else class="text-slate-400 text-xs font-normal">(optional)</span>
                             </label>
                             <select
                                 v-model="form.country"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                required
+                                :required="activeChannel.requires_location"
                             >
                                 <option value="" disabled>Select country</option>
                                 <option
@@ -191,7 +227,8 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                             {{ form.processing ? 'Starting...' : 'Start Scrape' }}
                         </button>
                         <p class="text-xs text-slate-400">
-                            Playwright (primary) · Google Places API (fallback)
+                            Source: {{ activeChannel.label ?? form.source_channel }}
+                            <span v-if="form.source_channel === 'reddit'"> · realtime posts only</span>
                         </p>
                     </div>
                 </form>
@@ -211,6 +248,7 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                     <table class="min-w-full divide-y divide-slate-100">
                         <thead class="bg-slate-50 text-xs font-medium text-slate-500 uppercase tracking-wider">
                             <tr>
+                                <th class="px-6 py-3 text-left">Source</th>
                                 <th class="px-6 py-3 text-left">Search</th>
                                 <th class="px-6 py-3 text-left">Status</th>
                                 <th class="px-6 py-3 text-center">Found</th>
@@ -228,6 +266,16 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                                 :key="job.uuid"
                                 class="hover:bg-slate-50 transition-colors"
                             >
+                                <td class="px-6 py-3">
+                                    <span
+                                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                                        :class="job.source_channel === 'reddit'
+                                            ? 'bg-orange-100 text-orange-700'
+                                            : 'bg-indigo-100 text-indigo-700'"
+                                    >
+                                        {{ channelLabel(job.source_channel) }}
+                                    </span>
+                                </td>
                                 <td class="px-6 py-3">
                                     <div class="text-sm font-medium text-slate-800">{{ job.keyword }}</div>
                                     <div class="text-xs text-slate-400">

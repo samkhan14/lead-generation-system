@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class IngestLeadRequest extends FormRequest
 {
@@ -16,10 +17,14 @@ class IngestLeadRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Reddit leads are people/intent posts — they have no business name or
+        // company, so identity comes from first_name (username) + reddit_post_id.
+        $isReddit = $this->input('source') === 'reddit';
+
         return [
-            'business_name' => ['nullable', 'string', 'max:255', 'required_without:company'],
-            'company' => ['nullable', 'string', 'max:255', 'required_without:business_name'],
-            'first_name' => ['nullable', 'string', 'max:255'],
+            'business_name' => ['nullable', 'string', 'max:255', Rule::requiredIf(! $isReddit && blank($this->input('company')))],
+            'company' => ['nullable', 'string', 'max:255', Rule::requiredIf(! $isReddit && blank($this->input('business_name')))],
+            'first_name' => ['nullable', 'string', 'max:255', Rule::requiredIf($isReddit)],
             'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],

@@ -157,6 +157,12 @@ class LeadScoringService
             $signals = array_merge($signals, $googleSignals['signals']);
         }
 
+        if ($this->isRedditLead($lead)) {
+            $redditSignals = $this->redditOpportunitySignals($lead, $config['reddit']);
+            $score += $redditSignals['score'];
+            $signals = array_merge($signals, $redditSignals['signals']);
+        }
+
         return [
             'score' => $this->clampScore($score),
             'signals' => $signals,
@@ -217,6 +223,12 @@ class LeadScoringService
             $signals = array_merge($signals, $googleSignals['signals']);
         }
 
+        if ($this->isRedditLead($lead)) {
+            $redditSignals = $this->redditAuthenticitySignals($lead, $config['reddit']);
+            $score += $redditSignals['score'];
+            $signals = array_merge($signals, $redditSignals['signals']);
+        }
+
         return [
             'score' => $this->clampScore($score),
             'signals' => $signals,
@@ -274,6 +286,66 @@ class LeadScoringService
     private function isGoogleMapsLead(Lead $lead): bool
     {
         return strtolower((string) $lead->source) === 'google_maps';
+    }
+
+    private function isRedditLead(Lead $lead): bool
+    {
+        return strtolower((string) $lead->source) === 'reddit';
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function redditOpportunitySignals(Lead $lead, array $config): array
+    {
+        $score = 0;
+        $signals = [];
+
+        $leadKind = (string) data_get($lead->metadata, 'lead_kind');
+        if ($leadKind !== '' && isset($config['lead_kind_points'][$leadKind])) {
+            $score += $config['lead_kind_points'][$leadKind];
+            $signals[] = "Reddit intent: {$leadKind}";
+        }
+
+        if ($lead->website) {
+            $score += $config['website_audit_points'];
+            $signals[] = 'Shared a website (audit/improvement pitch)';
+        } else {
+            $score += $config['no_website_points'];
+            $signals[] = 'No website shared (website build opportunity)';
+        }
+
+        $comments = data_get($lead->metadata, 'comment_count');
+        if (is_numeric($comments) && (int) $comments >= $config['engagement_comment_threshold']) {
+            $score += $config['engagement_points'];
+            $signals[] = 'Active discussion (engaged thread)';
+        }
+
+        return ['score' => $score, 'signals' => $signals];
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function redditAuthenticitySignals(Lead $lead, array $config): array
+    {
+        $score = 0;
+        $signals = [];
+
+        if (data_get($lead->metadata, 'author')) {
+            $score += $config['author_points'];
+            $signals[] = 'Identifiable Reddit author';
+        }
+
+        $upvotes = data_get($lead->metadata, 'upvotes');
+        if (is_numeric($upvotes) && (int) $upvotes >= $config['upvote_threshold']) {
+            $score += $config['engagement_points'];
+            $signals[] = 'Post has community traction';
+        }
+
+        return ['score' => $score, 'signals' => $signals];
     }
 
     /**

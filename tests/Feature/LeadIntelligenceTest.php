@@ -33,7 +33,7 @@ test('intelligence engine calculates intent opportunity and authenticity scores'
 
     $score = app(LeadScoringService::class)->score($lead);
 
-    expect($score->scoring_version)->toBe('v5')
+    expect($score->scoring_version)->toBe('v6')
         ->and($score->intent_score)->toBeGreaterThan(0)
         ->and($score->opportunity_score)->toBeGreaterThan(0)
         ->and($score->authenticity_score)->toBeGreaterThan(0)
@@ -156,7 +156,7 @@ test('lead show page exposes intelligence breakdown', function () {
             ->has('lead.latest_score.intent_score')
             ->has('lead.latest_score.opportunity_score')
             ->has('lead.latest_score.authenticity_score')
-            ->where('lead.latest_score.scoring_version', 'v5')
+            ->where('lead.latest_score.scoring_version', 'v6')
             ->has('lead.pitch_recommendations')
         );
 });

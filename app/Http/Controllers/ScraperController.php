@@ -30,6 +30,16 @@ class ScraperController extends Controller
         return Inertia::render('Scraper/Index', [
             'jobs' => $jobs,
             'countries' => config('countries.list'),
+            'channels' => collect(config('scraper.channels'))
+                ->map(fn (array $channel, string $key) => [
+                    'value' => $key,
+                    'label' => $channel['label'],
+                    'keyword_label' => $channel['keyword_label'],
+                    'keyword_placeholder' => $channel['keyword_placeholder'],
+                    'requires_location' => $channel['requires_location'],
+                ])
+                ->values(),
+            'default_channel' => config('scraper.default_channel'),
         ]);
     }
 
@@ -37,6 +47,7 @@ class ScraperController extends Controller
     {
         $job = ScrapeJob::query()->create([
             ...$request->validated(),
+            'source_channel' => $request->input('source_channel', config('scraper.default_channel')),
             'max_results' => $request->integer('max_results', 20),
             'created_by' => $request->user()->id,
         ]);
@@ -60,6 +71,8 @@ class ScraperController extends Controller
         return Inertia::render('Scraper/Show', [
             'job' => [
                 'uuid' => $scrapeJob->uuid,
+                'source_channel' => $scrapeJob->source_channel,
+                'source_label' => config("scraper.channels.{$scrapeJob->source_channel}.label", $scrapeJob->source_channel),
                 'keyword' => $scrapeJob->keyword,
                 'industry' => $scrapeJob->industry,
                 'country' => $scrapeJob->country,

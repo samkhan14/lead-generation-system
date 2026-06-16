@@ -23,6 +23,9 @@ class LeadQueryFilters
         $query = static::applyKeyword($query, $filters['keyword'] ?? null);
         $query = static::applyHasWebsite($query, $filters['has_website'] ?? null);
         $query = static::applyPitchType($query, $filters['pitch_type'] ?? null);
+        $query = static::applySubreddit($query, $filters['subreddit'] ?? null);
+        $query = static::applyLeadKind($query, $filters['lead_kind'] ?? null);
+        $query = static::applyPostedWithin($query, $filters['posted_within'] ?? null);
         $query = static::applySort($query, $filters['sort'] ?? 'created_desc');
 
         return $query;
@@ -64,11 +67,44 @@ class LeadQueryFilters
 
     public static function applySource(Builder $query, ?string $source): Builder
     {
-        if (! in_array($source, ['google_maps', 'manual', 'api', 'import', 'scraper'], true)) {
+        if (! in_array($source, ['google_maps', 'reddit', 'manual', 'api', 'import', 'scraper'], true)) {
             return $query;
         }
 
         return $query->where('source', $source);
+    }
+
+    public static function applySubreddit(Builder $query, ?string $subreddit): Builder
+    {
+        $subreddit = ltrim(trim((string) $subreddit), 'r/');
+
+        if ($subreddit === '') {
+            return $query;
+        }
+
+        return $query->where('metadata->subreddit', $subreddit);
+    }
+
+    public static function applyLeadKind(Builder $query, ?string $leadKind): Builder
+    {
+        if (! array_key_exists((string) $leadKind, config('reddit.lead_kinds', []))) {
+            return $query;
+        }
+
+        return $query->where('metadata->lead_kind', $leadKind);
+    }
+
+    public static function applyPostedWithin(Builder $query, int|string|null $days): Builder
+    {
+        $days = (int) $days;
+
+        if (! in_array($days, [1, 7, 30], true)) {
+            return $query;
+        }
+
+        $cutoff = now()->subDays($days)->toIso8601String();
+
+        return $query->where('metadata->posted_at', '>=', $cutoff);
     }
 
     public static function applyCountry(Builder $query, ?string $country): Builder
@@ -166,6 +202,7 @@ class LeadQueryFilters
                 ->where(function (Builder $query): void {
                     $query->whereNull('email')->orWhere('email', '=', '');
                 }),
+            'reddit_outreach' => $query->where('source', 'reddit'),
             default => $query,
         };
     }

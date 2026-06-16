@@ -23,6 +23,9 @@ const props = defineProps({
             areas: [],
             keywords: [],
             sources: [],
+            subreddits: [],
+            lead_kinds: [],
+            posted_within: [],
             pitch_types: [],
             sorts: [],
         }),
@@ -40,6 +43,9 @@ const local = ref({
     source: props.filters.source ?? '',
     pitch_type: props.filters.pitch_type ?? '',
     has_website: props.filters.has_website ?? '',
+    subreddit: props.filters.subreddit ?? '',
+    lead_kind: props.filters.lead_kind ?? '',
+    posted_within: props.filters.posted_within ?? '',
     sort: props.filters.sort ?? 'created_desc',
     per_page: props.filters.per_page ?? 15,
     temperature: props.filters.temperature ?? null,
@@ -55,10 +61,17 @@ const hasActiveFilters = computed(() => {
         || local.value.source
         || local.value.pitch_type
         || local.value.has_website
+        || local.value.subreddit
+        || local.value.lead_kind
+        || local.value.posted_within
         || local.value.temperature
         || local.value.sort !== 'created_desc',
     );
 });
+
+const showRedditFilters = computed(
+    () => !local.value.source || local.value.source === 'reddit',
+);
 
 const buildParams = (overrides = {}) => {
     const params = {
@@ -70,6 +83,9 @@ const buildParams = (overrides = {}) => {
         source: local.value.source || undefined,
         pitch_type: local.value.pitch_type || undefined,
         has_website: local.value.has_website || undefined,
+        subreddit: local.value.subreddit || undefined,
+        lead_kind: local.value.lead_kind || undefined,
+        posted_within: local.value.posted_within || undefined,
         sort: local.value.sort !== 'created_desc' ? local.value.sort : undefined,
         per_page: local.value.per_page,
         temperature: local.value.temperature || undefined,
@@ -107,6 +123,9 @@ const clearFilters = () => {
         source: '',
         pitch_type: '',
         has_website: '',
+        subreddit: '',
+        lead_kind: '',
+        posted_within: '',
         sort: 'created_desc',
         per_page: local.value.per_page,
         temperature: null,
@@ -287,6 +306,50 @@ const locationLabel = (lead) => {
                             <option value="no">No website</option>
                         </select>
                     </div>
+
+                    <template v-if="showRedditFilters">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Subreddit</label>
+                            <select
+                                v-model="local.subreddit"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                @change="onSelectChange"
+                            >
+                                <option value="">All subreddits</option>
+                                <option v-for="subreddit in filterOptions.subreddits" :key="subreddit" :value="subreddit">
+                                    r/{{ subreddit }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Reddit intent</label>
+                            <select
+                                v-model="local.lead_kind"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                @change="onSelectChange"
+                            >
+                                <option value="">All intents</option>
+                                <option v-for="kind in filterOptions.lead_kinds" :key="kind.value" :value="kind.value">
+                                    {{ kind.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Posted</label>
+                            <select
+                                v-model="local.posted_within"
+                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                @change="onSelectChange"
+                            >
+                                <option value="">Any time</option>
+                                <option v-for="window in filterOptions.posted_within" :key="window.value" :value="window.value">
+                                    {{ window.label }}
+                                </option>
+                            </select>
+                        </div>
+                    </template>
 
                     <div>
                         <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Sort</label>

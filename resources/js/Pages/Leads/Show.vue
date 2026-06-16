@@ -6,6 +6,7 @@ import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     lead: {
@@ -28,6 +29,28 @@ const priorityClasses = {
     medium: 'bg-amber-50 text-amber-700 ring-amber-100',
     low: 'bg-slate-50 text-slate-700 ring-slate-100',
 };
+
+const isReddit = computed(() => props.lead.source === 'reddit');
+const reddit = computed(() => props.lead.metadata ?? {});
+
+const leadKindLabels = {
+    service_request: 'Service request',
+    problem_post: 'Problem post',
+    feedback_request: 'Feedback request',
+    local_recommendation: 'Local recommendation',
+};
+
+const leadKindLabel = computed(
+    () => leadKindLabels[reddit.value.lead_kind] ?? reddit.value.lead_kind ?? '—',
+);
+
+const postedAt = computed(() => {
+    if (!reddit.value.posted_at) {
+        return null;
+    }
+
+    return new Date(reddit.value.posted_at).toLocaleString();
+});
 </script>
 
 <template>
@@ -89,6 +112,78 @@ const priorityClasses = {
                     Final = (Intent × {{ intelligence().final.weights.intent }})
                     + (Opportunity × {{ intelligence().final.weights.opportunity }})
                     + (Authenticity × {{ intelligence().final.weights.authenticity }})
+                </div>
+            </div>
+
+            <div v-if="isReddit" class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-medium text-slate-900">Reddit context</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Active intent post — reply helpfully in-thread first, then follow up.
+                        </p>
+                    </div>
+                    <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-medium capitalize text-orange-700 ring-1 ring-orange-100">
+                        {{ leadKindLabel }}
+                    </span>
+                </div>
+
+                <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-if="reddit.subreddit">
+                        <dt class="text-sm text-slate-500">Subreddit</dt>
+                        <dd class="text-sm text-slate-900">
+                            <a
+                                :href="`https://www.reddit.com/r/${reddit.subreddit}`"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-indigo-600 hover:text-indigo-800"
+                            >
+                                r/{{ reddit.subreddit }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div v-if="reddit.author">
+                        <dt class="text-sm text-slate-500">Author</dt>
+                        <dd class="text-sm text-slate-900">u/{{ reddit.author }}</dd>
+                    </div>
+                    <div v-if="postedAt">
+                        <dt class="text-sm text-slate-500">Posted</dt>
+                        <dd class="text-sm text-slate-900">{{ postedAt }}</dd>
+                    </div>
+                    <div v-if="reddit.upvotes !== undefined || reddit.comment_count !== undefined">
+                        <dt class="text-sm text-slate-500">Engagement</dt>
+                        <dd class="text-sm text-slate-900">
+                            {{ reddit.upvotes ?? 0 }} upvotes · {{ reddit.comment_count ?? 0 }} comments
+                        </dd>
+                    </div>
+                    <div v-if="reddit.intent_keywords_matched?.length" class="sm:col-span-2">
+                        <dt class="text-sm text-slate-500">Intent signals</dt>
+                        <dd class="mt-1 flex flex-wrap gap-1.5">
+                            <span
+                                v-for="keyword in reddit.intent_keywords_matched"
+                                :key="keyword"
+                                class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700"
+                            >
+                                {{ keyword }}
+                            </span>
+                        </dd>
+                    </div>
+                </dl>
+
+                <div v-if="reddit.post_title" class="mt-4 rounded-lg bg-slate-50 p-3">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Original post</div>
+                    <p class="mt-1 text-sm font-medium text-slate-800">{{ reddit.post_title }}</p>
+                </div>
+
+                <div v-if="reddit.post_url" class="mt-4">
+                    <a
+                        :href="reddit.post_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700"
+                    >
+                        View original post on Reddit
+                    </a>
                 </div>
             </div>
 

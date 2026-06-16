@@ -2,7 +2,7 @@
 
 return [
 
-    'version' => 'v5',
+    'version' => 'v6',
 
     'weights' => [
         'intent' => 0.25,
@@ -35,6 +35,7 @@ return [
         'source' => [
             'api' => 15,
             'google_maps' => 4,
+            'reddit' => 12,
             'scraper' => 10,
             'import' => 8,
             'manual' => 5,
@@ -68,6 +69,18 @@ return [
             'low_rating_points' => 18,
             'low_rating_threshold' => 4.0,
         ],
+        'reddit' => [
+            'lead_kind_points' => [
+                'service_request' => 35,
+                'problem_post' => 28,
+                'feedback_request' => 28,
+                'local_recommendation' => 24,
+            ],
+            'no_website_points' => 18,
+            'website_audit_points' => 8,
+            'engagement_points' => 6,
+            'engagement_comment_threshold' => 3,
+        ],
     ],
 
     'authenticity' => [
@@ -77,7 +90,7 @@ return [
         'website_points' => 20,
         'name_points' => 15,
         'trusted_source_points' => 15,
-        'trusted_sources' => ['manual', 'api', 'google_maps'],
+        'trusted_sources' => ['manual', 'api', 'google_maps', 'reddit'],
         'google_maps' => [
             'place_id_points' => 12,
             'address_points' => 10,
@@ -93,6 +106,11 @@ return [
                 50 => 9,
                 10 => 5,
             ],
+        ],
+        'reddit' => [
+            'author_points' => 10,
+            'engagement_points' => 8,
+            'upvote_threshold' => 3,
         ],
         'free_email_domains' => [
             'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com', 'proton.me', 'protonmail.com',

@@ -18,4 +18,29 @@ return [
     | The actual scraping runs asynchronously and reports back via callbacks.
     */
     'dispatch_timeout' => (int) env('SRP_DISPATCH_TIMEOUT', 10),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Lead Source Channels
+    |--------------------------------------------------------------------------
+    | Each connector is an independent source. Jobs are isolated per channel so
+    | multiple connectors (e.g. Google Maps and Reddit) can run concurrently
+    | without conflicting. Add new connectors here as they come online.
+    */
+    'default_channel' => 'google_maps',
+
+    'channels' => [
+        'google_maps' => [
+            'label' => 'Google Maps',
+            'keyword_label' => 'Keyword',
+            'keyword_placeholder' => 'e.g. dentist, restaurant',
+            'requires_location' => true,
+        ],
+        'reddit' => [
+            'label' => 'Reddit',
+            'keyword_label' => 'Intent keyword',
+            'keyword_placeholder' => 'e.g. need a website, looking for developer',
+            'requires_location' => false,
+        ],
+    ],
 ];

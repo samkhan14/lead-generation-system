@@ -36,6 +36,9 @@ class LeadController extends Controller
             'source' => $request->query('source'),
             'pitch_type' => $request->query('pitch_type'),
             'has_website' => $request->query('has_website'),
+            'subreddit' => trim((string) $request->query('subreddit', '')),
+            'lead_kind' => $request->query('lead_kind'),
+            'posted_within' => $request->query('posted_within'),
             'sort' => $request->query('sort', 'created_desc'),
             'per_page' => (int) $request->query('per_page', 15),
         ];
@@ -78,10 +81,25 @@ class LeadController extends Controller
                 'keywords' => LeadQueryFilters::distinctMetadataValues('scrape_keyword'),
                 'sources' => [
                     ['value' => 'google_maps', 'label' => 'Google Maps'],
+                    ['value' => 'reddit', 'label' => 'Reddit'],
                     ['value' => 'manual', 'label' => 'Manual'],
                     ['value' => 'api', 'label' => 'API'],
                     ['value' => 'import', 'label' => 'Import'],
                     ['value' => 'scraper', 'label' => 'Scraper'],
+                ],
+                'subreddits' => LeadQueryFilters::distinctMetadataValues('subreddit'),
+                'lead_kinds' => collect(config('reddit.lead_kinds', []))
+                    ->keys()
+                    ->map(fn (string $kind) => [
+                        'value' => $kind,
+                        'label' => ucwords(str_replace('_', ' ', $kind)),
+                    ])
+                    ->values()
+                    ->all(),
+                'posted_within' => [
+                    ['value' => 1, 'label' => 'Posted today'],
+                    ['value' => 7, 'label' => 'Posted this week'],
+                    ['value' => 30, 'label' => 'Posted this month'],
                 ],
                 'pitch_types' => LeadPitchService::pitchTypeOptions(),
                 'sorts' => [

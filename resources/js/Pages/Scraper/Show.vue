@@ -160,6 +160,10 @@ const formatDuration = (secs) => {
                 <h3 class="mb-4 text-sm font-semibold text-slate-700 uppercase tracking-wide">Job Configuration</h3>
                 <dl class="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 text-sm">
                     <div>
+                        <dt class="text-slate-400">Source</dt>
+                        <dd class="font-medium text-slate-800">{{ job.source_label ?? job.source_channel }}</dd>
+                    </div>
+                    <div>
                         <dt class="text-slate-400">Keyword</dt>
                         <dd class="font-medium text-slate-800">{{ job.keyword }}</dd>
                     </div>

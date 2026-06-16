@@ -230,7 +230,7 @@ test('scoring engine marks complete leads as hot', function () {
 
     expect($lead->latestScore->score)->toBeGreaterThanOrEqual(70)
         ->and($lead->latestScore->temperature)->toBe('hot')
-        ->and($lead->latestScore->scoring_version)->toBe('v5')
+        ->and($lead->latestScore->scoring_version)->toBe('v6')
         ->and($lead->latestScore->factors)->toHaveKeys(['intent', 'opportunity', 'authenticity', 'final']);
 });
 
@@ -299,6 +299,32 @@ test('leads index filters by pitch type and source', function () {
             ->where('filters.source', 'google_maps')
             ->has('leads.data', 1)
             ->where('leads.data.0.id', $websitePitchLead->id)
+        );
+});
+
+test('leads index filters by reddit_outreach pitch type returns only reddit leads', function () {
+    $agent = createAgent();
+
+    $redditLead = createLead([
+        'email' => null,
+        'first_name' => 'u/poster',
+        'last_name' => '(Reddit)',
+        'source' => 'reddit',
+        'metadata' => ['reddit_post_id' => 'pitch_filter_test', 'lead_kind' => 'service_request'],
+    ]);
+
+    createLead([
+        'email' => 'maps@pitchfilter.com',
+        'source' => 'google_maps',
+        'website' => null,
+    ]);
+
+    $this->actingAs($agent)
+        ->get(route('leads.index', ['pitch_type' => 'reddit_outreach']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.id', $redditLead->id)
         );
 });
 

@@ -64,6 +64,7 @@ class LeadPitchService
             'reputation_repair' => is_numeric($rating) && (float) $rating < $ratingThreshold,
             'gbp_optimization' => $lead->source === 'google_maps',
             'phone_outreach' => filled($lead->phone) && blank($lead->email),
+            'reddit_outreach' => $lead->source === 'reddit',
             default => false,
         };
     }

@@ -102,6 +102,18 @@ class LeadIngestionService
             }
         }
 
+        $redditPostId = data_get($normalized, 'metadata.reddit_post_id');
+
+        if ($redditPostId) {
+            $existing = Lead::query()
+                ->where('metadata->reddit_post_id', $redditPostId)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
         return Lead::findDuplicate(
             $normalized['email'] ?? null,
             $normalized['phone'] ?? null,

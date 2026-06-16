@@ -50,6 +50,13 @@ return [
             'reason' => 'A phone number is available but no public email was found, so outreach should start by call.',
             'opener' => 'I found your phone contact but not a public email. We can help set up a simple inquiry flow so calls and leads are easier to track.',
         ],
+        'reddit_outreach' => [
+            'label' => 'Reddit reply outreach',
+            'service' => 'Helpful Reddit reply, then direct follow-up',
+            'priority' => 'high',
+            'reason' => 'This lead is an active Reddit post showing real intent — a genuine, helpful public reply converts far better than a cold pitch.',
+            'opener' => 'Reply in-thread with a specific, useful answer to their question first (no hard sell), then offer to share a quick example or DM the details.',
+        ],
     ],
 
     'reviews_growth_threshold' => 20,
