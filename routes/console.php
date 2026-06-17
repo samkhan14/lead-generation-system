@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 // Re-dispatch due scrape watch templates. The command checks each watch's own
 // interval, so running hourly is safe and cheap.
 Schedule::command('scrape:watch')->hourly()->withoutOverlapping();
+Schedule::command('scrape:fail-stale')->everyFifteenMinutes()->withoutOverlapping();

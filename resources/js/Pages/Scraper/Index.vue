@@ -10,6 +10,10 @@ const props = defineProps({
     jobs: { type: Object, default: () => ({ data: [], links: [] }) },
     countries: { type: Array, default: () => [] },
     channels: { type: Array, default: () => [] },
+    channel_groups: {
+        type: Object,
+        default: () => ({ warm: [], hot: [] }),
+    },
     default_channel: { type: String, default: 'google_maps' },
 });
 
@@ -36,25 +40,39 @@ const submit = () => {
     form.post(route('scraper.store'), { preserveScroll: true });
 };
 
-// Notification for any recently completed running job
+// Notification only for jobs we saw enter "running" on this page
 const notifyJob = ref(null);
+const watchedRunning = ref(new Set());
 let pollInterval = null;
 
 const runningJobs = () => (props.jobs?.data ?? []).filter(j => j.status === 'running');
 
+const trackRunningJobs = () => {
+    for (const job of runningJobs()) {
+        watchedRunning.value.add(job.uuid);
+    }
+};
+
 const startPolling = () => {
     if (pollInterval) return;
     pollInterval = setInterval(() => {
-        if (runningJobs().length === 0) {
+        if (watchedRunning.value.size === 0 && runningJobs().length === 0) {
             stopPolling();
             return;
         }
         router.reload({ only: ['jobs'], onSuccess: () => {
-            const done = (props.jobs?.data ?? []).find(
-                j => j.status === 'completed' || j.status === 'failed'
-            );
-            if (done && notifyJob.value?.uuid !== done.uuid) {
-                notifyJob.value = done;
+            for (const job of props.jobs?.data ?? []) {
+                if (
+                    watchedRunning.value.has(job.uuid)
+                    && (job.status === 'completed' || job.status === 'failed')
+                ) {
+                    notifyJob.value = job;
+                    watchedRunning.value.delete(job.uuid);
+                }
+            }
+            trackRunningJobs();
+            if (watchedRunning.value.size === 0 && runningJobs().length === 0) {
+                stopPolling();
             }
         }});
     }, 3000);
@@ -68,15 +86,21 @@ const stopPolling = () => {
 };
 
 onMounted(() => {
-    if (runningJobs().length > 0) startPolling();
+    trackRunningJobs();
+    if (watchedRunning.value.size > 0 || runningJobs().length > 0) startPolling();
 });
 
 onUnmounted(stopPolling);
 
 watch(() => props.jobs, () => {
-    if (runningJobs().length > 0) startPolling();
+    trackRunningJobs();
+    if (watchedRunning.value.size > 0 || runningJobs().length > 0) startPolling();
     else stopPolling();
 }, { deep: true });
+
+const tierBadgeClass = (tier) => tier === 'hot'
+    ? 'bg-orange-100 text-orange-700'
+    : 'bg-indigo-100 text-indigo-700';
 
 const statusClasses = {
     pending: 'bg-slate-100 text-slate-600',
@@ -110,13 +134,24 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                                 v-model="form.source_channel"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
-                                <option
-                                    v-for="channel in channels"
-                                    :key="channel.value"
-                                    :value="channel.value"
-                                >
-                                    {{ channel.label }}
-                                </option>
+                                <optgroup v-if="channel_groups.warm?.length" label="Warm leads (directories)">
+                                    <option
+                                        v-for="channel in channel_groups.warm"
+                                        :key="channel.value"
+                                        :value="channel.value"
+                                    >
+                                        {{ channel.label }}
+                                    </option>
+                                </optgroup>
+                                <optgroup v-if="channel_groups.hot?.length" label="Hot leads (intent / social)">
+                                    <option
+                                        v-for="channel in channel_groups.hot"
+                                        :key="channel.value"
+                                        :value="channel.value"
+                                    >
+                                        {{ channel.label }}
+                                    </option>
+                                </optgroup>
                             </select>
                             <p v-if="form.errors.source_channel" class="mt-1 text-xs text-red-600">{{ form.errors.source_channel }}</p>
                         </div>
@@ -137,18 +172,23 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">
-                                <template v-if="form.source_channel === 'reddit'">Subreddits</template>
-                                <template v-else>Industry</template>
+                                {{ activeChannel.industry_label ?? 'Industry' }}
                                 <span class="text-slate-400 text-xs font-normal">(optional)</span>
                             </label>
                             <input
                                 v-model="form.industry"
                                 type="text"
-                                :placeholder="form.source_channel === 'reddit' ? 'e.g. smallbusiness, entrepreneur' : 'e.g. healthcare, F&B'"
+                                :placeholder="activeChannel.industry_placeholder ?? 'e.g. healthcare, F&B'"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                             <p v-if="form.source_channel === 'reddit'" class="mt-1 text-xs text-slate-400">
                                 Leave empty to use default subreddit packs.
+                            </p>
+                            <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'yelp'" class="mt-1 text-xs text-amber-600">
+                                Yelp blocks browser scraping — set YELP_API_KEY on the SRP service.
+                            </p>
+                            <p v-else-if="activeChannel.tier === 'warm'" class="mt-1 text-xs text-slate-400">
+                                Narrow results by vertical (optional).
                             </p>
                         </div>
 
@@ -228,7 +268,8 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                         </button>
                         <p class="text-xs text-slate-400">
                             Source: {{ activeChannel.label ?? form.source_channel }}
-                            <span v-if="form.source_channel === 'reddit'"> · realtime posts only</span>
+                            <span v-if="activeChannel.tier === 'warm'"> · directory listing</span>
+                            <span v-else-if="activeChannel.tier === 'hot'"> · intent / social</span>
                         </p>
                     </div>
                 </form>
@@ -269,9 +310,7 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                                 <td class="px-6 py-3">
                                     <span
                                         class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                        :class="job.source_channel === 'reddit'
-                                            ? 'bg-orange-100 text-orange-700'
-                                            : 'bg-indigo-100 text-indigo-700'"
+                                        :class="tierBadgeClass(channels.find(c => c.value === job.source_channel)?.tier ?? 'warm')"
                                     >
                                         {{ channelLabel(job.source_channel) }}
                                     </span>

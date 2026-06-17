@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ScraperChannels;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,14 +15,17 @@ class StoreScrapeJobRequest extends FormRequest
 
     public function rules(): array
     {
-        $isReddit = $this->input('source_channel', config('scraper.default_channel')) === 'reddit';
+        $channel = $this->input('source_channel', config('scraper.default_channel'));
 
         return [
-            'source_channel' => ['nullable', Rule::in(array_keys(config('scraper.channels')))],
+            'source_channel' => [
+                'nullable',
+                Rule::in(ScraperChannels::runnableKeys()),
+            ],
             'keyword' => ['required', 'string', 'max:100'],
             'industry' => ['nullable', 'string', 'max:100'],
             'country' => [
-                Rule::requiredIf(! $isReddit),
+                Rule::requiredIf(ScraperChannels::requiresLocation($channel)),
                 'nullable',
                 'string',
                 Rule::in(config('countries.list')),
@@ -37,6 +41,7 @@ class StoreScrapeJobRequest extends FormRequest
         return [
             'keyword.required' => 'A search keyword is required.',
             'country.required' => 'Country is required for this source.',
+            'source_channel.in' => 'This lead source is not available yet.',
         ];
     }
 }

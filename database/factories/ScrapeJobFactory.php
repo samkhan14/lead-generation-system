@@ -13,6 +13,7 @@ class ScrapeJobFactory extends Factory
     public function definition(): array
     {
         return [
+            'source_channel' => config('scraper.default_channel', 'google_maps'),
             'keyword' => $this->faker->word(),
             'industry' => null,
             'country' => $this->faker->country(),

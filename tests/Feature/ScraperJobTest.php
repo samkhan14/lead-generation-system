@@ -5,6 +5,8 @@ use App\Jobs\ProcessScrapeJob;
 use App\Models\ScrapeJob;
 use App\Models\ScrapeRunLog;
 use App\Models\User;
+use App\Support\ScraperChannels;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -42,7 +44,44 @@ it('agent can access scraper index', function () {
     actingAs(createAgentUser())
         ->get(route('scraper.index'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('Scraper/Index'));
+        ->assertInertia(fn ($page) => $page
+            ->component('Scraper/Index')
+            ->has('channel_groups.warm')
+        );
+});
+
+it('reddit is disabled by default in runnable channels', function () {
+    expect(ScraperChannels::runnableKeys())->toContain('google_maps')
+        ->and(ScraperChannels::runnableKeys())->toContain('yelp')
+        ->and(ScraperChannels::runnableKeys())->not->toContain('reddit');
+});
+
+it('process scrape job fails fast when srp service is down', function () {
+    Http::fake([
+        '*/health' => Http::response(null, 500),
+    ]);
+
+    $job = ScrapeJob::factory()->create([
+        'status' => ScrapeJobStatus::Pending,
+        'source_channel' => 'google_maps',
+    ]);
+
+    (new ProcessScrapeJob($job))->handle();
+
+    expect($job->fresh()->status)->toBe(ScrapeJobStatus::Failed);
+    expect($job->fresh()->error_message)->toContain('Scraper service');
+});
+
+it('marks stale running jobs as failed', function () {
+    $job = ScrapeJob::factory()->create([
+        'status' => ScrapeJobStatus::Running,
+        'started_at' => now()->subHours(2),
+    ]);
+
+    $this->artisan('scrape:fail-stale')->assertSuccessful();
+
+    expect($job->fresh()->status)->toBe(ScrapeJobStatus::Failed);
+    expect($job->fresh()->error_message)->toContain('timed out');
 });
 
 it('unauthenticated user is redirected from scraper index', function () {

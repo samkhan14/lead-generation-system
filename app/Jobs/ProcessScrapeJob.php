@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\ScrapeJobStatus;
 use App\Models\ScrapeJob;
+use App\Support\ScraperChannels;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,14 +26,49 @@ class ProcessScrapeJob implements ShouldQueue
     public function handle(): void
     {
         $job = $this->scrapeJob;
+        $channel = $job->source_channel ?: config('scraper.default_channel');
+
+        if (! ScraperChannels::isEnabled($channel)) {
+            $this->markFailed($job, "Source channel \"{$channel}\" is disabled.");
+
+            return;
+        }
+
+        if (! ScraperChannels::isImplemented($channel)) {
+            $this->markFailed($job, "Source channel \"{$channel}\" is not implemented yet.");
+
+            return;
+        }
 
         $serviceUrl = rtrim((string) config('scraper.service_url'), '/');
         $timeout = (int) config('scraper.dispatch_timeout', 10);
-        $callbackBase = rtrim((string) config('app.url'), '/');
+        $callbackBase = rtrim((string) config('scraper.callback_url'), '/');
+
+        try {
+            $health = Http::timeout(3)->get("{$serviceUrl}/health");
+
+            if (! $health->successful()) {
+                $this->markFailed($job, "Scraper service unhealthy at {$serviceUrl} (HTTP {$health->status()}). Start it with: npm run dev");
+
+                return;
+            }
+        } catch (\Throwable $e) {
+            Log::error('ScrapeJob SRP health check failed', [
+                'uuid' => $job->uuid,
+                'service_url' => $serviceUrl,
+                'error' => $e->getMessage(),
+            ]);
+            $this->markFailed(
+                $job,
+                "Scraper service not reachable at {$serviceUrl}. Run the SRP service (npm run dev) and verify SRP_SERVICE_URL.",
+            );
+
+            return;
+        }
 
         $payload = [
             'uuid' => $job->uuid,
-            'source_channel' => $job->source_channel,
+            'source_channel' => $channel,
             'keyword' => $job->keyword,
             'industry' => $job->industry,
             'country' => $job->country,
@@ -44,19 +80,8 @@ class ProcessScrapeJob implements ShouldQueue
             'callback_log' => "{$callbackBase}/api/scrape/jobs/{$job->uuid}/log",
             'callback_complete' => "{$callbackBase}/api/scrape/jobs/{$job->uuid}/complete",
             'ingest_token' => config('ingest.token'),
+            ...ScraperChannels::payloadFor($job),
         ];
-
-        if ($job->source_channel === 'reddit') {
-            $payload['reddit'] = [
-                'subreddits' => $this->resolveSubreddits($job),
-                'time_filter' => config('reddit.time_filter'),
-                'max_age_days' => config('reddit.max_age_days'),
-                'min_post_length' => config('reddit.min_post_length'),
-                'exclude_flairs' => config('reddit.exclude_flairs'),
-                'exclude_keywords' => config('reddit.exclude_keywords'),
-                'lead_kinds' => config('reddit.lead_kinds'),
-            ];
-        }
 
         try {
             $response = Http::timeout($timeout)->post("{$serviceUrl}/run", $payload);
@@ -71,23 +96,6 @@ class ProcessScrapeJob implements ShouldQueue
             ]);
             $this->markFailed($job, "Could not reach scraper service: {$e->getMessage()}");
         }
-    }
-
-    /**
-     * Resolve default subreddits for a Reddit job by country (merged with global
-     * defaults). The SRP connector still lets the Industry field override these.
-     *
-     * @return array<int, string>
-     */
-    private function resolveSubreddits(ScrapeJob $job): array
-    {
-        $country = strtolower(trim((string) $job->country));
-        $countryPack = config("reddit.country_subreddits.{$country}", []);
-
-        return array_values(array_unique(array_merge(
-            is_array($countryPack) ? $countryPack : [],
-            (array) config('reddit.default_subreddits'),
-        )));
     }
 
     private function markFailed(ScrapeJob $job, string $reason): void

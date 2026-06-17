@@ -6,6 +6,7 @@ use App\Enums\ScrapeJobStatus;
 use App\Http\Requests\StoreScrapeJobRequest;
 use App\Jobs\ProcessScrapeJob;
 use App\Models\ScrapeJob;
+use App\Support\ScraperChannels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,18 +28,13 @@ class ScraperController extends Controller
             ->latest()
             ->paginate(20);
 
+        $channelGroups = ScraperChannels::groupedForUi();
+
         return Inertia::render('Scraper/Index', [
             'jobs' => $jobs,
             'countries' => config('countries.list'),
-            'channels' => collect(config('scraper.channels'))
-                ->map(fn (array $channel, string $key) => [
-                    'value' => $key,
-                    'label' => $channel['label'],
-                    'keyword_label' => $channel['keyword_label'],
-                    'keyword_placeholder' => $channel['keyword_placeholder'],
-                    'requires_location' => $channel['requires_location'],
-                ])
-                ->values(),
+            'channels' => ScraperChannels::forUi(),
+            'channel_groups' => $channelGroups,
             'default_channel' => config('scraper.default_channel'),
         ]);
     }
