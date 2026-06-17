@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DataTransferObjects\LeadIngestResult;
 use App\Models\Lead;
 use App\Support\LeadBusinessName;
+use App\Support\LeadIdentifiers;
 use Illuminate\Support\Facades\DB;
 
 class LeadIngestionService
@@ -54,6 +55,8 @@ class LeadIngestionService
             is_array($payload['metadata'] ?? null) ? $payload['metadata'] : [],
             array_filter([
                 'google_place_id' => $payload['google_place_id'] ?? null,
+                'yelp_business_id' => $payload['yelp_business_id'] ?? null,
+                'yelp_url' => $payload['yelp_url'] ?? null,
                 'address' => $payload['address'] ?? null,
                 'rating' => isset($payload['rating']) ? (float) $payload['rating'] : null,
                 'review_count' => isset($payload['review_count']) ? (int) $payload['review_count'] : null,
@@ -74,7 +77,7 @@ class LeadIngestionService
             'last_name' => $payload['last_name'] ?? $nameParts['last_name'],
             'email' => $payload['email'] ?? null,
             'phone' => $payload['phone'] ?? null,
-            'website' => $payload['website'] ?? null,
+            'website' => LeadIdentifiers::sanitizeBusinessWebsite($payload['website'] ?? null),
             'company' => $nameParts['company'] ?? $payload['company'] ?? null,
             'job_title' => $payload['job_title'] ?? null,
             'source' => $payload['source'] ?? 'google_maps',
@@ -107,6 +110,18 @@ class LeadIngestionService
         if ($redditPostId) {
             $existing = Lead::query()
                 ->where('metadata->reddit_post_id', $redditPostId)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        $yelpBusinessId = data_get($normalized, 'metadata.yelp_business_id');
+
+        if ($yelpBusinessId) {
+            $existing = Lead::query()
+                ->where('metadata->yelp_business_id', $yelpBusinessId)
                 ->first();
 
             if ($existing) {
@@ -150,7 +165,8 @@ class LeadIngestionService
 
         if (! empty($metadata['rating'])) {
             $reviewCount = $metadata['review_count'] ?? 0;
-            $lines[] = "Google rating: {$metadata['rating']} ({$reviewCount} reviews)";
+            $sourceLabel = ($payload['source'] ?? 'google_maps') === 'yelp' ? 'Yelp' : 'Google';
+            $lines[] = "{$sourceLabel} rating: {$metadata['rating']} ({$reviewCount} reviews)";
         }
 
         if (! empty($payload['scrape_keyword']) && ! empty($payload['scrape_city'])) {

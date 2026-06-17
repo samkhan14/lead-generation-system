@@ -90,7 +90,7 @@ class LeadScoringService
         }
 
         $metadataLevel = strtolower((string) data_get($lead->metadata, 'intent_level', ''));
-        if (! $this->isGoogleMapsLead($lead) && $metadataLevel !== '' && isset($config['metadata_levels'][$metadataLevel])) {
+        if (! $this->isDirectoryLead($lead) && $metadataLevel !== '' && isset($config['metadata_levels'][$metadataLevel])) {
             $score += $config['metadata_levels'][$metadataLevel];
             $signals[] = "Metadata intent level: {$metadataLevel}";
         }
@@ -151,7 +151,7 @@ class LeadScoringService
             $signals[] = 'Email domain matches website';
         }
 
-        if ($this->isGoogleMapsLead($lead)) {
+        if ($this->isDirectoryLead($lead)) {
             $googleSignals = $this->googleMapsOpportunitySignals($lead, $config['google_maps']);
             $score += $googleSignals['score'];
             $signals = array_merge($signals, $googleSignals['signals']);
@@ -195,7 +195,7 @@ class LeadScoringService
             $signals[] = 'Website provided';
         }
 
-        if ($this->isGoogleMapsLead($lead) && $lead->company) {
+        if ($this->isDirectoryLead($lead) && $lead->company) {
             $score += $config['name_points'];
             $signals[] = 'Business name identified';
         } elseif (! $this->isGenericName($lead->first_name, $lead->last_name)) {
@@ -217,7 +217,7 @@ class LeadScoringService
             $signals[] = 'Free email without company context';
         }
 
-        if ($this->isGoogleMapsLead($lead)) {
+        if ($this->isDirectoryLead($lead)) {
             $googleSignals = $this->googleMapsAuthenticitySignals($lead, $config['google_maps']);
             $score += $googleSignals['score'];
             $signals = array_merge($signals, $googleSignals['signals']);
@@ -281,6 +281,15 @@ class LeadScoringService
         return in_array($first, $genericNames, true)
             || in_array($last, $genericNames, true)
             || in_array(trim("{$first} {$last}"), $genericNames, true);
+    }
+
+    private function isDirectoryLead(Lead $lead): bool
+    {
+        return in_array(
+            strtolower((string) $lead->source),
+            config('lead_scoring.directory_sources', ['google_maps']),
+            true,
+        );
     }
 
     private function isGoogleMapsLead(Lead $lead): bool
@@ -411,9 +420,9 @@ class LeadScoringService
         $rating = data_get($lead->metadata, 'rating');
         $reviewCount = data_get($lead->metadata, 'review_count');
 
-        if (data_get($lead->metadata, 'google_place_id')) {
+        if (data_get($lead->metadata, 'google_place_id') || data_get($lead->metadata, 'yelp_business_id')) {
             $score += $config['place_id_points'];
-            $signals[] = 'Google place ID present';
+            $signals[] = 'Directory business ID present';
         }
 
         if (data_get($lead->metadata, 'address')) {

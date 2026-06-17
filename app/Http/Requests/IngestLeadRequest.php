@@ -33,6 +33,8 @@ class IngestLeadRequest extends FormRequest
             'rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'review_count' => ['nullable', 'integer', 'min:0'],
             'google_place_id' => ['nullable', 'string', 'max:255'],
+            'yelp_business_id' => ['nullable', 'string', 'max:255'],
+            'yelp_url' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:255'],
             'scrape_keyword' => ['nullable', 'string', 'max:255'],
             'scrape_country' => ['nullable', 'string', 'max:255'],
