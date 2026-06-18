@@ -81,4 +81,45 @@ class LeadIdentifiers
 
         return trim($website);
     }
+
+    /**
+     * Normalize Google place IDs scraped from Maps URLs (may embed ChIJ inside data= blobs).
+     */
+    public static function normalizeGooglePlaceId(?string $placeId): ?string
+    {
+        if ($placeId === null || trim($placeId) === '') {
+            return null;
+        }
+
+        $placeId = trim($placeId);
+
+        if (preg_match('/(ChIJ[\w-]+)/', $placeId, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/(0x[a-f0-9]+:0x[a-f0-9]+)/i', $placeId, $matches)) {
+            return $matches[1];
+        }
+
+        if (str_contains($placeId, 'data=') || str_contains($placeId, '!4m')) {
+            return null;
+        }
+
+        return $placeId;
+    }
+
+    /**
+     * Remove Google Maps icon font artifacts from scraped addresses.
+     */
+    public static function sanitizeAddress(?string $address): ?string
+    {
+        if ($address === null || trim($address) === '') {
+            return null;
+        }
+
+        $cleaned = preg_replace('/[\x{E000}-\x{F8FF}]/u', '', $address);
+        $cleaned = preg_replace('/\s+/u', ' ', trim((string) $cleaned));
+
+        return $cleaned !== '' ? $cleaned : null;
+    }
 }

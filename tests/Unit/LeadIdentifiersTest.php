@@ -19,3 +19,7 @@ test('returns null for empty identifiers', function () {
         ->and(LeadIdentifiers::normalizePhone(null))->toBeNull()
         ->and(LeadIdentifiers::normalizeWebsite('   '))->toBeNull();
 });
+
+test('rejects directory profile urls as business websites', function () {
+    expect(LeadIdentifiers::sanitizeBusinessWebsite('https://maps.google.com/maps/place/foo'))->toBeNull();
+});

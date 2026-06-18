@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DataTransferObjects\LeadIngestResult;
 use App\Models\Lead;
 use App\Support\LeadBusinessName;
+use App\Support\LeadDataQuality;
 use App\Support\LeadIdentifiers;
 use Illuminate\Support\Facades\DB;
 
@@ -22,7 +23,9 @@ class LeadIngestionService
         $normalized = $this->normalizePayload($payload);
 
         if ($duplicate = $this->findDuplicate($normalized)) {
-            return LeadIngestResult::duplicate($duplicate);
+            $merged = $this->mergeDirectoryLeadIfImproved($duplicate, $normalized);
+
+            return LeadIngestResult::duplicate($merged);
         }
 
         return DB::transaction(function () use ($normalized): LeadIngestResult {
@@ -54,13 +57,13 @@ class LeadIngestionService
         $metadata = array_merge(
             is_array($payload['metadata'] ?? null) ? $payload['metadata'] : [],
             array_filter([
-                'google_place_id' => $payload['google_place_id'] ?? null,
+                'google_place_id' => LeadIdentifiers::normalizeGooglePlaceId($payload['google_place_id'] ?? null),
                 'yelp_business_id' => $payload['yelp_business_id'] ?? null,
                 'yelp_url' => $payload['yelp_url'] ?? null,
                 'osm_id' => $payload['osm_id'] ?? null,
                 'osm_type' => $payload['osm_type'] ?? null,
                 'osm_url' => $payload['osm_url'] ?? null,
-                'address' => $payload['address'] ?? null,
+                'address' => LeadIdentifiers::sanitizeAddress($payload['address'] ?? null),
                 'rating' => isset($payload['rating']) ? (float) $payload['rating'] : null,
                 'review_count' => isset($payload['review_count']) ? (int) $payload['review_count'] : null,
                 'scrape_keyword' => $payload['scrape_keyword'] ?? null,
@@ -75,7 +78,7 @@ class LeadIngestionService
 
         $notes = $payload['notes'] ?? $this->buildNotesFromMetadata($metadata, $payload);
 
-        return [
+        $normalized = [
             'first_name' => $payload['first_name'] ?? $nameParts['first_name'],
             'last_name' => $payload['last_name'] ?? $nameParts['last_name'],
             'email' => $payload['email'] ?? null,
@@ -89,6 +92,75 @@ class LeadIngestionService
             'assigned_to' => $payload['assigned_to'] ?? null,
             'created_by' => $payload['created_by'] ?? null,
         ];
+
+        $normalized['metadata']['data_quality'] = LeadDataQuality::assess($normalized);
+
+        return $normalized;
+    }
+
+    /**
+     * @param  array<string, mixed>  $normalized
+     */
+    public function mergeDirectoryLeadIfImproved(Lead $existing, array $normalized): Lead
+    {
+        $directorySources = config('lead_quality.directory_sources', []);
+
+        if (! in_array($existing->source, $directorySources, true)) {
+            return $existing;
+        }
+
+        $updates = [];
+        $metadata = $existing->metadata ?? [];
+
+        if (blank($existing->website) && filled($normalized['website'] ?? null)) {
+            $updates['website'] = $normalized['website'];
+        }
+
+        if (blank($existing->phone) && filled($normalized['phone'] ?? null)) {
+            $updates['phone'] = $normalized['phone'];
+        }
+
+        foreach (['address', 'rating', 'review_count', 'yelp_url', 'osm_url'] as $key) {
+            $incoming = data_get($normalized, "metadata.{$key}");
+
+            if (filled($incoming) && blank($metadata[$key] ?? null)) {
+                $metadata[$key] = $incoming;
+            }
+        }
+
+        $incomingPlaceId = data_get($normalized, 'metadata.google_place_id');
+        $existingPlaceId = $metadata['google_place_id'] ?? null;
+
+        if (filled($incomingPlaceId) && ($this->isMalformedGooglePlaceId($existingPlaceId) || blank($existingPlaceId))) {
+            $metadata['google_place_id'] = $incomingPlaceId;
+        }
+
+        $mergedForQuality = array_merge($existing->toArray(), $updates, [
+            'metadata' => array_merge($metadata, array_diff_key($normalized['metadata'] ?? [], ['data_quality' => true])),
+        ]);
+        $metadata['data_quality'] = LeadDataQuality::assess($mergedForQuality);
+
+        $originalMetadata = $existing->metadata ?? [];
+
+        if ($updates === [] && $metadata === $originalMetadata) {
+            return $existing;
+        }
+
+        $updates['metadata'] = $metadata;
+
+        $existing->update($updates);
+        $this->scoringService->score($existing->fresh());
+
+        return $existing->fresh(['latestScore']);
+    }
+
+    private function isMalformedGooglePlaceId(mixed $placeId): bool
+    {
+        if (! is_string($placeId) || $placeId === '') {
+            return true;
+        }
+
+        return str_contains($placeId, 'data=') || str_contains($placeId, '!4m');
     }
 
     /**
@@ -105,6 +177,16 @@ class LeadIngestionService
 
             if ($existing) {
                 return $existing;
+            }
+
+            if (str_starts_with($placeId, 'ChIJ')) {
+                $existing = Lead::query()
+                    ->where('metadata->google_place_id', 'like', '%'.$placeId.'%')
+                    ->first();
+
+                if ($existing) {
+                    return $existing;
+                }
             }
         }
 
