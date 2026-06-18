@@ -55,7 +55,8 @@ return [
     // freelancers, job seekers) instead of buying them. We only want buyers.
     'exclude_keywords' => [
         '[for hire]', 'for hire', '[hiring]', '[hire me]', 'hire me',
-        'i offer', 'i provide', 'offering', 'i build', 'i can build', 'i will build',
+        'i offer', 'i provide', 'i am offering', 'offering services', 'offering my',
+        'i build', 'i can build', 'i will build',
         'i am a developer', "i'm a developer", 'freelance developer',
         'my portfolio', 'my services', 'dm me', 'message me for',
         'fiverr.com', 'upwork.com',

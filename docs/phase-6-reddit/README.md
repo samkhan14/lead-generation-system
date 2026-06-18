@@ -100,6 +100,30 @@ REDDIT_TIME_FILTER=week   # optional (CRM also sends this)
 REDDIT_MAX_AGE_DAYS=14    # optional
 ```
 
+### Realtime on server/datacenter IPs (recommended)
+
+Public `reddit.com` JSON is often WAF-blocked (403) on server IPs. PullPush
+(free fallback) can lag **months** behind — posts may fetch successfully but all
+fail the 14-day freshness guard (`Found: 0`).
+
+Use **free Reddit OAuth** (~100 req/min, no paid tier needed):
+
+1. Create a **script** app at https://www.reddit.com/prefs/apps
+2. Set on the SRP service `.env`:
+
+```
+REDDIT_CLIENT_ID=your_client_id
+REDDIT_CLIENT_SECRET=your_secret
+REDDIT_USERNAME=your_reddit_username
+REDDIT_PASSWORD=your_reddit_password
+REDDIT_USER_AGENT=srp-service/1.0 (by u/your_username)
+```
+
+3. Restart the SRP service and re-run the job. Logs should show `via reddit-oauth`.
+
+When zero leads are ingested, job logs now report skip breakdown (stale / excluded /
+no intent) and the newest post date seen.
+
 ## Lead detail UI
 
 The lead show page renders a **Reddit context** card (source = `reddit`): subreddit
