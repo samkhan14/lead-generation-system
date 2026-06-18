@@ -107,3 +107,25 @@ test('enrichment service fills missing website from places api', function () {
     expect($lead->website)->toBe('https://www.foodsinn.pk')
         ->and($lead->metadata['google_place_id'])->toBe('ChIJ_foods_inn_test');
 });
+
+test('enrichment service skips gracefully when api key is not configured', function () {
+    config(['google_places.api_key' => null]);
+
+    $stats = app(\App\Services\LeadEnrichmentService::class)->enrichDirectoryLeads();
+
+    expect($stats['status'])->toBe('unavailable')
+        ->and($stats['message'])->toContain('GOOGLE_PLACES_API_KEY');
+});
+
+test('data quality includes enrichment hint when website missing and api not configured', function () {
+    config(['google_places.api_key' => null]);
+
+    $quality = LeadDataQuality::assess([
+        'company' => 'Foods Inn',
+        'phone' => '+923001234567',
+        'website' => null,
+        'metadata' => ['address' => 'Karachi'],
+    ]);
+
+    expect($quality['enrichment_hint'])->toContain('GOOGLE_PLACES_API_KEY');
+});

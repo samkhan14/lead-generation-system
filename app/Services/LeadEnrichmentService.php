@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Lead;
+use App\Support\GooglePlacesConfig;
 use App\Support\LeadDataQuality;
 use App\Support\LeadIdentifiers;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
@@ -14,18 +16,38 @@ class LeadEnrichmentService
         private LeadScoringService $scoringService,
     ) {}
 
-    /**
-     * @return array{updated: int, skipped: int, failed: int}
-     */
+  /**
+   * @return array{
+   *   updated: int,
+   *   skipped: int,
+   *   failed: int,
+   *   status: 'completed'|'unavailable',
+   *   message: ?string,
+   *   errors: array<int, string>
+   * }
+   */
     public function enrichDirectoryLeads(bool $dryRun = false, ?int $limit = null): array
     {
-        $apiKey = config('google_places.api_key');
-
-        if (blank($apiKey)) {
-            throw new \RuntimeException('GOOGLE_PLACES_API_KEY is not configured in .env');
+        if (! GooglePlacesConfig::isConfigured()) {
+            return [
+                'updated' => 0,
+                'skipped' => 0,
+                'failed' => 0,
+                'status' => 'unavailable',
+                'message' => GooglePlacesConfig::unavailableMessage(),
+                'errors' => [],
+            ];
         }
 
-        $stats = ['updated' => 0, 'skipped' => 0, 'failed' => 0];
+        $apiKey = (string) config('google_places.api_key');
+        $stats = [
+            'updated' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+            'status' => 'completed',
+            'message' => null,
+            'errors' => [],
+        ];
 
         $query = Lead::query()
             ->whereIn('source', config('lead_quality.directory_sources', []))
@@ -42,13 +64,18 @@ class LeadEnrichmentService
 
         foreach ($leads as $lead) {
             try {
-                $details = $this->fetchPlaceDetails($apiKey, $lead);
+                $result = $this->fetchPlaceDetails($apiKey, $lead);
 
-                if ($details === null) {
+                if ($result['data'] === null) {
                     $stats['skipped']++;
+                    if ($result['error'] !== null) {
+                        $stats['errors'][] = "{$lead->company}: {$result['error']}";
+                    }
 
                     continue;
                 }
+
+                $details = $result['data'];
 
                 if ($dryRun) {
                     $stats['updated']++;
@@ -88,8 +115,9 @@ class LeadEnrichmentService
                 $lead->update($updates);
                 $this->scoringService->score($lead->fresh());
                 $stats['updated']++;
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
                 $stats['failed']++;
+                $stats['errors'][] = "{$lead->company}: {$e->getMessage()}";
             }
         }
 
@@ -97,18 +125,22 @@ class LeadEnrichmentService
     }
 
     /**
-     * @return array{website: ?string, phone: ?string, address: ?string, google_place_id: ?string}|null
+     * @return array{data: ?array{website: ?string, phone: ?string, address: ?string, google_place_id: ?string}, error: ?string}
      */
-    private function fetchPlaceDetails(string $apiKey, Lead $lead): ?array
+    private function fetchPlaceDetails(string $apiKey, Lead $lead): array
     {
         $placeId = LeadIdentifiers::normalizeGooglePlaceId(data_get($lead->metadata, 'google_place_id'));
 
         if ($placeId !== null) {
             $fromId = $this->requestPlaceDetails($apiKey, $placeId);
 
-            if ($fromId !== null) {
+            if ($fromId['data'] !== null) {
                 return $fromId;
             }
+
+            $lastError = $fromId['error'];
+        } else {
+            $lastError = null;
         }
 
         $query = trim(implode(' ', array_filter([
@@ -119,39 +151,51 @@ class LeadEnrichmentService
         ])));
 
         if ($query === '') {
-            return null;
+            return [
+                'data' => null,
+                'error' => $lastError ?? 'No place ID or searchable name/address on this lead',
+            ];
         }
 
         $response = Http::withHeaders([
             'X-Goog-Api-Key' => $apiKey,
             'X-Goog-FieldMask' => 'places.id,places.websiteUri,places.nationalPhoneNumber,places.formattedAddress',
-        ])->post('https://places.googleapis.com/v1/places:searchText', [
+        ])->post((string) config('google_places.search_url'), [
             'textQuery' => $query,
             'pageSize' => 1,
         ]);
 
         if (! $response->successful()) {
-            return null;
+            return [
+                'data' => null,
+                'error' => $this->formatPlacesError($response, $lastError),
+            ];
         }
 
         $place = $response->json('places.0');
 
         if (! is_array($place)) {
-            return null;
+            return [
+                'data' => null,
+                'error' => $lastError ?? 'Places API text search returned no match',
+            ];
         }
 
         return [
-            'website' => $place['websiteUri'] ?? null,
-            'phone' => $place['nationalPhoneNumber'] ?? null,
-            'address' => $place['formattedAddress'] ?? null,
-            'google_place_id' => isset($place['id']) ? str_replace('places/', '', (string) $place['id']) : null,
+            'data' => [
+                'website' => $place['websiteUri'] ?? null,
+                'phone' => $place['nationalPhoneNumber'] ?? null,
+                'address' => $place['formattedAddress'] ?? null,
+                'google_place_id' => isset($place['id']) ? str_replace('places/', '', (string) $place['id']) : null,
+            ],
+            'error' => null,
         ];
     }
 
     /**
-     * @return array{website: ?string, phone: ?string, address: ?string, google_place_id: ?string}|null
+     * @return array{data: ?array{website: ?string, phone: ?string, address: ?string, google_place_id: ?string}, error: ?string}
      */
-    private function requestPlaceDetails(string $apiKey, string $placeId): ?array
+    private function requestPlaceDetails(string $apiKey, string $placeId): array
     {
         $url = rtrim((string) config('google_places.details_url'), '/').'/'.urlencode($placeId);
 
@@ -161,20 +205,43 @@ class LeadEnrichmentService
         ])->get($url);
 
         if (! $response->successful()) {
-            return null;
+            return [
+                'data' => null,
+                'error' => $this->formatPlacesError($response),
+            ];
         }
 
         $data = $response->json();
 
         if (! is_array($data)) {
-            return null;
+            return [
+                'data' => null,
+                'error' => 'Places API returned an invalid response',
+            ];
         }
 
         return [
-            'website' => $data['websiteUri'] ?? null,
-            'phone' => $data['nationalPhoneNumber'] ?? null,
-            'address' => $data['formattedAddress'] ?? null,
-            'google_place_id' => isset($data['id']) ? str_replace('places/', '', (string) $data['id']) : $placeId,
+            'data' => [
+                'website' => $data['websiteUri'] ?? null,
+                'phone' => $data['nationalPhoneNumber'] ?? null,
+                'address' => $data['formattedAddress'] ?? null,
+                'google_place_id' => isset($data['id']) ? str_replace('places/', '', (string) $data['id']) : $placeId,
+            ],
+            'error' => null,
         ];
+    }
+
+    private function formatPlacesError(Response $response, ?string $previous = null): string
+    {
+        $body = $response->json();
+        $apiMessage = is_array($body)
+            ? ($body['error']['message'] ?? $body['message'] ?? null)
+            : null;
+
+        $message = $apiMessage
+            ? "Places API error ({$response->status()}): {$apiMessage}"
+            : "Places API error ({$response->status()}): {$response->body()}";
+
+        return $previous ? "{$previous}; fallback text search — {$message}" : $message;
     }
 }

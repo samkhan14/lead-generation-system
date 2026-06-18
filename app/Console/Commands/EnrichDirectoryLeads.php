@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\LeadEnrichmentService;
+use App\Support\GooglePlacesConfig;
 use Illuminate\Console\Command;
 
 class EnrichDirectoryLeads extends Command
@@ -24,6 +25,12 @@ class EnrichDirectoryLeads extends Command
             return self::FAILURE;
         }
 
+        if (($stats['status'] ?? 'completed') === 'unavailable') {
+            $this->warn($stats['message'] ?? GooglePlacesConfig::unavailableMessage());
+
+            return self::SUCCESS;
+        }
+
         $this->info(sprintf(
             '%s — updated: %d, skipped: %d, failed: %d',
             $dryRun ? 'Dry run' : 'Done',
@@ -31,6 +38,10 @@ class EnrichDirectoryLeads extends Command
             $stats['skipped'],
             $stats['failed'],
         ));
+
+        foreach ($stats['errors'] ?? [] as $error) {
+            $this->line("  - {$error}");
+        }
 
         return self::SUCCESS;
     }

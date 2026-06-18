@@ -36,6 +36,9 @@ class LeadDataQuality
             'has_website' => ! in_array('website', $missing, true),
             'has_phone' => ! in_array('phone', $missing, true),
             'assessed_at' => now()->toIso8601String(),
+            'enrichment_hint' => in_array('website', $missing, true) && ! GooglePlacesConfig::isConfigured()
+                ? GooglePlacesConfig::unavailableMessage()
+                : null,
         ];
     }
 }
