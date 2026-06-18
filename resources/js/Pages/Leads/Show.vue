@@ -35,20 +35,27 @@ const priorityClasses = {
 const sourceLabels = {
     google_maps: 'Google Maps',
     yelp: 'Yelp',
+    openstreetmap: 'OpenStreetMap',
     reddit: 'Reddit',
 };
 
 const isReddit = computed(() => props.lead.source === 'reddit');
 const isYelp = computed(() => props.lead.source === 'yelp');
-const isDirectory = computed(() => ['google_maps', 'yelp'].includes(props.lead.source));
+const isOsm = computed(() => props.lead.source === 'openstreetmap');
+const isDirectory = computed(() => ['google_maps', 'yelp', 'openstreetmap'].includes(props.lead.source));
 
 const sourceLabel = computed(
     () => sourceLabels[props.lead.source] ?? props.lead.source ?? '—',
 );
 
-const ratingLabel = computed(() => (isYelp.value ? 'Yelp rating' : 'Google rating'));
+const ratingLabel = computed(() => {
+    if (isYelp.value) return 'Yelp rating';
+    if (props.lead.source === 'google_maps') return 'Google rating';
+    return 'Rating';
+});
 
 const yelpUrl = computed(() => metadata.value.yelp_url ?? null);
+const osmUrl = computed(() => metadata.value.osm_url ?? null);
 
 const externalWebsite = computed(() => {
     const url = props.lead.website;
@@ -160,6 +167,50 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                     Final = (Intent × {{ intelligence().final.weights.intent }})
                     + (Opportunity × {{ intelligence().final.weights.opportunity }})
                     + (Authenticity × {{ intelligence().final.weights.authenticity }})
+                </div>
+            </div>
+
+            <!-- OpenStreetMap context -->
+            <div
+                v-if="isOsm"
+                class="animate-fade-slide-up rounded-xl bg-white p-6 shadow-sm ring-1 ring-emerald-100 transition-shadow hover:shadow-md"
+                :style="sectionDelay(1)"
+            >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">OpenStreetMap listing</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Community-sourced map data — free directory with address and contact tags.
+                        </p>
+                    </div>
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
+                        Warm lead
+                    </span>
+                </div>
+
+                <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-if="metadata.osm_id">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">OSM ID</dt>
+                        <dd class="mt-1 text-sm text-slate-900">{{ metadata.osm_id }}</dd>
+                    </div>
+                    <div v-if="metadata.scrape_keyword">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Discovered via</dt>
+                        <dd class="mt-1 text-sm text-slate-900">
+                            {{ metadata.scrape_keyword }}
+                            <span v-if="metadata.scrape_city"> in {{ metadata.scrape_city }}</span>
+                        </dd>
+                    </div>
+                </dl>
+
+                <div v-if="osmUrl" class="mt-4">
+                    <a
+                        :href="osmUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+                    >
+                        View on OpenStreetMap
+                    </a>
                 </div>
             </div>
 

@@ -57,6 +57,9 @@ class LeadIngestionService
                 'google_place_id' => $payload['google_place_id'] ?? null,
                 'yelp_business_id' => $payload['yelp_business_id'] ?? null,
                 'yelp_url' => $payload['yelp_url'] ?? null,
+                'osm_id' => $payload['osm_id'] ?? null,
+                'osm_type' => $payload['osm_type'] ?? null,
+                'osm_url' => $payload['osm_url'] ?? null,
                 'address' => $payload['address'] ?? null,
                 'rating' => isset($payload['rating']) ? (float) $payload['rating'] : null,
                 'review_count' => isset($payload['review_count']) ? (int) $payload['review_count'] : null,
@@ -129,6 +132,18 @@ class LeadIngestionService
             }
         }
 
+        $osmId = data_get($normalized, 'metadata.osm_id');
+
+        if ($osmId) {
+            $existing = Lead::query()
+                ->where('metadata->osm_id', $osmId)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
         return Lead::findDuplicate(
             $normalized['email'] ?? null,
             $normalized['phone'] ?? null,
@@ -165,7 +180,11 @@ class LeadIngestionService
 
         if (! empty($metadata['rating'])) {
             $reviewCount = $metadata['review_count'] ?? 0;
-            $sourceLabel = ($payload['source'] ?? 'google_maps') === 'yelp' ? 'Yelp' : 'Google';
+            $sourceLabel = match ($payload['source'] ?? 'google_maps') {
+                'yelp' => 'Yelp',
+                'openstreetmap' => 'OSM',
+                default => 'Google',
+            };
             $lines[] = "{$sourceLabel} rating: {$metadata['rating']} ({$reviewCount} reviews)";
         }
 

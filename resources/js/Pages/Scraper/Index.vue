@@ -187,6 +187,9 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
                             <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'yelp'" class="mt-1 text-xs text-amber-600">
                                 Yelp blocks browser scraping — set YELP_API_KEY on the SRP service.
                             </p>
+                            <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'openstreetmap'" class="mt-1 text-xs text-emerald-600">
+                                Free OSM data — city recommended for accurate results.
+                            </p>
                             <p v-else-if="activeChannel.tier === 'warm'" class="mt-1 text-xs text-slate-400">
                                 Narrow results by vertical (optional).
                             </p>

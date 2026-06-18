@@ -65,6 +65,7 @@ class LeadIdentifiers
             'yelp.com', 'yelp.co.uk', 'yelp.ca', 'yelp.de', 'yelp.fr', 'yelp.com.au',
             'google.com', 'maps.google.com', 'g.page', 'goo.gl',
             'facebook.com', 'fb.com', 'instagram.com',
+            'openstreetmap.org',
             'bing.com', 'apple.com',
         ];
 

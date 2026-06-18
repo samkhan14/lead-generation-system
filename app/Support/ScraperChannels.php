@@ -128,6 +128,18 @@ class ScraperChannels
                     'lead_kinds' => config('reddit.lead_kinds'),
                 ],
             ],
+            'openstreetmap' => [
+                'openstreetmap' => [
+                    'nominatim_url' => config('openstreetmap.nominatim_url'),
+                    'overpass_url' => config('openstreetmap.overpass_url'),
+                    'user_agent' => config('openstreetmap.user_agent'),
+                    'radius_with_area_m' => config('openstreetmap.radius_with_area_m'),
+                    'radius_with_city_m' => config('openstreetmap.radius_with_city_m'),
+                    'radius_country_only_m' => config('openstreetmap.radius_country_only_m'),
+                    'keyword_tags' => config('openstreetmap.keyword_tags'),
+                    'fallback_name_search' => config('openstreetmap.fallback_name_search'),
+                ],
+            ],
             default => [],
         };
     }
