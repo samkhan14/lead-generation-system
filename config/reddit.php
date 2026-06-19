@@ -21,8 +21,8 @@ return [
     ],
 
     /*
-    | Per-country subreddit packs. When a job does not override subreddits (via the
-    | Industry field), ProcessScrapeJob merges the country pack with the defaults so
+    | Per-country subreddit packs. ProcessScrapeJob merges the country pack with the
+    | defaults so
     | jobs target locally-relevant communities. Keys are lower-cased country names.
     */
     'country_subreddits' => [

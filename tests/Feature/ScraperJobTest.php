@@ -47,6 +47,21 @@ it('agent can access scraper index', function () {
         ->assertInertia(fn ($page) => $page
             ->component('Scraper/Index')
             ->has('channel_groups.warm')
+            ->has('scrape_options.business_type_groups')
+            ->where('filters.per_page', 15)
+        );
+});
+
+it('scraper index respects per_page query', function () {
+    ScrapeJob::factory()->count(12)->create();
+
+    actingAs(createAgentUser())
+        ->get(route('scraper.index', ['per_page' => 10]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('filters.per_page', 10)
+            ->has('jobs.data', 10)
+            ->where('jobs.per_page', 10)
         );
 });
 
@@ -122,6 +137,15 @@ it('country is required when creating a scrape job', function () {
 it('keyword is required when creating a scrape job', function () {
     actingAs(createAgentUser())
         ->post(route('scraper.store'), [
+            'country' => 'Pakistan',
+        ])
+        ->assertSessionHasErrors('keyword');
+});
+
+it('rejects keyword not in the configured list', function () {
+    actingAs(createAgentUser())
+        ->post(route('scraper.store'), [
+            'keyword' => 'not-a-real-business-type-xyz',
             'country' => 'Pakistan',
         ])
         ->assertSessionHasErrors('keyword');

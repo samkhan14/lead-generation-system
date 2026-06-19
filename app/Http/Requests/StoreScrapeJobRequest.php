@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Support\ScraperChannels;
+use App\Support\ScraperOptions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,8 +23,12 @@ class StoreScrapeJobRequest extends FormRequest
                 'nullable',
                 Rule::in(ScraperChannels::runnableKeys()),
             ],
-            'keyword' => ['required', 'string', 'max:100'],
-            'industry' => ['nullable', 'string', 'max:100'],
+            'keyword' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::in(ScraperOptions::keywordValuesFor($channel)),
+            ],
             'country' => [
                 Rule::requiredIf(ScraperChannels::requiresLocation($channel)),
                 'nullable',
@@ -39,7 +44,8 @@ class StoreScrapeJobRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'keyword.required' => 'A search keyword is required.',
+            'keyword.required' => 'Please select a business type or intent keyword.',
+            'keyword.in' => 'Please select a valid option from the list.',
             'country.required' => 'Country is required for this source.',
             'source_channel.in' => 'This lead source is not available yet.',
         ];

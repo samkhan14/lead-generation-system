@@ -7,6 +7,7 @@ use App\Http\Requests\StoreScrapeJobRequest;
 use App\Jobs\ProcessScrapeJob;
 use App\Models\ScrapeJob;
 use App\Support\ScraperChannels;
+use App\Support\ScraperOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,20 +23,27 @@ class ScraperController extends Controller
 
     public function index(Request $request): Response
     {
+        $perPage = (int) $request->query('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50], true) ? $perPage : 15;
 
         $jobs = ScrapeJob::query()
             ->with('creator:id,name')
             ->latest()
-            ->paginate(20);
+            ->paginate($perPage)
+            ->withQueryString();
 
         $channelGroups = ScraperChannels::groupedForUi();
 
         return Inertia::render('Scraper/Index', [
             'jobs' => $jobs,
+            'filters' => [
+                'per_page' => $perPage,
+            ],
             'countries' => config('countries.list'),
             'channels' => ScraperChannels::forUi(),
             'channel_groups' => $channelGroups,
             'default_channel' => config('scraper.default_channel'),
+            'scrape_options' => ScraperOptions::forUi(),
         ]);
     }
 

@@ -7,10 +7,11 @@ return [
     | Nominatim / Overpass
     |--------------------------------------------------------------------------
     | Free OSM APIs — no API key. Nominatim requires a descriptive User-Agent.
+    | Set OSM_USER_AGENT for a full override, or OSM_CONTACT_EMAIL (+ APP_URL).
     */
     'nominatim_url' => env('OSM_NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
     'overpass_url' => env('OSM_OVERPASS_URL', 'https://overpass-api.de/api/interpreter'),
-    'user_agent' => env('OSM_USER_AGENT', 'srp-lead-engine/1.0 (contact@example.com)'),
+    'user_agent' => \App\Support\OpenStreetMapConfig::userAgent(),
 
     /*
     |--------------------------------------------------------------------------

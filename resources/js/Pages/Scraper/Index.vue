@@ -1,5 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import DataTable from '@/Components/Admin/DataTable.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
 import ScraperNotification from '@/Components/Admin/ScraperNotification.vue';
 import { useAuth } from '@/composables/useAuth';
 import { useForm, router, Link } from '@inertiajs/vue3';
@@ -15,6 +17,17 @@ const props = defineProps({
         default: () => ({ warm: [], hot: [] }),
     },
     default_channel: { type: String, default: 'google_maps' },
+    scrape_options: {
+        type: Object,
+        default: () => ({
+            business_type_groups: [],
+            intent_keyword_groups: [],
+        }),
+    },
+    filters: {
+        type: Object,
+        default: () => ({ per_page: 15 }),
+    },
 });
 
 const { can } = useAuth();
@@ -22,7 +35,6 @@ const { can } = useAuth();
 const form = useForm({
     source_channel: props.default_channel,
     keyword: '',
-    industry: '',
     country: '',
     city: '',
     area: '',
@@ -32,6 +44,18 @@ const form = useForm({
 const activeChannel = computed(
     () => props.channels.find((c) => c.value === form.source_channel) ?? props.channels[0] ?? {},
 );
+
+const isReddit = computed(() => form.source_channel === 'reddit');
+
+const keywordGroups = computed(() =>
+    isReddit.value
+        ? props.scrape_options.intent_keyword_groups
+        : props.scrape_options.business_type_groups,
+);
+
+watch(() => form.source_channel, () => {
+    form.keyword = '';
+});
 
 const channelLabel = (value) =>
     props.channels.find((c) => c.value === value)?.label ?? value;
@@ -60,7 +84,7 @@ const startPolling = () => {
             stopPolling();
             return;
         }
-        router.reload({ only: ['jobs'], onSuccess: () => {
+        router.reload({ only: ['jobs'], preserveScroll: true, onSuccess: () => {
             for (const job of props.jobs?.data ?? []) {
                 if (
                     watchedRunning.value.has(job.uuid)
@@ -110,6 +134,11 @@ const statusClasses = {
 };
 
 const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
+
+const locationLabel = (job) => [job.city, job.area, job.country].filter(Boolean).join(', ') || '—';
+
+const channelTier = (sourceChannel) =>
+    props.channels.find((c) => c.value === sourceChannel)?.tier ?? 'warm';
 </script>
 
 <template>
@@ -158,40 +187,39 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
 
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">
-                                {{ activeChannel.keyword_label ?? 'Keyword' }} <span class="text-red-500">*</span>
+                                {{ activeChannel.keyword_label ?? 'Business type' }} <span class="text-red-500">*</span>
                             </label>
-                            <input
+                            <select
                                 v-model="form.keyword"
-                                type="text"
-                                :placeholder="activeChannel.keyword_placeholder ?? 'e.g. dentist, restaurant'"
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 required
-                            />
+                            >
+                                <option value="" disabled>
+                                    {{ isReddit ? 'Select intent keyword' : 'Select business type' }}
+                                </option>
+                                <optgroup
+                                    v-for="group in keywordGroups"
+                                    :key="group.label"
+                                    :label="group.label"
+                                >
+                                    <option
+                                        v-for="opt in group.options"
+                                        :key="opt.value"
+                                        :value="opt.value"
+                                    >
+                                        {{ opt.label }}
+                                    </option>
+                                </optgroup>
+                            </select>
                             <p v-if="form.errors.keyword" class="mt-1 text-xs text-red-600">{{ form.errors.keyword }}</p>
-                        </div>
-
-                        <div>
-                            <label class="mb-1 block text-sm font-medium text-slate-700">
-                                {{ activeChannel.industry_label ?? 'Industry' }}
-                                <span class="text-slate-400 text-xs font-normal">(optional)</span>
-                            </label>
-                            <input
-                                v-model="form.industry"
-                                type="text"
-                                :placeholder="activeChannel.industry_placeholder ?? 'e.g. healthcare, F&B'"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
                             <p v-if="form.source_channel === 'reddit'" class="mt-1 text-xs text-slate-400">
-                                Leave empty to use default subreddit packs.
+                                Subreddits are chosen automatically from your selected country.
                             </p>
                             <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'yelp'" class="mt-1 text-xs text-amber-600">
                                 Yelp blocks browser scraping — set YELP_API_KEY on the SRP service.
                             </p>
                             <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'openstreetmap'" class="mt-1 text-xs text-emerald-600">
                                 Free OSM data — city recommended for accurate results.
-                            </p>
-                            <p v-else-if="activeChannel.tier === 'warm'" class="mt-1 text-xs text-slate-400">
-                                Narrow results by vertical (optional).
                             </p>
                         </div>
 
@@ -279,104 +307,88 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleString() : '—';
             </div>
 
             <!-- Job History -->
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                <div class="border-b border-slate-100 px-6 py-4">
-                    <h3 class="text-base font-semibold text-slate-800">Job History</h3>
-                </div>
+            <DataTable
+                title="Job History"
+                :is-empty="jobs.data.length === 0"
+                empty-message="No scrape jobs yet. Run your first job above."
+            >
+                <template #head>
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Source</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Search</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Status</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Found</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Created</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Dupes</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Failed</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Scraper</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6">Run at</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500 sm:px-6"></th>
+                    </tr>
+                </template>
 
-                <div v-if="jobs.data.length === 0" class="px-6 py-10 text-center text-sm text-slate-400">
-                    No scrape jobs yet. Run your first job above.
-                </div>
+                <tr
+                    v-for="job in jobs.data"
+                    :key="job.uuid"
+                    class="hover:bg-slate-50 transition-colors"
+                >
+                    <td class="whitespace-nowrap px-4 py-3 sm:px-6">
+                        <span
+                            class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                            :class="tierBadgeClass(channelTier(job.source_channel))"
+                        >
+                            {{ channelLabel(job.source_channel) }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 sm:px-6">
+                        <div class="text-sm font-medium text-slate-800">{{ job.keyword }}</div>
+                        <div class="max-w-xs truncate text-xs text-slate-400">
+                            {{ locationLabel(job) }}
+                        </div>
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3 sm:px-6">
+                        <span
+                            class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize"
+                            :class="statusClasses[job.status] ?? 'bg-slate-100 text-slate-600'"
+                        >
+                            <span
+                                v-if="job.status === 'running'"
+                                class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"
+                            />
+                            {{ job.status }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-center text-sm text-slate-600 sm:px-6">{{ job.total_found }}</td>
+                    <td class="px-4 py-3 text-center text-sm font-medium text-emerald-600 sm:px-6">{{ job.created_count }}</td>
+                    <td class="px-4 py-3 text-center text-sm text-amber-600 sm:px-6">{{ job.duplicate_count }}</td>
+                    <td class="px-4 py-3 text-center text-sm text-red-500 sm:px-6">{{ job.failed_count }}</td>
+                    <td class="px-4 py-3 text-xs capitalize text-slate-500 sm:px-6">
+                        {{ job.scraper_used?.replace('_', ' ') ?? '—' }}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-400 sm:px-6">
+                        {{ formatDate(job.created_at) }}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3 sm:px-6">
+                        <Link
+                            :href="route('scraper.show', job.uuid)"
+                            class="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        >
+                            Details →
+                        </Link>
+                    </td>
+                </tr>
 
-                <div v-else class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-100">
-                        <thead class="bg-slate-50 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-3 text-left">Source</th>
-                                <th class="px-6 py-3 text-left">Search</th>
-                                <th class="px-6 py-3 text-left">Status</th>
-                                <th class="px-6 py-3 text-center">Found</th>
-                                <th class="px-6 py-3 text-center">Created</th>
-                                <th class="px-6 py-3 text-center">Dupes</th>
-                                <th class="px-6 py-3 text-center">Failed</th>
-                                <th class="px-6 py-3 text-left">Scraper</th>
-                                <th class="px-6 py-3 text-left">Run at</th>
-                                <th class="px-6 py-3 text-left"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <tr
-                                v-for="job in jobs.data"
-                                :key="job.uuid"
-                                class="hover:bg-slate-50 transition-colors"
-                            >
-                                <td class="px-6 py-3">
-                                    <span
-                                        class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                        :class="tierBadgeClass(channels.find(c => c.value === job.source_channel)?.tier ?? 'warm')"
-                                    >
-                                        {{ channelLabel(job.source_channel) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-3">
-                                    <div class="text-sm font-medium text-slate-800">{{ job.keyword }}</div>
-                                    <div class="text-xs text-slate-400">
-                                        <span v-if="job.industry">{{ job.industry }} · </span>
-                                        {{ [job.city, job.area, job.country].filter(Boolean).join(', ') }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-3">
-                                    <span
-                                        class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize"
-                                        :class="statusClasses[job.status] ?? 'bg-slate-100 text-slate-600'"
-                                    >
-                                        <span
-                                            v-if="job.status === 'running'"
-                                            class="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"
-                                        />
-                                        {{ job.status }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-3 text-center text-sm text-slate-600">{{ job.total_found }}</td>
-                                <td class="px-6 py-3 text-center text-sm font-medium text-emerald-600">{{ job.created_count }}</td>
-                                <td class="px-6 py-3 text-center text-sm text-amber-600">{{ job.duplicate_count }}</td>
-                                <td class="px-6 py-3 text-center text-sm text-red-500">{{ job.failed_count }}</td>
-                                <td class="px-6 py-3 text-xs text-slate-500 capitalize">
-                                    {{ job.scraper_used?.replace('_', ' ') ?? '—' }}
-                                </td>
-                                <td class="px-6 py-3 text-xs text-slate-400 whitespace-nowrap">
-                                    {{ formatDate(job.created_at) }}
-                                </td>
-                                <td class="px-6 py-3">
-                                    <Link
-                                        :href="route('scraper.show', job.uuid)"
-                                        class="text-xs font-medium text-blue-600 hover:text-blue-800"
-                                    >
-                                        Details →
-                                    </Link>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div v-if="jobs.links?.length > 3" class="border-t border-slate-100 px-6 py-3 flex gap-1">
-                    <component
-                        :is="link.url ? Link : 'span'"
-                        v-for="link in jobs.links"
-                        :key="link.label"
-                        :href="link.url"
-                        class="rounded px-3 py-1 text-xs"
-                        :class="link.active
-                            ? 'bg-blue-600 text-white'
-                            : link.url
-                                ? 'text-slate-600 hover:bg-slate-100'
-                                : 'text-slate-300 cursor-default'"
-                        v-html="link.label"
+                <template #footer>
+                    <Pagination
+                        :paginator="jobs"
+                        item-label="jobs"
+                        :per-page="filters.per_page"
+                        route-name="scraper.index"
+                        :query="{ per_page: filters.per_page }"
+                        :only="['jobs', 'filters']"
                     />
-                </div>
-            </div>
+                </template>
+            </DataTable>
         </div>
 
         <!-- Completion Notification -->

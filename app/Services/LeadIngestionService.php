@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DataTransferObjects\LeadIngestResult;
+use App\Jobs\VerifyLeadJob;
 use App\Models\Lead;
 use App\Support\LeadBusinessName;
 use App\Support\LeadDataQuality;
@@ -24,6 +25,7 @@ class LeadIngestionService
 
         if ($duplicate = $this->findDuplicate($normalized)) {
             $merged = $this->mergeDirectoryLeadIfImproved($duplicate, $normalized);
+            $this->dispatchVerificationIfNeeded($merged);
 
             return LeadIngestResult::duplicate($merged);
         }
@@ -31,8 +33,10 @@ class LeadIngestionService
         return DB::transaction(function () use ($normalized): LeadIngestResult {
             $lead = Lead::query()->create($normalized);
             $this->scoringService->score($lead);
+            $fresh = $lead->fresh(['latestScore']);
+            $this->dispatchVerificationIfNeeded($fresh);
 
-            return LeadIngestResult::created($lead->fresh(['latestScore']));
+            return LeadIngestResult::created($fresh);
         });
     }
 
@@ -275,5 +279,14 @@ class LeadIngestionService
         }
 
         return $lines === [] ? null : implode("\n", $lines);
+    }
+
+    private function dispatchVerificationIfNeeded(Lead $lead): void
+    {
+        if (! app(LeadVerificationService::class)->shouldVerify($lead)) {
+            return;
+        }
+
+        VerifyLeadJob::dispatch($lead)->afterCommit();
     }
 }

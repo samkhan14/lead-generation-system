@@ -29,12 +29,15 @@ class LeadDataQuality
 
         $score = (int) round((count($present) / max(count($fields), 1)) * 100);
 
+        $verification = data_get($normalized, 'metadata.verification');
+
         return [
             'score' => $score,
             'missing_fields' => $missing,
             'is_complete' => $missing === [],
             'has_website' => ! in_array('website', $missing, true),
             'has_phone' => ! in_array('phone', $missing, true),
+            'verification_status' => is_array($verification) ? ($verification['status'] ?? null) : null,
             'assessed_at' => now()->toIso8601String(),
             'enrichment_hint' => in_array('website', $missing, true) && ! GooglePlacesConfig::isConfigured()
                 ? GooglePlacesConfig::unavailableMessage()

@@ -79,8 +79,8 @@ test('agent can create a lead with automatic scoring', function () {
         ->and($lead->email_normalized)->toBe('jane@example.com')
         ->and($lead->phone_normalized)->toBe('5551112222')
         ->and($lead->website_normalized)->toBe('acme.com')
-        ->and($lead->scores)->toHaveCount(1)
-        ->and($lead->scores->first()->temperature)->not->toBeNull();
+        ->and($lead->fresh()->latestScore)->not->toBeNull()
+        ->and($lead->fresh()->latestScore->temperature)->not->toBeNull();
 
     $response->assertRedirect(route('leads.show', $lead));
 });

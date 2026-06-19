@@ -16,6 +16,21 @@ class LeadEnrichmentService
         private LeadScoringService $scoringService,
     ) {}
 
+    /**
+     * @return array{data: ?array{website: ?string, phone: ?string, address: ?string, google_place_id: ?string}, error: ?string}
+     */
+    public function lookupPlaceDetails(Lead $lead): array
+    {
+        if (! GooglePlacesConfig::isConfigured()) {
+            return [
+                'data' => null,
+                'error' => GooglePlacesConfig::unavailableMessage(),
+            ];
+        }
+
+        return $this->fetchPlaceDetails((string) config('google_places.api_key'), $lead);
+    }
+
   /**
    * @return array{
    *   updated: int,

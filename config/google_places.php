@@ -6,7 +6,7 @@ return [
     |--------------------------------------------------------------------------
     | Google Places API (optional enrichment fallback)
     |--------------------------------------------------------------------------
-    | Used only when Playwright misses website/phone, or by leads:enrich-directory.
+    | Used when Playwright misses website/phone during scrape or verification.
     | When empty, scraping continues without API — no hard failure.
     */
     'api_key' => env('GOOGLE_PLACES_API_KEY'),
