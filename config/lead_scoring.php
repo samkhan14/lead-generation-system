@@ -4,7 +4,7 @@ return [
 
     'version' => 'v6',
 
-    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap'],
+    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap', 'bing_places'],
 
     'weights' => [
         'intent' => 0.25,
@@ -39,6 +39,7 @@ return [
             'google_maps' => 4,
             'yelp' => 4,
             'openstreetmap' => 4,
+            'bing_places' => 4,
             'reddit' => 12,
             'scraper' => 10,
             'import' => 8,
@@ -94,7 +95,7 @@ return [
         'website_points' => 20,
         'name_points' => 15,
         'trusted_source_points' => 15,
-        'trusted_sources' => ['manual', 'api', 'google_maps', 'yelp', 'openstreetmap', 'reddit'],
+        'trusted_sources' => ['manual', 'api', 'google_maps', 'yelp', 'openstreetmap', 'bing_places', 'reddit'],
         'google_maps' => [
             'place_id_points' => 12,
             'address_points' => 10,

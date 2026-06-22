@@ -140,6 +140,15 @@ class ScraperChannels
                     'fallback_name_search' => config('openstreetmap.fallback_name_search'),
                 ],
             ],
+            'bing_places' => [
+                'bing' => [
+                    'api_base_url' => config('bing.api_base_url'),
+                    'api_version' => config('bing.api_version'),
+                    'search_path' => config('bing.search_path'),
+                    'entity_type' => config('bing.entity_type'),
+                    'max_limit' => config('bing.max_limit'),
+                ],
+            ],
             default => [],
         };
     }

@@ -221,6 +221,9 @@ const channelTier = (sourceChannel) =>
                             <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'openstreetmap'" class="mt-1 text-xs text-emerald-600">
                                 Free OSM data — city recommended for accurate results.
                             </p>
+                            <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'bing_places'" class="mt-1 text-xs text-slate-400">
+                                Playwright scrapes Bing Maps first. Set AZURE_MAPS_KEY on SRP only as fallback.
+                            </p>
                         </div>
 
                         <div>

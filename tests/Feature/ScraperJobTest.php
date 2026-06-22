@@ -69,6 +69,7 @@ it('reddit is disabled by default in runnable channels', function () {
     expect(ScraperChannels::runnableKeys())->toContain('google_maps')
         ->and(ScraperChannels::runnableKeys())->toContain('yelp')
         ->and(ScraperChannels::runnableKeys())->toContain('openstreetmap')
+        ->and(ScraperChannels::runnableKeys())->toContain('bing_places')
         ->and(ScraperChannels::runnableKeys())->not->toContain('reddit');
 });
 
