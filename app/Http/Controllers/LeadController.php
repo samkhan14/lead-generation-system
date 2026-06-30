@@ -82,6 +82,10 @@ class LeadController extends Controller
                 'keywords' => LeadQueryFilters::distinctMetadataValues('scrape_keyword'),
                 'sources' => [
                     ['value' => 'google_maps', 'label' => 'Google Maps'],
+                    ['value' => 'yelp', 'label' => 'Yelp'],
+                    ['value' => 'hotfrog', 'label' => 'Hotfrog'],
+                    ['value' => 'openstreetmap', 'label' => 'OpenStreetMap'],
+                    ['value' => 'bing_places', 'label' => 'Bing Places'],
                     ['value' => 'reddit', 'label' => 'Reddit'],
                     ['value' => 'manual', 'label' => 'Manual'],
                     ['value' => 'api', 'label' => 'API'],

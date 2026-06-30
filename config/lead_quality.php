@@ -7,7 +7,7 @@ return [
     | Directory lead sources (merge-on-re-ingest)
     |--------------------------------------------------------------------------
     */
-    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap', 'bing_places'],
+    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog'],
 
     /*
     |--------------------------------------------------------------------------

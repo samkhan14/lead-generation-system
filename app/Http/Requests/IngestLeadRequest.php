@@ -37,6 +37,8 @@ class IngestLeadRequest extends FormRequest
             'yelp_url' => ['nullable', 'string', 'max:500'],
             'bing_entity_id' => ['nullable', 'string', 'max:255'],
             'bing_url' => ['nullable', 'string', 'max:500'],
+            'hotfrog_business_id' => ['nullable', 'string', 'max:255'],
+            'hotfrog_url' => ['nullable', 'string', 'max:500'],
             'osm_id' => ['nullable', 'string', 'max:64'],
             'osm_type' => ['nullable', 'string', 'max:16'],
             'osm_url' => ['nullable', 'string', 'max:500'],

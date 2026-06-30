@@ -66,6 +66,8 @@ class LeadIdentifiers
             'google.com', 'maps.google.com', 'g.page', 'goo.gl',
             'facebook.com', 'fb.com', 'instagram.com',
             'openstreetmap.org',
+            'hotfrog.com', 'hotfrog.co.uk', 'hotfrog.com.au', 'hotfrog.ca', 'hotfrog.com.pk',
+            'hotfrog.in', 'hotfrog.ie', 'hotfrog.co.za', 'hotfrog.de', 'hotfrog.fr',
             'bing.com', 'apple.com',
         ];
 
@@ -73,6 +75,10 @@ class LeadIdentifiers
             if ($host === $blocked || str_ends_with($host, '.'.$blocked)) {
                 return null;
             }
+        }
+
+        if (str_contains($host, 'hotfrog.')) {
+            return null;
         }
 
         if (str_contains($host, 'google.') && str_contains($website, '/maps')) {

@@ -59,14 +59,16 @@ const priorityClasses = {
 const sourceLabels = {
     google_maps: 'Google Maps',
     yelp: 'Yelp',
+    hotfrog: 'Hotfrog',
     openstreetmap: 'OpenStreetMap',
     reddit: 'Reddit',
 };
 
 const isReddit = computed(() => props.lead.source === 'reddit');
 const isYelp = computed(() => props.lead.source === 'yelp');
+const isHotfrog = computed(() => props.lead.source === 'hotfrog');
 const isOsm = computed(() => props.lead.source === 'openstreetmap');
-const isDirectory = computed(() => ['google_maps', 'yelp', 'openstreetmap'].includes(props.lead.source));
+const isDirectory = computed(() => ['google_maps', 'yelp', 'hotfrog', 'openstreetmap', 'bing_places'].includes(props.lead.source));
 
 const sourceLabel = computed(
     () => sourceLabels[props.lead.source] ?? props.lead.source ?? '—',
@@ -79,6 +81,7 @@ const ratingLabel = computed(() => {
 });
 
 const yelpUrl = computed(() => metadata.value.yelp_url ?? null);
+const hotfrogUrl = computed(() => metadata.value.hotfrog_url ?? null);
 const osmUrl = computed(() => metadata.value.osm_url ?? null);
 
 const externalWebsite = computed(() => {
@@ -288,6 +291,50 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                         class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                     >
                         View listing on Yelp
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hotfrog context -->
+            <div
+                v-if="isHotfrog"
+                class="animate-fade-slide-up rounded-xl bg-white p-6 shadow-sm ring-1 ring-orange-100 transition-shadow hover:shadow-md"
+                :style="sectionDelay(1)"
+            >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">Hotfrog listing</h3>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Global business directory — Hotfrog profile is separate from the business website.
+                        </p>
+                    </div>
+                    <span class="rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 ring-1 ring-orange-100">
+                        Warm lead
+                    </span>
+                </div>
+
+                <dl class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div v-if="metadata.hotfrog_business_id">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Business ID</dt>
+                        <dd class="mt-1 text-sm text-slate-900">{{ metadata.hotfrog_business_id }}</dd>
+                    </div>
+                    <div v-if="metadata.scrape_keyword">
+                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-400">Discovered via</dt>
+                        <dd class="mt-1 text-sm text-slate-900">
+                            {{ metadata.scrape_keyword }}
+                            <span v-if="metadata.scrape_city"> in {{ metadata.scrape_city }}</span>
+                        </dd>
+                    </div>
+                </dl>
+
+                <div v-if="hotfrogUrl" class="mt-4">
+                    <a
+                        :href="hotfrogUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+                    >
+                        View listing on Hotfrog
                     </a>
                 </div>
             </div>

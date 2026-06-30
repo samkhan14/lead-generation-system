@@ -66,6 +66,8 @@ class LeadIngestionService
                 'yelp_url' => $payload['yelp_url'] ?? null,
                 'bing_entity_id' => $payload['bing_entity_id'] ?? null,
                 'bing_url' => $payload['bing_url'] ?? null,
+                'hotfrog_business_id' => $payload['hotfrog_business_id'] ?? null,
+                'hotfrog_url' => $payload['hotfrog_url'] ?? null,
                 'osm_id' => $payload['osm_id'] ?? null,
                 'osm_type' => $payload['osm_type'] ?? null,
                 'osm_url' => $payload['osm_url'] ?? null,
@@ -126,7 +128,7 @@ class LeadIngestionService
             $updates['phone'] = $normalized['phone'];
         }
 
-        foreach (['address', 'rating', 'review_count', 'yelp_url', 'bing_url', 'osm_url'] as $key) {
+        foreach (['address', 'rating', 'review_count', 'yelp_url', 'bing_url', 'hotfrog_url', 'osm_url'] as $key) {
             $incoming = data_get($normalized, "metadata.{$key}");
 
             if (filled($incoming) && blank($metadata[$key] ?? null)) {
@@ -232,6 +234,18 @@ class LeadIngestionService
             }
         }
 
+        $hotfrogBusinessId = data_get($normalized, 'metadata.hotfrog_business_id');
+
+        if ($hotfrogBusinessId) {
+            $existing = Lead::query()
+                ->where('metadata->hotfrog_business_id', $hotfrogBusinessId)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
         $osmId = data_get($normalized, 'metadata.osm_id');
 
         if ($osmId) {
@@ -283,6 +297,7 @@ class LeadIngestionService
             $sourceLabel = match ($payload['source'] ?? 'google_maps') {
                 'yelp' => 'Yelp',
                 'bing_places' => 'Bing',
+                'hotfrog' => 'Hotfrog',
                 'openstreetmap' => 'OSM',
                 default => 'Google',
             };

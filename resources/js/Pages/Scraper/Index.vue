@@ -224,6 +224,9 @@ const channelTier = (sourceChannel) =>
                             <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'bing_places'" class="mt-1 text-xs text-slate-400">
                                 Playwright scrapes Bing Maps first. Set AZURE_MAPS_KEY on SRP only as fallback.
                             </p>
+                            <p v-else-if="activeChannel.tier === 'warm' && form.source_channel === 'hotfrog'" class="mt-1 text-xs text-slate-400">
+                                Global business directory — city recommended for accurate local results.
+                            </p>
                         </div>
 
                         <div>

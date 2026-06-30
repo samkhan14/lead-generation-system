@@ -428,7 +428,7 @@ class LeadScoringService
         $rating = data_get($lead->metadata, 'rating');
         $reviewCount = data_get($lead->metadata, 'review_count');
 
-        if (data_get($lead->metadata, 'google_place_id') || data_get($lead->metadata, 'yelp_business_id') || data_get($lead->metadata, 'bing_entity_id') || data_get($lead->metadata, 'osm_id')) {
+        if (data_get($lead->metadata, 'google_place_id') || data_get($lead->metadata, 'yelp_business_id') || data_get($lead->metadata, 'bing_entity_id') || data_get($lead->metadata, 'hotfrog_business_id') || data_get($lead->metadata, 'osm_id')) {
             $score += $config['place_id_points'];
             $signals[] = 'Directory business ID present';
         }

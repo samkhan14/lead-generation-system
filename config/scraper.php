@@ -86,6 +86,16 @@ return [
             'requires_location' => true,
             'dedupe_metadata_key' => 'bing_entity_id',
         ],
+        'hotfrog' => [
+            'tier' => 'warm',
+            'enabled' => true,
+            'implemented' => true,
+            'label' => 'Hotfrog',
+            'keyword_label' => 'Business type',
+            'keyword_placeholder' => 'e.g. plumber, dentist, restaurant',
+            'requires_location' => true,
+            'dedupe_metadata_key' => 'hotfrog_business_id',
+        ],
         'reddit' => [
             'tier' => 'hot',
             'enabled' => false,
