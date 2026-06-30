@@ -30,6 +30,7 @@ use Illuminate\Support\Str;
     'status',
     'notes',
     'metadata',
+    'verified_at',
     'last_contacted_at',
 ])]
 class Lead extends Model
@@ -40,6 +41,7 @@ class Lead extends Model
     {
         return [
             'metadata' => 'array',
+            'verified_at' => 'datetime',
             'last_contacted_at' => 'datetime',
         ];
     }

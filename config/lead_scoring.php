@@ -88,6 +88,25 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Website analysis scoring — signals derived from metadata.website_analysis.
+    |--------------------------------------------------------------------------
+    | opportunity: website issues / missing tools = pitch opportunity for agency
+    | authenticity: confirmed live website = trust signal
+    */
+    'website_analysis' => [
+        'opportunity' => [
+            'high_revamp_points' => 12,   // outdated site = revamp pitch
+            'no_booking_points' => 8,     // missing booking system
+            'no_chat_points' => 5,        // missing live chat
+            'no_analytics_points' => 6,   // no tracking = analytics opportunity
+        ],
+        'authenticity' => [
+            'confirmed_points' => 8,      // website exists + analyzed
+        ],
+    ],
+
     'authenticity' => [
         'phone_points' => 25,
         'min_phone_digits' => 10,

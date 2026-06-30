@@ -14,6 +14,7 @@ class LeadVerificationService
     public function __construct(
         private LeadScoringService $scoringService,
         private LeadEnrichmentService $enrichmentService,
+        private LeadWebsiteAnalysisService $analysisService,
     ) {}
 
     /**
@@ -106,6 +107,21 @@ class LeadVerificationService
             $checks['website_http'] = $this->checkWebsiteReachable($website);
         }
 
+        if ($this->layerEnabled('website_analysis') && filled($website)) {
+            $analysis = $this->analysisService->analyze($lead, $website);
+            $checks['website_analysis'] = $analysis['check'];
+
+            if (is_array($analysis['data'])) {
+                $metadata['website_analysis'] = $analysis['data'];
+            }
+        } elseif ($this->layerEnabled('website_analysis') && blank($website)) {
+            $checks['website_analysis'] = [
+                'layer' => 'website_analysis',
+                'status' => 'skip',
+                'message' => 'No website available for analysis',
+            ];
+        }
+
         $phoneDigits = LeadIdentifiers::normalizePhone($phone);
         $minDigits = (int) config('lead_quality.verification.min_phone_digits', 7);
         $checks['phone'] = [
@@ -136,6 +152,11 @@ class LeadVerificationService
 
         if ($dirty) {
             $updates['metadata'] = $metadata;
+
+            if (in_array($verification['status'], ['fully_verified', 'verified'], true)) {
+                $updates['verified_at'] = now();
+            }
+
             $lead->update($updates);
             $this->scoringService->score($lead->fresh());
         }
@@ -187,7 +208,7 @@ class LeadVerificationService
             return true;
         }
 
-        if (($verification['status'] ?? '') === 'verified') {
+        if (in_array($verification['status'] ?? '', ['verified', 'fully_verified'], true)) {
             return false;
         }
 
@@ -235,7 +256,13 @@ class LeadVerificationService
         $failed = collect($checks)->where('status', 'fail')->count();
         $passed = collect($checks)->where('status', 'pass')->count();
 
+        $analysisCheck = $checks['website_analysis'] ?? null;
+
+        $websiteAnalysisConfirmed = $analysisCheck !== null
+            && ($analysisCheck['status'] ?? '') === 'pass';
+
         $status = match (true) {
+            $failed === 0 && $passed > 0 && $websiteAnalysisConfirmed => 'fully_verified',
             $failed === 0 && $passed > 0 => 'verified',
             $passed > 0 => 'partial',
             default => 'unverified',

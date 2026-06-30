@@ -80,6 +80,25 @@ test('verification service discovers website via srp google search', function ()
             ],
             'scraper_used' => 'playwright',
         ]),
+        'localhost:3100/analyze-website' => Http::response([
+            'status' => 'ok',
+            'exists' => true,
+            'final_url' => 'https://www.foodsinn.pk',
+            'tech_stack' => ['WordPress'],
+            'cms' => 'WordPress',
+            'is_mobile_responsive' => true,
+            'has_contact_info' => true,
+            'has_booking' => false,
+            'has_chat' => false,
+            'has_analytics' => false,
+            'has_crm' => false,
+            'copyright_year' => 2022,
+            'quality_score' => 45,
+            'revamp_potential' => 'medium',
+            'automation_opportunities' => ['booking', 'live_chat', 'analytics'],
+            'pages_analyzed' => 1,
+            'analyzed_at' => now()->toIso8601String(),
+        ]),
         'www.foodsinn.pk/*' => Http::response('ok', 200),
     ]);
 
@@ -103,8 +122,9 @@ test('verification service discovers website via srp google search', function ()
     $lead->refresh();
 
     expect($lead->website)->toBe('https://www.foodsinn.pk')
-        ->and($lead->metadata['verification']['status'])->toBeIn(['verified', 'partial'])
-        ->and($lead->metadata['verification']['checks']['google_search']['status'])->toBe('pass');
+        ->and($lead->metadata['verification']['status'])->toBeIn(['fully_verified', 'verified', 'partial'])
+        ->and($lead->metadata['verification']['checks']['google_search']['status'])->toBe('pass')
+        ->and($lead->metadata['verification']['checks']['website_analysis']['layer'])->toBe('website_analysis');
 });
 
 test('verification skips places api layer when key not configured', function () {
@@ -113,6 +133,7 @@ test('verification skips places api layer when key not configured', function () 
         'scraper.service_url' => 'http://localhost:3100',
     ]);
 
+    // No website discovered → website_analysis layer skips (blank website)
     Http::fake([
         'localhost:3100/verify' => Http::response([
             'status' => 'ok',

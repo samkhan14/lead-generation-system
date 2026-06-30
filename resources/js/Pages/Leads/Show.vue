@@ -1,12 +1,14 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
+import VerificationBadge from '@/Components/Admin/VerificationBadge.vue';
+import WebsiteAnalysisPanel from '@/Components/Admin/WebsiteAnalysisPanel.vue';
 import IntelligenceScoreCard from '@/Components/Admin/IntelligenceScoreCard.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     lead: {
@@ -25,6 +27,28 @@ const deleteLead = () => {
 
 const intelligence = () => props.lead.latest_score?.factors ?? {};
 const metadata = computed(() => props.lead.metadata ?? {});
+const websiteAnalysis = computed(() => metadata.value.website_analysis ?? null);
+const verificationStatus = computed(() => metadata.value.verification?.status ?? null);
+
+const reverifying = ref(false);
+const reverifyMessage = ref(null);
+
+const reverify = () => {
+    reverifying.value = true;
+    reverifyMessage.value = null;
+    router.post(route('leads.reverify', props.lead.id), {}, {
+        preserveScroll: true,
+        onSuccess: () => {
+            reverifyMessage.value = 'Verification queued. Results will appear after the job runs.';
+        },
+        onError: () => {
+            reverifyMessage.value = 'Failed to queue verification. Please try again.';
+        },
+        onFinish: () => {
+            reverifying.value = false;
+        },
+    });
+};
 
 const priorityClasses = {
     high: 'bg-red-50 text-red-700 ring-red-100',
@@ -98,6 +122,7 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                 <div class="flex flex-wrap items-center gap-3">
                     <h1 class="text-xl font-semibold text-slate-900">{{ lead.full_name }}</h1>
                     <TemperatureBadge :temperature="lead.latest_score?.temperature" />
+                    <VerificationBadge :status="verificationStatus" />
                     <span
                         v-if="lead.source"
                         class="rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1"
@@ -491,10 +516,27 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                 </div>
             </div>
 
+            <!-- Website Analysis / Verification -->
+            <div
+                class="animate-fade-slide-up"
+                :style="sectionDelay(4)"
+            >
+                <div v-if="reverifyMessage" class="mb-3 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-700 ring-1 ring-indigo-100">
+                    {{ reverifyMessage }}
+                </div>
+                <WebsiteAnalysisPanel
+                    :analysis="websiteAnalysis"
+                    :verification-status="verificationStatus"
+                    :verified-at="lead.verified_at"
+                    :lead-id="lead.id"
+                    @reverify="reverify"
+                />
+            </div>
+
             <!-- Score history -->
             <div
                 class="animate-fade-slide-up rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-                :style="sectionDelay(4)"
+                :style="sectionDelay(5)"
             >
                 <h3 class="text-lg font-semibold text-slate-900">Score history</h3>
                 <div v-if="lead.scores.length === 0" class="mt-4 text-sm text-slate-500">

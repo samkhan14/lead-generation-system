@@ -1,6 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
+import VerificationBadge from '@/Components/Admin/VerificationBadge.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -422,6 +423,7 @@ const locationLabel = (lead) => {
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Pitch</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Source</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Score</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Verified</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Temp</th>
                         </tr>
                     </thead>
@@ -490,11 +492,14 @@ const locationLabel = (lead) => {
                                 <span v-else>—</span>
                             </td>
                             <td class="px-4 py-3 text-sm">
+                                <VerificationBadge :status="lead.verification_status" size="xs" />
+                            </td>
+                            <td class="px-4 py-3 text-sm">
                                 <TemperatureBadge :temperature="lead.latest_score?.temperature" />
                             </td>
                         </tr>
                         <tr v-if="leads.data.length === 0">
-                            <td colspan="9" class="px-4 py-8 text-center text-sm text-slate-500">
+                            <td colspan="10" class="px-4 py-8 text-center text-sm text-slate-500">
                                 No leads match these filters.
                             </td>
                         </tr>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLeadRequest;
+use App\Jobs\VerifyLeadJob;
 use App\Models\Lead;
 use App\Models\LeadScore;
 use App\Services\LeadIngestionService;
@@ -19,7 +20,7 @@ class LeadController extends Controller
         private LeadIngestionService $ingestionService,
         private LeadPitchService $pitchService,
     ) {
-        $this->middleware('permission:leads.view')->only(['index', 'show']);
+        $this->middleware('permission:leads.view')->only(['index', 'show', 'reverify']);
         $this->middleware('permission:leads.create')->only(['create', 'store']);
         $this->middleware('permission:leads.delete')->only('destroy');
     }
@@ -160,6 +161,7 @@ class LeadController extends Controller
                 'status' => $lead->status,
                 'notes' => $lead->notes,
                 'metadata' => $lead->metadata,
+                'verified_at' => $lead->verified_at?->toIso8601String(),
                 'assigned_to' => $lead->assignedTo?->name,
                 'created_by' => $lead->createdBy?->name,
                 'created_at' => $lead->created_at?->toIso8601String(),
@@ -172,6 +174,13 @@ class LeadController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function reverify(Request $request, Lead $lead): RedirectResponse
+    {
+        VerifyLeadJob::dispatch($lead);
+
+        return redirect()->back()->with('reverify_queued', true);
     }
 
     public function destroy(Lead $lead): RedirectResponse
@@ -203,6 +212,8 @@ class LeadController extends Controller
             'rating' => data_get($lead->metadata, 'rating'),
             'review_count' => data_get($lead->metadata, 'review_count'),
             'pitch_summary' => $this->pitchService->primaryRecommendation($lead),
+            'verification_status' => data_get($lead->metadata, 'verification.status'),
+            'verified_at' => $lead->verified_at?->toIso8601String(),
             'assigned_to' => $lead->assignedTo?->name,
             'latest_score' => $lead->latestScore ? $this->formatScore($lead->latestScore) : null,
             'created_at' => $lead->created_at?->toIso8601String(),

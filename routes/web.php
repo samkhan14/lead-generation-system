@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::resource('leads', LeadController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::post('/leads/{lead}/verify', [LeadController::class, 'reverify'])->name('leads.reverify');
 
     Route::prefix('scraper')->name('scraper.')->group(function () {
         Route::get('/', [ScraperController::class, 'index'])->name('index');

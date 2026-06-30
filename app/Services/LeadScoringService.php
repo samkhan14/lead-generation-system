@@ -163,6 +163,10 @@ class LeadScoringService
             $signals = array_merge($signals, $redditSignals['signals']);
         }
 
+        $analysisSignals = $this->websiteAnalysisOpportunitySignals($lead);
+        $score += $analysisSignals['score'];
+        $signals = array_merge($signals, $analysisSignals['signals']);
+
         return [
             'score' => $this->clampScore($score),
             'signals' => $signals,
@@ -228,6 +232,10 @@ class LeadScoringService
             $score += $redditSignals['score'];
             $signals = array_merge($signals, $redditSignals['signals']);
         }
+
+        $analysisSignals = $this->websiteAnalysisAuthenticitySignals($lead);
+        $score += $analysisSignals['score'];
+        $signals = array_merge($signals, $analysisSignals['signals']);
 
         return [
             'score' => $this->clampScore($score),
@@ -449,6 +457,71 @@ class LeadScoringService
                 }
             }
         }
+
+        return ['score' => $score, 'signals' => $signals];
+    }
+
+    /**
+     * Opportunity signals derived from website_analysis metadata.
+     * What's MISSING on the website = pitch opportunity for an agency.
+     *
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function websiteAnalysisOpportunitySignals(Lead $lead): array
+    {
+        $analysis = data_get($lead->metadata, 'website_analysis');
+        if (! is_array($analysis) || ! ($analysis['exists'] ?? false)) {
+            return ['score' => 0, 'signals' => []];
+        }
+
+        $config = config('lead_scoring.website_analysis.opportunity', []);
+        $score = 0;
+        $signals = [];
+
+        if (($analysis['revamp_potential'] ?? '') === 'high') {
+            $points = (int) ($config['high_revamp_points'] ?? 12);
+            $score += $points;
+            $signals[] = 'Website is outdated (high revamp potential)';
+        }
+
+        if (! ($analysis['has_booking'] ?? true)) {
+            $points = (int) ($config['no_booking_points'] ?? 8);
+            $score += $points;
+            $signals[] = 'No booking system detected (booking tool opportunity)';
+        }
+
+        if (! ($analysis['has_chat'] ?? true)) {
+            $points = (int) ($config['no_chat_points'] ?? 5);
+            $score += $points;
+            $signals[] = 'No chat widget detected (live chat opportunity)';
+        }
+
+        if (! ($analysis['has_analytics'] ?? true)) {
+            $points = (int) ($config['no_analytics_points'] ?? 6);
+            $score += $points;
+            $signals[] = 'No analytics detected (tracking setup opportunity)';
+        }
+
+        return ['score' => $score, 'signals' => $signals];
+    }
+
+    /**
+     * Authenticity signals derived from website_analysis metadata.
+     * A confirmed live website = trust signal.
+     *
+     * @return array{score: int, signals: array<int, string>}
+     */
+    private function websiteAnalysisAuthenticitySignals(Lead $lead): array
+    {
+        $analysis = data_get($lead->metadata, 'website_analysis');
+        if (! is_array($analysis) || ! ($analysis['exists'] ?? false)) {
+            return ['score' => 0, 'signals' => []];
+        }
+
+        $config = config('lead_scoring.website_analysis.authenticity', []);
+        $points = (int) ($config['confirmed_points'] ?? 8);
+        $score = $points;
+        $signals = ["Website verified and analyzed (quality: {$analysis['quality_score']}/100)"];
 
         return ['score' => $score, 'signals' => $signals];
     }
