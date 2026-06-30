@@ -20,6 +20,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'leads.delete',
             'scraper.view',
             'scraper.run',
+            'services.view',
+            'services.create',
+            'services.update',
+            'services.delete',
         ];
 
         foreach ($permissions as $permission) {

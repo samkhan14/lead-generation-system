@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ProfileController;
@@ -23,6 +24,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [ScraperController::class, 'store'])->name('store');
         Route::get('/{scrapeJob}', [ScraperController::class, 'show'])->name('show');
         Route::get('/{scrapeJob}/status', [ScraperController::class, 'statusPoll'])->name('status');
+    });
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('services', ServiceController::class)
+            ->only(['index', 'show', 'store', 'update', 'destroy']);
     });
 });
 
