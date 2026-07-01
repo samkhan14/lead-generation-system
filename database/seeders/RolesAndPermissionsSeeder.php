@@ -45,6 +45,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'ai.knowledge.update',
             'ai.knowledge.delete',
             'ai.logs.view',
+            'voice.providers.view',
+            'voice.providers.create',
+            'voice.providers.update',
+            'voice.providers.delete',
+            'voice.calls.view',
         ];
 
         foreach ($permissions as $permission) {

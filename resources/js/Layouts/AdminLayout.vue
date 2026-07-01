@@ -165,6 +165,36 @@ const { user, can } = useAuth();
                     </template>
                     AI Logs
                 </SidebarLink>
+
+                <div v-if="can('voice.providers.view') || can('voice.calls.view')" class="pt-4">
+                    <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Voice</p>
+                </div>
+
+                <SidebarLink
+                    v-if="can('voice.providers.view')"
+                    :href="route('admin.voice.providers.index')"
+                    :active="route().current('admin.voice.providers.*')"
+                >
+                    <template #icon>
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                    </template>
+                    Voice Providers
+                </SidebarLink>
+
+                <SidebarLink
+                    v-if="can('voice.calls.view')"
+                    :href="route('admin.voice.calls.index')"
+                    :active="route().current('admin.voice.calls.*')"
+                >
+                    <template #icon>
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a9 9 0 010 12m-3.536-8.464a5 5 0 000 7.072" />
+                        </svg>
+                    </template>
+                    Voice Calls
+                </SidebarLink>
             </nav>
 
             <div class="border-t border-slate-800 p-4">

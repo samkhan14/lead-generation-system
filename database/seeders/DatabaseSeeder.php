@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ServiceSeeder::class,
             AiProviderSeeder::class,
+            VoiceProviderSeeder::class,
         ]);
     }
 }

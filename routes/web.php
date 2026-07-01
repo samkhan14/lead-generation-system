@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\AiProviderController;
 use App\Http\Controllers\Admin\KnowledgeBaseController;
 use App\Http\Controllers\Admin\PromptTemplateController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\VoiceCallController;
+use App\Http\Controllers\Admin\VoiceProviderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ProfileController;
@@ -59,6 +61,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::resource('logs', AiLogController::class)
                 ->parameters(['logs' => 'aiLog'])
+                ->only(['index', 'show']);
+        });
+
+        Route::prefix('voice')->name('voice.')->group(function () {
+            Route::resource('providers', VoiceProviderController::class)
+                ->parameters(['providers' => 'voiceProvider'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('calls', VoiceCallController::class)
+                ->parameters(['calls' => 'voiceCall'])
                 ->only(['index', 'show']);
         });
     });
