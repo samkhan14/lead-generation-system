@@ -4,12 +4,14 @@ namespace App\Domains\Voice\Services;
 
 use App\Domains\AI\Models\AiEmployee;
 use App\Domains\AI\Services\ContextBuilder;
+use App\Domains\BusinessKnowledge\Services\ServiceKnowledgeFormatter;
 use App\Models\Lead;
 
 class VoiceContextBuilder
 {
     public function __construct(
         private ContextBuilder $contextBuilder,
+        private ServiceKnowledgeFormatter $serviceKnowledgeFormatter,
     ) {}
 
     /**
@@ -21,11 +23,7 @@ class VoiceContextBuilder
     {
         $context = $this->contextBuilder->build($employee, $lead);
 
-        $services = collect($context->services)
-            ->take(5)
-            ->map(fn ($service) => is_object($service) ? ($service->name ?? null) : ($service['name'] ?? null))
-            ->filter()
-            ->implode(', ');
+        $knowledgeVariables = $this->serviceKnowledgeFormatter->formatCatalogForVoice($context->services);
 
         return array_filter([
             'lead_name' => $lead->full_name ?: 'there',
@@ -34,7 +32,7 @@ class VoiceContextBuilder
             'lead_email' => (string) ($lead->email ?: ''),
             'lead_website' => (string) ($lead->website ?: ''),
             'employee_name' => $employee->name,
-            'services_summary' => $services,
-        ], fn (string $value) => $value !== '');
+            ...$knowledgeVariables,
+        ], fn (string $value) => trim($value) !== '');
     }
 }

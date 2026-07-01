@@ -37,4 +37,27 @@ return [
 
     'log_payload_max_chars' => 12000,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Service knowledge (Business Knowledge Base → AI employees)
+    |--------------------------------------------------------------------------
+    |
+    | Controls how much service catalog data is injected into text and voice
+    | agent prompts. Tune limits to balance context quality vs token cost.
+    |
+    */
+    'service_knowledge' => [
+        'include_detailed_description' => true,
+        'max_faqs_per_service' => 5,
+        'max_objections_per_service' => 5,
+        'max_discovery_questions_per_service' => 7,
+        'max_quotation_requirements_per_service' => 6,
+        'max_problems_per_service' => 6,
+        'voice_max_services' => 8,
+        'voice_max_discovery_questions' => 8,
+        'voice_max_objections' => 5,
+        'voice_max_faqs' => 5,
+        'voice_max_catalog_chars' => 4500,
+    ],
+
 ];

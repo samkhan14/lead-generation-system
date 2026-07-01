@@ -21,6 +21,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    complexityOptions: {
+        type: Array,
+        default: () => [],
+    },
     serviceOptions: {
         type: Array,
         default: () => [],
@@ -130,6 +134,7 @@ const statusClass = (status) => {
             <template #head>
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Service</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Order</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Version</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tags</th>
@@ -141,8 +146,9 @@ const statusClass = (status) => {
             <tr v-for="service in services.data" :key="service.id" class="hover:bg-slate-50">
                 <td class="px-4 py-3">
                     <div class="font-medium text-slate-900">{{ service.name }}</div>
-                    <div class="text-xs text-slate-500">{{ service.slug }}</div>
+                    <div class="text-xs text-slate-500">{{ service.short_description || service.slug }}</div>
                 </td>
+                <td class="px-4 py-3 text-sm text-slate-600">{{ service.sort_order ?? 0 }}</td>
                 <td class="px-4 py-3">
                     <span class="rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" :class="statusClass(service.status)">
                         {{ service.status }}
@@ -199,6 +205,7 @@ const statusClass = (status) => {
             :show="showCreateModal"
             mode="create"
             :status-options="statusOptions"
+            :complexity-options="complexityOptions"
             :service-options="serviceOptions"
             @close="showCreateModal = false"
         />

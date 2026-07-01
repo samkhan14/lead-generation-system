@@ -28,6 +28,7 @@ class ServiceCatalogService
 
         $query = Service::query()
             ->with(['creator:id,name', 'updater:id,name'])
+            ->ordered()
             ->latest('updated_at');
 
         if (filled($filters['q'] ?? null)) {

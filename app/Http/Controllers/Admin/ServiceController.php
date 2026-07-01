@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domains\BusinessKnowledge\Enums\ServiceComplexity;
 use App\Domains\BusinessKnowledge\Enums\ServiceStatus;
 use App\Domains\BusinessKnowledge\Models\Service;
 use App\Http\Controllers\Controller;
@@ -50,7 +51,7 @@ class ServiceController extends Controller
                 ->values()
                 ->all(),
             'serviceOptions' => Service::query()
-                ->orderBy('name')
+                ->ordered()
                 ->get(['id', 'name', 'slug', 'status'])
                 ->map(fn (Service $service) => [
                     'id' => $service->id,
@@ -60,6 +61,7 @@ class ServiceController extends Controller
                 ])
                 ->values()
                 ->all(),
+            'complexityOptions' => $this->complexityOptions(),
         ]);
     }
 
@@ -71,7 +73,7 @@ class ServiceController extends Controller
             'service' => ServiceResource::make($service)->resolve(),
             'serviceOptions' => Service::query()
                 ->whereKeyNot($service->id)
-                ->orderBy('name')
+                ->ordered()
                 ->get(['id', 'name', 'slug', 'status'])
                 ->map(fn (Service $item) => [
                     'id' => $item->id,
@@ -88,7 +90,22 @@ class ServiceController extends Controller
                 ])
                 ->values()
                 ->all(),
+            'complexityOptions' => $this->complexityOptions(),
         ]);
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function complexityOptions(): array
+    {
+        return collect(ServiceComplexity::cases())
+            ->map(fn (ServiceComplexity $level) => [
+                'value' => $level->value,
+                'label' => $level->label(),
+            ])
+            ->values()
+            ->all();
     }
 
     public function store(StoreServiceRequest $request): RedirectResponse
