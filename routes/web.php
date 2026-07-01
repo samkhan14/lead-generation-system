@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AiEmployeeController;
+use App\Http\Controllers\Admin\AiLogController;
+use App\Http\Controllers\Admin\AiModelController;
+use App\Http\Controllers\Admin\AiProviderController;
+use App\Http\Controllers\Admin\KnowledgeBaseController;
+use App\Http\Controllers\Admin\PromptTemplateController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
@@ -29,6 +35,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('services', ServiceController::class)
             ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+        Route::prefix('ai')->name('ai.')->group(function () {
+            Route::resource('providers', AiProviderController::class)
+                ->parameters(['providers' => 'aiProvider'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('models', AiModelController::class)
+                ->parameters(['models' => 'aiModel'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('employees', AiEmployeeController::class)
+                ->parameters(['employees' => 'aiEmployee'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('prompts', PromptTemplateController::class)
+                ->parameters(['prompts' => 'promptTemplate'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('knowledge', KnowledgeBaseController::class)
+                ->parameters(['knowledge' => 'knowledgeBase'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('logs', AiLogController::class)
+                ->parameters(['logs' => 'aiLog'])
+                ->only(['index', 'show']);
+        });
     });
 });
 
