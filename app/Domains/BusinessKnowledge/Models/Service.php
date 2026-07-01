@@ -2,6 +2,7 @@
 
 namespace App\Domains\BusinessKnowledge\Models;
 
+use App\Domains\BusinessKnowledge\Enums\ServiceComplexity;
 use App\Domains\BusinessKnowledge\Enums\ServiceStatus;
 use App\Models\User;
 use Database\Factories\ServiceFactory;
@@ -17,16 +18,28 @@ use Illuminate\Support\Str;
     'uuid',
     'name',
     'slug',
+    'short_description',
     'description',
+    'detailed_description',
+    'target_audience',
+    'ideal_customer_profile',
+    'problems_solved',
     'features',
     'benefits',
     'deliverables',
     'pricing_notes',
     'faqs',
     'objections',
+    'discovery_questions',
+    'quotation_requirements',
     'cross_sell_ids',
     'upsell_ids',
+    'related_service_ids',
     'tags',
+    'technologies',
+    'complexity_level',
+    'typical_timeline',
+    'sort_order',
     'status',
     'version',
     'created_by',
@@ -40,14 +53,22 @@ class Service extends Model
     protected function casts(): array
     {
         return [
+            'target_audience' => 'array',
+            'problems_solved' => 'array',
             'features' => 'array',
             'benefits' => 'array',
             'deliverables' => 'array',
             'faqs' => 'array',
             'objections' => 'array',
+            'discovery_questions' => 'array',
+            'quotation_requirements' => 'array',
             'cross_sell_ids' => 'array',
             'upsell_ids' => 'array',
+            'related_service_ids' => 'array',
             'tags' => 'array',
+            'technologies' => 'array',
+            'complexity_level' => ServiceComplexity::class,
+            'sort_order' => 'integer',
             'status' => ServiceStatus::class,
             'version' => 'integer',
         ];
@@ -84,6 +105,11 @@ class Service extends Model
         return $query->where('status', ServiceStatus::Active);
     }
 
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderBy('name');
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         $term = trim((string) $term);
@@ -96,7 +122,9 @@ class Service extends Model
             $query
                 ->where('name', 'like', "%{$term}%")
                 ->orWhere('slug', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%");
+                ->orWhere('short_description', 'like', "%{$term}%")
+                ->orWhere('description', 'like', "%{$term}%")
+                ->orWhere('detailed_description', 'like', "%{$term}%");
         });
     }
 

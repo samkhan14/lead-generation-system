@@ -53,7 +53,7 @@ class ServiceCatalogService
     {
         return Service::query()
             ->active()
-            ->orderBy('name')
+            ->ordered()
             ->get();
     }
 
@@ -125,16 +125,30 @@ class ServiceCatalogService
         return [
             'name' => trim((string) ($data['name'] ?? '')),
             'slug' => filled($data['slug'] ?? null) ? Str::slug((string) $data['slug']) : null,
+            'short_description' => $this->nullableString($data['short_description'] ?? null),
             'description' => $this->nullableString($data['description'] ?? null),
+            'detailed_description' => $this->nullableString($data['detailed_description'] ?? null),
+            'target_audience' => $this->normalizeStringList($data['target_audience'] ?? []),
+            'ideal_customer_profile' => $this->nullableString($data['ideal_customer_profile'] ?? null),
+            'problems_solved' => $this->normalizeStringList($data['problems_solved'] ?? []),
             'features' => $this->normalizeStringList($data['features'] ?? []),
             'benefits' => $this->normalizeStringList($data['benefits'] ?? []),
             'deliverables' => $this->normalizeStringList($data['deliverables'] ?? []),
             'pricing_notes' => $this->nullableString($data['pricing_notes'] ?? null),
             'faqs' => $this->normalizeFaqs($data['faqs'] ?? []),
             'objections' => $this->normalizeObjections($data['objections'] ?? []),
+            'discovery_questions' => $this->normalizeStringList($data['discovery_questions'] ?? []),
+            'quotation_requirements' => $this->normalizeStringList($data['quotation_requirements'] ?? []),
             'cross_sell_ids' => $this->normalizeIdList($data['cross_sell_ids'] ?? []),
             'upsell_ids' => $this->normalizeIdList($data['upsell_ids'] ?? []),
+            'related_service_ids' => $this->normalizeIdList($data['related_service_ids'] ?? []),
             'tags' => $this->normalizeStringList($data['tags'] ?? []),
+            'technologies' => $this->normalizeStringList($data['technologies'] ?? []),
+            'complexity_level' => filled($data['complexity_level'] ?? null)
+                ? (string) $data['complexity_level']
+                : null,
+            'typical_timeline' => $this->nullableString($data['typical_timeline'] ?? null),
+            'sort_order' => max(0, (int) ($data['sort_order'] ?? 0)),
             'status' => $data['status'] ?? ServiceStatus::Draft->value,
         ];
     }
@@ -144,27 +158,42 @@ class ServiceCatalogService
      */
     public function toKnowledgeItem(Service $service, ?Collection $lookup = null): ServiceKnowledgeItem
     {
-        $lookup ??= Service::query()->whereIn('id', array_merge(
+        $relatedIds = array_merge(
             $service->cross_sell_ids ?? [],
             $service->upsell_ids ?? [],
-        ))->get()->keyBy('id');
+            $service->related_service_ids ?? [],
+        );
+
+        $lookup ??= Service::query()->whereIn('id', $relatedIds)->get()->keyBy('id');
 
         return new ServiceKnowledgeItem(
             id: $service->id,
             uuid: $service->uuid,
             name: $service->name,
             slug: $service->slug,
-            description: $service->description,
+            shortDescription: $service->short_description,
+            description: $service->description ?? $service->short_description,
+            detailedDescription: $service->detailed_description,
+            targetAudience: $service->target_audience ?? [],
+            idealCustomerProfile: $service->ideal_customer_profile,
+            problemsSolved: $service->problems_solved ?? [],
             features: $service->features ?? [],
             benefits: $service->benefits ?? [],
             deliverables: $service->deliverables ?? [],
+            typicalTimeline: $service->typical_timeline,
+            complexityLevel: $service->complexity_level?->value ?? $service->complexity_level,
             pricingNotes: $service->pricing_notes,
             faqs: $this->normalizeFaqs($service->faqs ?? []),
             objections: $this->normalizeObjections($service->objections ?? []),
+            discoveryQuestions: $service->discovery_questions ?? [],
+            quotationRequirements: $service->quotation_requirements ?? [],
             tags: $service->tags ?? [],
+            technologies: $service->technologies ?? [],
             crossSells: $this->relatedServiceSummaries($service->cross_sell_ids ?? [], $lookup),
             upsells: $this->relatedServiceSummaries($service->upsell_ids ?? [], $lookup),
+            relatedServices: $this->relatedServiceSummaries($service->related_service_ids ?? [], $lookup),
             version: $service->version,
+            sortOrder: $service->sort_order ?? 0,
         );
     }
 
@@ -261,8 +290,11 @@ class ServiceCatalogService
     private function shouldBumpVersion(Service $service, array $payload): bool
     {
         $tracked = [
-            'name', 'description', 'features', 'benefits', 'deliverables',
-            'pricing_notes', 'faqs', 'objections', 'cross_sell_ids', 'upsell_ids', 'tags',
+            'name', 'short_description', 'description', 'detailed_description',
+            'target_audience', 'ideal_customer_profile', 'problems_solved',
+            'features', 'benefits', 'deliverables', 'typical_timeline', 'complexity_level',
+            'pricing_notes', 'faqs', 'objections', 'discovery_questions', 'quotation_requirements',
+            'cross_sell_ids', 'upsell_ids', 'related_service_ids', 'tags', 'technologies', 'sort_order',
         ];
 
         foreach ($tracked as $field) {

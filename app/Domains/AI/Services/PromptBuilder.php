@@ -51,19 +51,51 @@ class PromptBuilder implements PromptableContextInterface
             return null;
         }
 
-        $lines = ['Company services catalog:'];
+        $lines = ['Company services catalog (use only this data — do not invent offerings):'];
 
         foreach ($context->services as $service) {
-            $lines[] = "- {$service->name}: {$service->description}";
+            $summary = $service->shortDescription ?? $service->description ?? '';
+            $lines[] = "### {$service->name}";
+            if ($summary !== '') {
+                $lines[] = $summary;
+            }
+            if (filled($service->idealCustomerProfile)) {
+                $lines[] = 'Ideal customer: '.$service->idealCustomerProfile;
+            }
+            if ($service->problemsSolved !== []) {
+                $lines[] = 'Problems solved: '.implode('; ', array_slice($service->problemsSolved, 0, 4));
+            }
             if ($service->features !== []) {
-                $lines[] = '  Features: '.implode('; ', array_slice($service->features, 0, 5));
+                $lines[] = 'Features: '.implode('; ', array_slice($service->features, 0, 6));
+            }
+            if ($service->benefits !== []) {
+                $lines[] = 'Benefits: '.implode('; ', array_slice($service->benefits, 0, 4));
+            }
+            if (filled($service->typicalTimeline)) {
+                $lines[] = 'Typical timeline: '.$service->typicalTimeline;
             }
             if ($service->pricingNotes) {
-                $lines[] = '  Pricing notes: '.$service->pricingNotes;
+                $lines[] = 'Pricing notes: '.$service->pricingNotes;
             }
+            if ($service->objections !== []) {
+                $lines[] = 'Common objections (with approved responses):';
+                foreach (array_slice($service->objections, 0, 3) as $objection) {
+                    $lines[] = "- \"{$objection['objection']}\" → {$objection['response']}";
+                }
+            }
+            if ($service->crossSells !== [] || $service->upsells !== []) {
+                $related = collect(array_merge($service->crossSells, $service->upsells))
+                    ->pluck('name')
+                    ->unique()
+                    ->implode(', ');
+                if ($related !== '') {
+                    $lines[] = 'Related offerings: '.$related;
+                }
+            }
+            $lines[] = '';
         }
 
-        return implode("\n", $lines);
+        return trim(implode("\n", $lines));
     }
 
     private function formatKnowledgeArticles(PromptContext $context): ?string

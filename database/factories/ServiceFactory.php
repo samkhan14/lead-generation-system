@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Domains\BusinessKnowledge\Enums\ServiceComplexity;
 use App\Domains\BusinessKnowledge\Enums\ServiceStatus;
 use App\Domains\BusinessKnowledge\Models\Service;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -25,7 +26,12 @@ class ServiceFactory extends Factory
             'uuid' => (string) Str::uuid(),
             'name' => ucwords($name),
             'slug' => Str::slug($name),
+            'short_description' => fake()->sentence(),
             'description' => fake()->paragraph(),
+            'detailed_description' => fake()->paragraphs(2, true),
+            'target_audience' => ['Startups', 'SMBs'],
+            'ideal_customer_profile' => fake()->paragraph(),
+            'problems_solved' => fake()->sentences(3),
             'features' => fake()->sentences(3),
             'benefits' => fake()->sentences(2),
             'deliverables' => ['Discovery call', 'Implementation', 'Handoff documentation'],
@@ -36,9 +42,16 @@ class ServiceFactory extends Factory
             'objections' => [
                 ['objection' => 'It is too expensive.', 'response' => 'We can phase the work to match your budget.'],
             ],
+            'discovery_questions' => ['What problem are you trying to solve?'],
+            'quotation_requirements' => ['Current system overview'],
             'cross_sell_ids' => [],
             'upsell_ids' => [],
-            'tags' => ['web', 'marketing'],
+            'related_service_ids' => [],
+            'tags' => ['software', 'laravel'],
+            'technologies' => ['Laravel', 'PHP', 'Vue.js'],
+            'complexity_level' => ServiceComplexity::Moderate,
+            'typical_timeline' => '4-8 weeks',
+            'sort_order' => 0,
             'status' => ServiceStatus::Active,
             'version' => 1,
         ];

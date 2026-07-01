@@ -134,13 +134,14 @@ test('user without create permission cannot store a service', function () {
 });
 
 test('service catalog returns active knowledge for ai consumption', function () {
-    $active = Service::factory()->create(['name' => 'Active Offer', 'status' => ServiceStatus::Active]);
+    $active = Service::factory()->create(['name' => 'Active Offer', 'status' => ServiceStatus::Active, 'sort_order' => 1]);
     Service::factory()->draft()->create(['name' => 'Draft Offer']);
     Service::factory()->archived()->create(['name' => 'Archived Offer']);
 
     $related = Service::factory()->create([
         'name' => 'Maintenance Plan',
         'status' => ServiceStatus::Active,
+        'sort_order' => 2,
     ]);
 
     $active->update([
@@ -156,6 +157,23 @@ test('service catalog returns active knowledge for ai consumption', function () 
         ->and($knowledge[0]->crossSells[0]['name'])->toBe('Maintenance Plan')
         ->and(collect($knowledge)->pluck('name'))->not->toContain('Draft Offer')
         ->and(collect($knowledge)->pluck('name'))->not->toContain('Archived Offer');
+});
+
+test('business service seeder loads fifteen production services', function () {
+    $this->seed(\Database\Seeders\ServiceSeeder::class);
+
+    expect(Service::query()->where('status', ServiceStatus::Active)->count())->toBe(15)
+        ->and(Service::query()->where('slug', 'laravel-development')->exists())->toBeTrue()
+        ->and(Service::query()->where('slug', 'ai-employees-voice-agents')->exists())->toBeTrue()
+        ->and(Service::query()->where('slug', 'basic-website')->exists())->toBeFalse();
+
+    $laravel = Service::query()->where('slug', 'laravel-development')->first();
+
+    expect($laravel)
+        ->short_description->not->toBeEmpty()
+        ->detailed_description->not->toBeEmpty()
+        ->discovery_questions->not->toBeEmpty()
+        ->technologies->toContain('Laravel');
 });
 
 test('service catalog paginate supports search and status filters', function () {

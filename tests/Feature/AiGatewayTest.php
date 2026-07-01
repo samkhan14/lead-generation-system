@@ -74,7 +74,7 @@ test('context builder loads active services and knowledge for employee', functio
     ]);
 
     Service::query()->where('status', ServiceStatus::Active)->update(['status' => ServiceStatus::Archived]);
-    Service::query()->where('slug', 'basic-website')->update(['status' => ServiceStatus::Active]);
+    Service::query()->where('slug', 'laravel-development')->update(['status' => ServiceStatus::Active]);
 
     $employee = AiEmployee::factory()->create([
         'knowledge_sources' => ['services', 'knowledge_bases'],
@@ -83,7 +83,7 @@ test('context builder loads active services and knowledge for employee', functio
     $context = app(ContextBuilder::class)->build($employee);
 
     expect($context->services)->not->toBeEmpty()
-        ->and(collect($context->services)->pluck('slug'))->toContain('basic-website')
+        ->and(collect($context->services)->pluck('slug'))->toContain('laravel-development')
         ->and($context->knowledgeArticles)->toHaveCount(1)
         ->and($context->lead)->toBeNull();
 });
