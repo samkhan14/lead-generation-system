@@ -9,27 +9,6 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-function createAgent(array $attributes = []): User
-{
-    $user = User::factory()->create($attributes);
-    $user->assignRole('agent');
-
-    return $user;
-}
-
-function createLead(array $attributes = []): Lead
-{
-    $lead = Lead::query()->create(array_merge([
-        'first_name' => 'John',
-        'last_name' => 'Smith',
-        'email' => 'john@example.com',
-    ], $attributes));
-
-    app(LeadScoringService::class)->score($lead);
-
-    return $lead->fresh(['latestScore']);
-}
-
 test('super admin can view leads without assigned permissions', function () {
     $superAdmin = User::factory()->create();
     $superAdmin->assignRole('super_admin');

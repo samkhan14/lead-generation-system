@@ -44,7 +44,27 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Models\Lead;
+use App\Models\User;
+use App\Services\LeadScoringService;
+
+function createAgent(array $attributes = []): User
 {
-    // ..
+    $user = User::factory()->create($attributes);
+    $user->assignRole('agent');
+
+    return $user;
+}
+
+function createLead(array $attributes = []): Lead
+{
+    $lead = Lead::query()->create(array_merge([
+        'first_name' => 'John',
+        'last_name' => 'Smith',
+        'email' => 'john@example.com',
+    ], $attributes));
+
+    app(LeadScoringService::class)->score($lead);
+
+    return $lead->fresh(['latestScore']);
 }
