@@ -7,7 +7,10 @@ return [
     | Directory lead sources (merge-on-re-ingest)
     |--------------------------------------------------------------------------
     */
-    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog'],
+    'directory_sources' => [
+        'google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog',
+        'yellow_pages', 'manta', 'foursquare', 'the_manifest', 'goodfirms', 'designrush', 'upcity',
+    ],
 
     /*
     |--------------------------------------------------------------------------

@@ -81,6 +81,15 @@ class LeadIdentifiers
             return null;
         }
 
+        foreach ([
+            'yellowpages.', 'yell.com', 'manta.com', 'foursquare.com',
+            'themanifest.com', 'goodfirms.co', 'designrush.com', 'upcity.com',
+        ] as $fragment) {
+            if (str_contains($host, $fragment)) {
+                return null;
+            }
+        }
+
         if (str_contains($host, 'google.') && str_contains($website, '/maps')) {
             return null;
         }

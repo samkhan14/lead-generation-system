@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Support\LeadBusinessName;
 use App\Support\LeadDataQuality;
 use App\Support\LeadIdentifiers;
+use App\Support\ScraperChannels;
 use Illuminate\Support\Facades\DB;
 
 class LeadIngestionService
@@ -68,6 +69,20 @@ class LeadIngestionService
                 'bing_url' => $payload['bing_url'] ?? null,
                 'hotfrog_business_id' => $payload['hotfrog_business_id'] ?? null,
                 'hotfrog_url' => $payload['hotfrog_url'] ?? null,
+                'yellow_pages_listing_id' => $payload['yellow_pages_listing_id'] ?? null,
+                'yellow_pages_url' => $payload['yellow_pages_url'] ?? null,
+                'manta_business_id' => $payload['manta_business_id'] ?? null,
+                'manta_url' => $payload['manta_url'] ?? null,
+                'foursquare_place_id' => $payload['foursquare_place_id'] ?? null,
+                'foursquare_url' => $payload['foursquare_url'] ?? null,
+                'manifest_profile_id' => $payload['manifest_profile_id'] ?? null,
+                'manifest_url' => $payload['manifest_url'] ?? null,
+                'goodfirms_profile_id' => $payload['goodfirms_profile_id'] ?? null,
+                'goodfirms_url' => $payload['goodfirms_url'] ?? null,
+                'designrush_profile_id' => $payload['designrush_profile_id'] ?? null,
+                'designrush_url' => $payload['designrush_url'] ?? null,
+                'upcity_profile_id' => $payload['upcity_profile_id'] ?? null,
+                'upcity_url' => $payload['upcity_url'] ?? null,
                 'osm_id' => $payload['osm_id'] ?? null,
                 'osm_type' => $payload['osm_type'] ?? null,
                 'osm_url' => $payload['osm_url'] ?? null,
@@ -128,7 +143,11 @@ class LeadIngestionService
             $updates['phone'] = $normalized['phone'];
         }
 
-        foreach (['address', 'rating', 'review_count', 'yelp_url', 'bing_url', 'hotfrog_url', 'osm_url'] as $key) {
+        foreach ([
+            'address', 'rating', 'review_count',
+            'yelp_url', 'bing_url', 'hotfrog_url', 'yellow_pages_url', 'manta_url',
+            'foursquare_url', 'manifest_url', 'goodfirms_url', 'designrush_url', 'upcity_url', 'osm_url',
+        ] as $key) {
             $incoming = data_get($normalized, "metadata.{$key}");
 
             if (filled($incoming) && blank($metadata[$key] ?? null)) {
@@ -210,51 +229,33 @@ class LeadIngestionService
             }
         }
 
-        $yelpBusinessId = data_get($normalized, 'metadata.yelp_business_id');
+        foreach (ScraperChannels::dedupeMetadataKeys() as $metadataKey) {
+            if ($metadataKey === 'reddit_post_id') {
+                continue;
+            }
 
-        if ($yelpBusinessId) {
+            $value = data_get($normalized, "metadata.{$metadataKey}");
+
+            if (blank($value)) {
+                continue;
+            }
+
             $existing = Lead::query()
-                ->where('metadata->yelp_business_id', $yelpBusinessId)
+                ->where("metadata->{$metadataKey}", $value)
                 ->first();
 
             if ($existing) {
                 return $existing;
             }
-        }
 
-        $bingEntityId = data_get($normalized, 'metadata.bing_entity_id');
+            if ($metadataKey === 'google_place_id' && str_starts_with((string) $value, 'ChIJ')) {
+                $existing = Lead::query()
+                    ->where('metadata->google_place_id', 'like', '%'.$value.'%')
+                    ->first();
 
-        if ($bingEntityId) {
-            $existing = Lead::query()
-                ->where('metadata->bing_entity_id', $bingEntityId)
-                ->first();
-
-            if ($existing) {
-                return $existing;
-            }
-        }
-
-        $hotfrogBusinessId = data_get($normalized, 'metadata.hotfrog_business_id');
-
-        if ($hotfrogBusinessId) {
-            $existing = Lead::query()
-                ->where('metadata->hotfrog_business_id', $hotfrogBusinessId)
-                ->first();
-
-            if ($existing) {
-                return $existing;
-            }
-        }
-
-        $osmId = data_get($normalized, 'metadata.osm_id');
-
-        if ($osmId) {
-            $existing = Lead::query()
-                ->where('metadata->osm_id', $osmId)
-                ->first();
-
-            if ($existing) {
-                return $existing;
+                if ($existing) {
+                    return $existing;
+                }
             }
         }
 
@@ -298,6 +299,13 @@ class LeadIngestionService
                 'yelp' => 'Yelp',
                 'bing_places' => 'Bing',
                 'hotfrog' => 'Hotfrog',
+                'yellow_pages' => 'Yellow Pages',
+                'manta' => 'Manta',
+                'foursquare' => 'Foursquare',
+                'the_manifest' => 'The Manifest',
+                'goodfirms' => 'GoodFirms',
+                'designrush' => 'DesignRush',
+                'upcity' => 'UpCity',
                 'openstreetmap' => 'OSM',
                 default => 'Google',
             };

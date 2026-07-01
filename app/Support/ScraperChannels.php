@@ -78,6 +78,22 @@ class ScraperChannels
     }
 
     /**
+     * @return array<int, string>
+     */
+    public static function dedupeMetadataKeys(): array
+    {
+        $keys = collect(self::all())
+            ->pluck('dedupe_metadata_key')
+            ->filter()
+            ->push('reddit_post_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        return $keys;
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     public static function forUi(): array
@@ -147,6 +163,13 @@ class ScraperChannels
                     'search_path' => config('bing.search_path'),
                     'entity_type' => config('bing.entity_type'),
                     'max_limit' => config('bing.max_limit'),
+                ],
+            ],
+            'foursquare' => [
+                'foursquare' => [
+                    'api_base_url' => config('foursquare.api_base_url'),
+                    'search_path' => config('foursquare.search_path'),
+                    'max_limit' => config('foursquare.max_limit'),
                 ],
             ],
             default => [],

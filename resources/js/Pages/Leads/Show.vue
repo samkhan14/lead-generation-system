@@ -65,7 +65,15 @@ const sourceLabels = {
     google_maps: 'Google Maps',
     yelp: 'Yelp',
     hotfrog: 'Hotfrog',
+    yellow_pages: 'Yellow Pages',
+    manta: 'Manta',
+    foursquare: 'Foursquare',
+    the_manifest: 'The Manifest',
+    goodfirms: 'GoodFirms',
+    designrush: 'DesignRush',
+    upcity: 'UpCity',
     openstreetmap: 'OpenStreetMap',
+    bing_places: 'Bing Places',
     reddit: 'Reddit',
 };
 
@@ -73,7 +81,10 @@ const isReddit = computed(() => props.lead.source === 'reddit');
 const isYelp = computed(() => props.lead.source === 'yelp');
 const isHotfrog = computed(() => props.lead.source === 'hotfrog');
 const isOsm = computed(() => props.lead.source === 'openstreetmap');
-const isDirectory = computed(() => ['google_maps', 'yelp', 'hotfrog', 'openstreetmap', 'bing_places'].includes(props.lead.source));
+const isDirectory = computed(() => [
+    'google_maps', 'yelp', 'hotfrog', 'yellow_pages', 'manta', 'foursquare',
+    'the_manifest', 'goodfirms', 'designrush', 'upcity', 'openstreetmap', 'bing_places',
+].includes(props.lead.source));
 
 const sourceLabel = computed(
     () => sourceLabels[props.lead.source] ?? props.lead.source ?? '—',

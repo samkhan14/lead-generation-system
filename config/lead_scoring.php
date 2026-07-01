@@ -4,7 +4,10 @@ return [
 
     'version' => 'v6',
 
-    'directory_sources' => ['google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog'],
+    'directory_sources' => [
+        'google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog',
+        'yellow_pages', 'manta', 'foursquare', 'the_manifest', 'goodfirms', 'designrush', 'upcity',
+    ],
 
     'weights' => [
         'intent' => 0.25,
@@ -41,6 +44,13 @@ return [
             'openstreetmap' => 4,
             'bing_places' => 4,
             'hotfrog' => 4,
+            'yellow_pages' => 4,
+            'manta' => 4,
+            'foursquare' => 4,
+            'the_manifest' => 5,
+            'goodfirms' => 5,
+            'designrush' => 5,
+            'upcity' => 5,
             'reddit' => 12,
             'scraper' => 10,
             'import' => 8,
@@ -115,7 +125,10 @@ return [
         'website_points' => 20,
         'name_points' => 15,
         'trusted_source_points' => 15,
-        'trusted_sources' => ['manual', 'api', 'google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog', 'reddit'],
+        'trusted_sources' => [
+            'manual', 'api', 'google_maps', 'yelp', 'openstreetmap', 'bing_places', 'hotfrog',
+            'yellow_pages', 'manta', 'foursquare', 'the_manifest', 'goodfirms', 'designrush', 'upcity', 'reddit',
+        ],
         'google_maps' => [
             'place_id_points' => 12,
             'address_points' => 10,

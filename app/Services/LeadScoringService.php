@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Lead;
 use App\Models\LeadScore;
 use App\Support\LeadIdentifiers;
+use App\Support\ScraperChannels;
 
 class LeadScoringService
 {
@@ -428,7 +429,10 @@ class LeadScoringService
         $rating = data_get($lead->metadata, 'rating');
         $reviewCount = data_get($lead->metadata, 'review_count');
 
-        if (data_get($lead->metadata, 'google_place_id') || data_get($lead->metadata, 'yelp_business_id') || data_get($lead->metadata, 'bing_entity_id') || data_get($lead->metadata, 'hotfrog_business_id') || data_get($lead->metadata, 'osm_id')) {
+        $hasDirectoryId = collect(ScraperChannels::dedupeMetadataKeys())
+            ->contains(fn (string $key) => filled(data_get($lead->metadata, $key)));
+
+        if ($hasDirectoryId) {
             $score += $config['place_id_points'];
             $signals[] = 'Directory business ID present';
         }
