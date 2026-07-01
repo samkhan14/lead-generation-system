@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\VoiceCallController;
 use App\Http\Controllers\Admin\VoiceProviderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LeadVoiceCallController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScraperController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('leads', LeadController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::post('/leads/{lead}/verify', [LeadController::class, 'reverify'])->name('leads.reverify');
+    Route::post('/leads/{lead}/voice-calls', [LeadVoiceCallController::class, 'store'])->name('leads.voice-calls.store');
 
     Route::prefix('scraper')->name('scraper.')->group(function () {
         Route::get('/', [ScraperController::class, 'index'])->name('index');

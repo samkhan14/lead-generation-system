@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'duplicate_lead_id' => fn () => $request->session()->get('duplicate_lead_id'),
                 'success' => fn () => $request->session()->get('success'),
+                'voice_call_started' => fn () => $request->session()->get('voice_call_started'),
             ],
         ];
     }

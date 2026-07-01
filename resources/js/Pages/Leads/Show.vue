@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
 import VerificationBadge from '@/Components/Admin/VerificationBadge.vue';
 import WebsiteAnalysisPanel from '@/Components/Admin/WebsiteAnalysisPanel.vue';
+import LeadWorkforcePanel from '@/Components/Admin/LeadWorkforcePanel.vue';
 import IntelligenceScoreCard from '@/Components/Admin/IntelligenceScoreCard.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -14,6 +15,10 @@ const props = defineProps({
     lead: {
         type: Object,
         required: true,
+    },
+    workforce: {
+        type: Object,
+        default: () => ({}),
     },
 });
 
@@ -512,10 +517,17 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                 </div>
             </div>
 
+            <!-- AI Workforce -->
+            <LeadWorkforcePanel
+                :workforce="workforce"
+                :lead-id="lead.id"
+                :section-delay="sectionDelay(3)"
+            />
+
             <!-- Pitch recommendations -->
             <div
                 class="animate-fade-slide-up rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition-shadow hover:shadow-md"
-                :style="sectionDelay(3)"
+                :style="sectionDelay(4)"
             >
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -566,7 +578,7 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
             <!-- Website Analysis / Verification -->
             <div
                 class="animate-fade-slide-up"
-                :style="sectionDelay(4)"
+                :style="sectionDelay(5)"
             >
                 <div v-if="reverifyMessage" class="mb-3 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-700 ring-1 ring-indigo-100">
                     {{ reverifyMessage }}
@@ -583,7 +595,7 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
             <!-- Score history -->
             <div
                 class="animate-fade-slide-up rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-                :style="sectionDelay(5)"
+                :style="sectionDelay(6)"
             >
                 <h3 class="text-lg font-semibold text-slate-900">Score history</h3>
                 <div v-if="lead.scores.length === 0" class="mt-4 text-sm text-slate-500">

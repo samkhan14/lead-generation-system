@@ -45,4 +45,6 @@ return [
 
     'log_payload_max_chars' => 12000,
 
+    'default_voice_employee_name' => 'Alex — Voice Sales Agent',
+
 ];

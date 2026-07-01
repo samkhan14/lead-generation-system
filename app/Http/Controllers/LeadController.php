@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\LeadScore;
 use App\Services\LeadIngestionService;
 use App\Services\LeadPitchService;
+use App\Services\LeadWorkforcePanelService;
 use App\Support\LeadQueryFilters;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class LeadController extends Controller
     public function __construct(
         private LeadIngestionService $ingestionService,
         private LeadPitchService $pitchService,
+        private LeadWorkforcePanelService $workforcePanel,
     ) {
         $this->middleware('permission:leads.view')->only(['index', 'show', 'reverify']);
         $this->middleware('permission:leads.create')->only(['create', 'store']);
@@ -145,7 +147,7 @@ class LeadController extends Controller
         return redirect()->route('leads.show', $result->lead);
     }
 
-    public function show(Lead $lead): Response
+    public function show(Request $request, Lead $lead): Response
     {
         $lead->load(['scores' => fn ($query) => $query->latest('calculated_at'), 'assignedTo', 'createdBy']);
 
@@ -177,6 +179,7 @@ class LeadController extends Controller
                     'calculated_at' => $score->calculated_at?->toIso8601String(),
                 ]),
             ],
+            'workforce' => $this->workforcePanel->forLead($lead, $request->user()),
         ]);
     }
 

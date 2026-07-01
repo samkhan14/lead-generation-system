@@ -50,6 +50,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'voice.providers.update',
             'voice.providers.delete',
             'voice.calls.view',
+            'voice.calls.create',
         ];
 
         foreach ($permissions as $permission) {
