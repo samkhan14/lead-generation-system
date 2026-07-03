@@ -15,6 +15,7 @@ class LeadIngestionService
 {
     public function __construct(
         private LeadScoringService $scoringService,
+        private LeadContactVerificationService $contactVerificationService,
     ) {}
 
     /**
@@ -22,7 +23,20 @@ class LeadIngestionService
      */
     public function ingest(array $payload): LeadIngestResult
     {
+        $contactVerification = $this->contactVerificationService->verify($payload);
+
+        if (! $contactVerification['passed']) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'contact_verification' => $contactVerification['errors'],
+            ]);
+        }
+
+        if (blank($payload['email'] ?? null) && filled($contactVerification['email']['value'] ?? null)) {
+            $payload['email'] = $contactVerification['email']['value'];
+        }
+
         $normalized = $this->normalizePayload($payload);
+        $normalized['metadata']['contact_verification'] = $contactVerification;
 
         if ($duplicate = $this->findDuplicate($normalized)) {
             $merged = $this->mergeDirectoryLeadIfImproved($duplicate, $normalized);

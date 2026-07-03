@@ -22,6 +22,7 @@ function verificationGoogleMapsPayload(array $overrides = []): array
 {
     return array_merge([
         'business_name' => 'Acme Dental Clinic',
+        'email' => 'info@acmedental.com',
         'phone' => '+92 300 1234567',
         'website' => 'https://www.acmedental.com',
         'address' => 'Clifton, Karachi, Pakistan',
@@ -50,6 +51,8 @@ test('ingest dispatches verification for reddit leads too', function () {
     $this->postJson('/api/leads/ingest', [
         'first_name' => 'John',
         'last_name' => 'Smith',
+        'email' => 'john.smith@example.com',
+        'phone' => '+1 555 123 4567',
         'source' => 'reddit',
         'notes' => 'Looking for a website developer',
         'metadata' => [

@@ -19,6 +19,7 @@ function googleMapsPayload(array $overrides = []): array
 {
     return array_merge([
         'business_name' => 'Acme Dental Clinic',
+        'email' => 'info@acmedental.com',
         'phone' => '+92 300 1234567',
         'website' => 'https://www.acmedental.com',
         'address' => 'Clifton, Karachi, Pakistan',
@@ -60,6 +61,46 @@ test('ingest endpoint creates scored google maps lead', function () {
         ->and($lead->metadata['google_place_id'])->toBe('ChIJ_test_place_id_001')
         ->and($lead->metadata['intent_level'])->toBe('high')
         ->and($lead->latestScore)->not->toBeNull();
+});
+
+test('ingest endpoint rejects lead before storage when email is missing', function () {
+    $this->postJson('/api/leads/ingest', googleMapsPayload([
+        'email' => null,
+    ]), ingestHeaders())
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['contact_verification']);
+
+    expect(Lead::query()->count())->toBe(0);
+});
+
+test('ingest endpoint rejects lead before storage when phone is missing', function () {
+    $this->postJson('/api/leads/ingest', googleMapsPayload([
+        'phone' => null,
+    ]), ingestHeaders())
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['contact_verification']);
+
+    expect(Lead::query()->count())->toBe(0);
+});
+
+test('ingest endpoint discovers email from website before storage', function () {
+    \Illuminate\Support\Facades\Http::fake([
+        'https://www.acmedental.com' => \Illuminate\Support\Facades\Http::response(
+            '<html><a href="mailto:hello@acmedental.com">Email us</a></html>',
+            200,
+        ),
+    ]);
+
+    $response = $this->postJson('/api/leads/ingest', googleMapsPayload([
+        'email' => null,
+    ]), ingestHeaders());
+
+    $response->assertCreated();
+
+    $lead = Lead::query()->find($response->json('lead_id'));
+
+    expect($lead->email)->toBe('hello@acmedental.com')
+        ->and($lead->metadata['contact_verification']['email']['passed'])->toBeTrue();
 });
 
 test('ingest endpoint returns duplicate for matching google place id', function () {

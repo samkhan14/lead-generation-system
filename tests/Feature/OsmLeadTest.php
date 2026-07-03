@@ -12,6 +12,7 @@ it('ingests an openstreetmap lead with osm metadata', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Corner Cafe',
+        'email' => 'info@cornercafe.com',
         'phone' => '+442071234567',
         'website' => 'https://cornercafe.example',
         'address' => '12 High Street, London',
@@ -43,6 +44,8 @@ it('dedupes openstreetmap leads by osm_id', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Same Place',
+        'email' => 'info@sameplace.com',
+        'phone' => '+44 20 7123 4568',
         'osm_id' => 'way/987654',
         'osm_type' => 'way',
         'osm_url' => 'https://www.openstreetmap.org/way/987654',
@@ -56,6 +59,8 @@ it('dedupes openstreetmap leads by osm_id', function () {
 it('strips openstreetmap profile urls from website field', function () {
     app(LeadIngestionService::class)->ingest([
         'business_name' => 'OSM Only',
+        'email' => 'info@osmonly.com',
+        'phone' => '+44 20 7123 4569',
         'website' => 'https://www.openstreetmap.org/node/111',
         'osm_id' => 'node/111',
         'osm_type' => 'node',

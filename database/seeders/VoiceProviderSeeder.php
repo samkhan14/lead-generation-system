@@ -43,14 +43,18 @@ class VoiceProviderSeeder extends Seeder
         ];
 
         foreach ($definitions as $definition) {
+            $slug = $definition['slug'];
+            $defaults = config("voice_platform.provider_defaults.{$slug}", []);
+
             VoiceProvider::query()->updateOrCreate(
-                ['slug' => $definition['slug']],
+                ['slug' => $slug],
                 [
                     ...$definition,
                     'api_key' => null,
+                    'api_base_url' => $defaults['api_base_url'] ?? null,
                     'timeout_seconds' => 30,
                     'retry_count' => 2,
-                    'status' => VoiceProviderStatus::Disabled,
+                    'status' => VoiceProviderStatus::Active,
                 ],
             );
         }

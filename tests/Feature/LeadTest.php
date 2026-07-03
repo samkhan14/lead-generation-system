@@ -75,6 +75,7 @@ test('duplicate email is rejected', function () {
             'first_name' => 'Other',
             'last_name' => 'Person',
             'email' => 'DUPLICATE@example.com',
+            'phone' => '555-222-3333',
         ])
         ->assertRedirect(route('leads.create'))
         ->assertSessionHasErrors('duplicate')
@@ -106,6 +107,7 @@ test('duplicate website is rejected', function () {
             'first_name' => 'Other',
             'last_name' => 'Person',
             'email' => 'second@example.com',
+            'phone' => '555-222-3333',
             'website' => 'shared.com',
         ])
         ->assertSessionHasErrors('duplicate');
@@ -378,6 +380,8 @@ test('scoring engine marks minimal leads below hot threshold', function () {
     $this->actingAs($agent)->post(route('leads.store'), [
         'first_name' => 'Minimal',
         'last_name' => 'Lead',
+        'email' => 'minimal@example.com',
+        'phone' => '555-333-4444',
     ]);
 
     $lead = Lead::query()->where('first_name', 'Minimal')->first();

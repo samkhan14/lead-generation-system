@@ -12,6 +12,7 @@ it('ingests a bing places lead with business metadata', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'City Jewelers',
+        'email' => 'info@cityjewelers.com',
         'phone' => '+1-555-0200',
         'website' => 'https://cityjewelers.example',
         'address' => '456 Market St, Houston, TX',
@@ -42,6 +43,8 @@ it('dedupes bing places leads by bing_entity_id', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'City Jewelers',
+        'email' => 'info@cityjewelers.com',
+        'phone' => '+1-555-0201',
         'bing_entity_id' => 'US/POI/p0/same-id',
         'source' => 'bing_places',
     ]);
@@ -53,6 +56,8 @@ it('dedupes bing places leads by bing_entity_id', function () {
 it('strips bing listing urls from website field on ingest', function () {
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Map Listing Shop',
+        'email' => 'info@maplistingshop.com',
+        'phone' => '+1-555-0202',
         'website' => 'https://www.bing.com/maps?cp=29.7~-95.3',
         'bing_entity_id' => 'US/POI/p0/listing',
         'bing_url' => 'https://www.bing.com/maps?cp=29.7~-95.3',

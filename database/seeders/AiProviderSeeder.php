@@ -32,7 +32,7 @@ class AiProviderSeeder extends Seeder
                     'api_key' => null,
                     'timeout_seconds' => 30,
                     'retry_count' => 2,
-                    'status' => AiProviderStatus::Disabled,
+                    'status' => AiProviderStatus::Active,
                 ],
             );
         }
@@ -114,7 +114,7 @@ class AiProviderSeeder extends Seeder
                 'ai_provider_id' => $openAi?->id,
                 'ai_model_id' => $model?->id,
                 'language' => 'en',
-                'status' => AiEmployeeStatus::Training,
+                'status' => AiEmployeeStatus::Active,
                 'created_by' => $authorId,
                 'updated_by' => $authorId,
             ],

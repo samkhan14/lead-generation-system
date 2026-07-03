@@ -44,6 +44,7 @@ it('registers all extended directory channels as runnable', function () {
 it('ingests and dedupes extended directory channel leads', function (string $source, string $idKey, string $idValue, string $listingUrl) {
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Acme Services Co',
+        'email' => 'info@acmeservices.com',
         'phone' => '+1-555-0100',
         'website' => 'https://acme.example',
         'address' => '123 Main St',
@@ -63,6 +64,8 @@ it('ingests and dedupes extended directory channel leads', function (string $sou
 
     $duplicate = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Acme Services Co',
+        'email' => 'info@acmeservices.com',
+        'phone' => '+1-555-0100',
         $idKey => $idValue,
         'source' => $source,
     ]);
@@ -74,6 +77,8 @@ it('ingests and dedupes extended directory channel leads', function (string $sou
 it('strips directory listing urls from website field on ingest', function (string $source, string $idKey, string $idValue, string $listingUrl) {
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Listing Only Co',
+        'email' => 'info@listingonly.com',
+        'phone' => '+1-555-0101',
         'website' => $listingUrl,
         $idKey => $idValue,
         listingUrlField($idKey) => $listingUrl,

@@ -40,6 +40,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pre-store contact verification
+    |--------------------------------------------------------------------------
+    | Leads are rejected before persistence unless both email and phone pass.
+    | email_dns_check is optional because DNS/network checks can be flaky in local
+    | and CI environments; plug external verification APIs into the service later.
+    */
+    'contact_verification' => [
+        'require_email' => true,
+        'require_phone' => true,
+        'discover_email_from_website' => (bool) env('LEAD_DISCOVER_EMAIL_FROM_WEBSITE', true),
+        'website_email_timeout' => (int) env('LEAD_WEBSITE_EMAIL_TIMEOUT', 6),
+        'email_dns_check' => (bool) env('LEAD_EMAIL_DNS_CHECK', false),
+        'min_phone_digits' => (int) env('LEAD_MIN_PHONE_DIGITS', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Website analysis settings
     |--------------------------------------------------------------------------
     */

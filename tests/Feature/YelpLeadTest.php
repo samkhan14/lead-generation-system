@@ -12,6 +12,7 @@ it('ingests a yelp lead with business metadata', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Joe\'s Plumbing',
+        'email' => 'info@joesplumbing.com',
         'phone' => '+1-555-0100',
         'website' => 'https://joesplumbing.example',
         'address' => '123 Main St, Austin, TX',
@@ -43,6 +44,8 @@ it('dedupes yelp leads by yelp_business_id', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Same Biz',
+        'email' => 'info@samebiz.com',
+        'phone' => '+1-555-0101',
         'yelp_business_id' => 'same-biz-slug',
         'source' => 'yelp',
     ]);
@@ -54,6 +57,8 @@ it('dedupes yelp leads by yelp_business_id', function () {
 it('strips yelp listing urls from website field on ingest', function () {
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Test Shop',
+        'email' => 'info@testshop.com',
+        'phone' => '+44 20 5555 0100',
         'website' => 'https://www.yelp.com/biz/test-shop-london',
         'yelp_business_id' => 'test-shop-london',
         'yelp_url' => 'https://www.yelp.com/biz/test-shop-london',

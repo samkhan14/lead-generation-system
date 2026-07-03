@@ -13,6 +13,7 @@ it('ingests a hotfrog lead with business metadata', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Karachi Plumbing Co',
+        'email' => 'info@karachiplumbing.com',
         'phone' => '+92-21-555-0100',
         'website' => 'https://karachiplumbing.example',
         'address' => 'Clifton, Karachi, Pakistan',
@@ -43,6 +44,8 @@ it('dedupes hotfrog leads by hotfrog_business_id', function () {
 
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Same Biz',
+        'email' => 'info@samebiz.com',
+        'phone' => '+92-21-555-0101',
         'hotfrog_business_id' => '765cdb7128e815dc42caaefe455a30cd',
         'source' => 'hotfrog',
     ]);
@@ -54,6 +57,8 @@ it('dedupes hotfrog leads by hotfrog_business_id', function () {
 it('strips hotfrog listing urls from website field on ingest', function () {
     $result = app(LeadIngestionService::class)->ingest([
         'business_name' => 'Test Shop',
+        'email' => 'info@testshop.com',
+        'phone' => '+44 20 5555 0100',
         'website' => 'https://www.hotfrog.com/company/abc123/test-shop/london/retail',
         'hotfrog_business_id' => 'abc123',
         'hotfrog_url' => 'https://www.hotfrog.com/company/abc123/test-shop/london/retail',

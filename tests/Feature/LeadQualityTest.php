@@ -10,6 +10,7 @@ function qualityGoogleMapsPayload(array $overrides = []): array
 {
     return array_merge([
         'business_name' => 'Acme Dental Clinic',
+        'email' => 'info@acmedental.com',
         'phone' => '+92 300 1234567',
         'website' => 'https://www.acmedental.com',
         'address' => 'Clifton, Karachi, Pakistan',

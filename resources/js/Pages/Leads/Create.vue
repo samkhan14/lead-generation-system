@@ -67,12 +67,12 @@ const submit = () => {
                 <div class="grid gap-6 sm:grid-cols-2">
                     <div>
                         <InputLabel for="email" value="Email" />
-                        <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" />
+                        <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" required />
                         <InputError class="mt-2" :message="form.errors.email" />
                     </div>
                     <div>
                         <InputLabel for="phone" value="Phone" />
-                        <TextInput id="phone" v-model="form.phone" class="mt-1 block w-full" />
+                        <TextInput id="phone" v-model="form.phone" class="mt-1 block w-full" required />
                         <InputError class="mt-2" :message="form.errors.phone" />
                     </div>
                 </div>
