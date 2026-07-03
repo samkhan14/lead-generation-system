@@ -47,4 +47,14 @@ return [
 
     'default_voice_employee_name' => 'Alex — Voice Sales Agent',
 
+    'queue' => env('VOICE_QUEUE', 'voice'),
+
+    'concurrency' => [
+        /** Block a second outbound call for the same lead + employee while one is active. */
+        'block_duplicate_lead_employee' => true,
+
+        /** Max simultaneous active calls per AI employee (Retell supports bulk; raise for campaigns). */
+        'max_active_calls_per_employee' => (int) env('VOICE_MAX_ACTIVE_CALLS_PER_EMPLOYEE', 50),
+    ],
+
 ];

@@ -3,7 +3,7 @@
 namespace App\Domains\Voice\Services;
 
 use App\Domains\AI\Models\AiEmployee;
-use App\Domains\AI\Services\ContextBuilder;
+use App\Domains\Voice\DataTransferObjects\VoiceCallSession;
 use App\Domains\Voice\DataTransferObjects\VoiceOutboundRequest;
 use App\Domains\Voice\Enums\VoiceCallDirection;
 use App\Domains\Voice\Enums\VoiceCallStatus;
@@ -12,6 +12,7 @@ use App\Domains\Voice\Models\VoiceProvider;
 use App\Models\Lead;
 use App\Models\User;
 use App\Support\LeadIdentifiers;
+use Illuminate\Support\Collection;
 use RuntimeException;
 use Throwable;
 
@@ -24,6 +25,9 @@ class VoiceGateway
         private VoiceContextBuilder $contextBuilder,
     ) {}
 
+    /**
+     * Synchronous outbound call — used by smoke tests and direct gateway usage.
+     */
     public function initiateOutbound(
         AiEmployee $employee,
         Lead $lead,
@@ -32,58 +36,91 @@ class VoiceGateway
     ): VoiceCall {
         $this->assertEmployeeCanCall($employee);
 
-        $toNumber = $this->resolveLeadPhone($lead);
-        $dynamicVariables = $this->contextBuilder->dynamicVariables($employee, $lead);
-        $request = new VoiceOutboundRequest(
-            employee: $employee,
-            lead: $lead,
-            toNumber: $toNumber,
-            agentId: $employee->voice_id,
-            dynamicVariables: $dynamicVariables,
-            metadata: [
-                'lead_uuid' => $lead->uuid,
-                'employee_uuid' => $employee->uuid,
-            ],
-        );
-
+        $request = $this->buildOutboundRequest($employee, $lead);
         $providers = $this->providerSelector->orderedProviders($preferredProviderSlug);
-        $lastError = null;
+        $session = $this->dialProviders($providers, $request);
 
-        foreach ($providers as $provider) {
-            $attempts = max(1, $provider->retry_count + 1);
-
-            for ($attempt = 1; $attempt <= $attempts; $attempt++) {
-                try {
-                    $connector = $this->connectors->get($provider->slug);
-                    $outboundRequest = $this->withProviderDefaults($request, $provider);
-                    $session = $connector->initiateOutbound($provider, $outboundRequest);
-
-                    return $this->callManager->createQueued(
-                        provider: $provider,
-                        session: $session,
-                        employeeId: $employee->id,
-                        leadId: $lead->id,
-                        initiatedBy: $initiator?->id,
-                        direction: VoiceCallDirection::Outbound,
-                    );
-                } catch (Throwable $exception) {
-                    $lastError = $exception->getMessage();
-                }
-            }
+        if ($session instanceof VoiceCallSession) {
+            return $this->callManager->createQueued(
+                provider: $this->resolveProviderForSession($providers, $session),
+                session: $session,
+                employeeId: $employee->id,
+                leadId: $lead->id,
+                initiatedBy: $initiator?->id,
+                direction: VoiceCallDirection::Outbound,
+            );
         }
 
-        $failedCall = VoiceCall::query()->create([
+        return VoiceCall::query()->create([
             'voice_provider_id' => $providers->first()->id,
             'ai_employee_id' => $employee->id,
             'lead_id' => $lead->id,
             'initiated_by' => $initiator?->id,
             'direction' => VoiceCallDirection::Outbound,
-            'to_number' => $toNumber,
+            'to_number' => $request->toNumber,
             'status' => VoiceCallStatus::Failed,
-            'error_message' => $lastError ?? 'All voice providers failed.',
+            'error_message' => $session,
         ]);
+    }
 
-        return $failedCall;
+    /**
+     * Execute a pending queued voice call record (async job path).
+     */
+    public function executePending(VoiceCall $call): VoiceCall
+    {
+        $call->loadMissing(['employee', 'lead', 'provider']);
+
+        if ($call->employee === null || $call->lead === null) {
+            return $this->markFailed($call, 'Voice call is missing employee or lead context.');
+        }
+
+        if ($call->status !== VoiceCallStatus::Pending) {
+            return $call;
+        }
+
+        try {
+            $this->assertEmployeeCanCall($call->employee);
+        } catch (RuntimeException $exception) {
+            return $this->markFailed($call, $exception->getMessage());
+        }
+
+        $request = $this->buildOutboundRequest($call->employee, $call->lead);
+        $preferredSlug = $call->provider?->slug;
+
+        try {
+            $providers = $this->providerSelector->orderedProviders($preferredSlug);
+        } catch (RuntimeException $exception) {
+            return $this->markFailed($call, $exception->getMessage());
+        }
+
+        $session = $this->dialProviders($providers, $request);
+
+        if ($session instanceof VoiceCallSession) {
+            $call->update([
+                'voice_provider_id' => $this->resolveProviderForSession($providers, $session)->id,
+                'external_call_id' => $session->externalCallId,
+                'from_number' => $session->fromNumber,
+                'to_number' => $session->toNumber ?? $request->toNumber,
+                'status' => $session->status,
+                'duration_seconds' => $session->durationSeconds,
+                'cost_usd' => $session->costUsd,
+                'transcript' => $session->transcript,
+                'summary' => $session->summary,
+                'recording_url' => $session->recordingUrl,
+                'error_message' => $session->errorMessage,
+                'metadata' => $session->raw,
+                'started_at' => $session->status === VoiceCallStatus::InProgress ? now() : null,
+            ]);
+
+            return $call->fresh();
+        }
+
+        return $this->markFailed($call, $session);
+    }
+
+    public function resolvePhoneForLead(Lead $lead): string
+    {
+        return $this->resolveLeadPhone($lead);
     }
 
     public function syncCall(VoiceCall $call): VoiceCall
@@ -147,6 +184,66 @@ class VoiceGateway
         }
 
         return $this->callManager->applySession($call, $session);
+    }
+
+    private function buildOutboundRequest(AiEmployee $employee, Lead $lead): VoiceOutboundRequest
+    {
+        return new VoiceOutboundRequest(
+            employee: $employee,
+            lead: $lead,
+            toNumber: $this->resolveLeadPhone($lead),
+            agentId: $employee->voice_id,
+            dynamicVariables: $this->contextBuilder->dynamicVariables($employee, $lead),
+            metadata: [
+                'lead_uuid' => $lead->uuid,
+                'employee_uuid' => $employee->uuid,
+            ],
+        );
+    }
+
+    /**
+     * @param  Collection<int, VoiceProvider>  $providers
+     * @return VoiceCallSession|string error message
+     */
+    private function dialProviders(Collection $providers, VoiceOutboundRequest $request): VoiceCallSession|string
+    {
+        $lastError = null;
+
+        foreach ($providers as $provider) {
+            $attempts = max(1, $provider->retry_count + 1);
+
+            for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+                try {
+                    $connector = $this->connectors->get($provider->slug);
+                    $outboundRequest = $this->withProviderDefaults($request, $provider);
+
+                    return $connector->initiateOutbound($provider, $outboundRequest);
+                } catch (Throwable $exception) {
+                    $lastError = $exception->getMessage();
+                }
+            }
+        }
+
+        return $lastError ?? 'All voice providers failed.';
+    }
+
+    /**
+     * @param  Collection<int, VoiceProvider>  $providers
+     */
+    private function resolveProviderForSession(Collection $providers, VoiceCallSession $session): VoiceProvider
+    {
+        return $providers->first() ?? throw new RuntimeException('No voice provider available.');
+    }
+
+    private function markFailed(VoiceCall $call, string $message): VoiceCall
+    {
+        $call->update([
+            'status' => VoiceCallStatus::Failed,
+            'error_message' => $message,
+            'ended_at' => now(),
+        ]);
+
+        return $call->fresh();
     }
 
     private function assertEmployeeCanCall(AiEmployee $employee): void

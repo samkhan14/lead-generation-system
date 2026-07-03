@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             AiProviderSeeder::class,
             VoiceProviderSeeder::class,
+            KnowledgeBaseSeeder::class,
             AiWorkforceCatalogSeeder::class,
         ]);
     }

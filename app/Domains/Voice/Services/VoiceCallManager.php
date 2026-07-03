@@ -10,6 +10,25 @@ use App\Domains\Voice\Models\VoiceProvider;
 
 class VoiceCallManager
 {
+    public function createPending(
+        VoiceProvider $provider,
+        string $toNumber,
+        ?int $employeeId = null,
+        ?int $leadId = null,
+        ?int $initiatedBy = null,
+        VoiceCallDirection $direction = VoiceCallDirection::Outbound,
+    ): VoiceCall {
+        return VoiceCall::query()->create([
+            'voice_provider_id' => $provider->id,
+            'ai_employee_id' => $employeeId,
+            'lead_id' => $leadId,
+            'initiated_by' => $initiatedBy,
+            'direction' => $direction,
+            'to_number' => $toNumber,
+            'status' => VoiceCallStatus::Pending,
+        ]);
+    }
+
     public function createQueued(
         VoiceProvider $provider,
         VoiceCallSession $session,

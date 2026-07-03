@@ -13,6 +13,7 @@ use App\Domains\Voice\Enums\VoiceProviderStatus;
 use App\Domains\Voice\Models\VoiceProvider;
 use Database\Seeders\AiProviderSeeder;
 use Database\Seeders\AiWorkforceCatalogSeeder;
+use Database\Seeders\KnowledgeBaseSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Database\Seeders\ServiceSeeder;
 use Database\Seeders\VoiceProviderSeeder;
@@ -24,6 +25,7 @@ beforeEach(function () {
 test('ai and voice seeders enable platform without api keys', function () {
     $this->seed(AiProviderSeeder::class);
     $this->seed(VoiceProviderSeeder::class);
+    $this->seed(KnowledgeBaseSeeder::class);
     $this->seed(AiWorkforceCatalogSeeder::class);
 
     expect(AiProvider::query()->where('status', AiProviderStatus::Active)->count())->toBe(5)
@@ -39,7 +41,7 @@ test('ai and voice seeders enable platform without api keys', function () {
         ->and($alex->ai_provider_id)->not->toBeNull()
         ->and($alex->ai_model_id)->not->toBeNull();
 
-    expect(KnowledgeBase::query()->where('status', KnowledgeBaseStatus::Active)->count())->toBe(3)
+    expect(KnowledgeBase::query()->where('status', KnowledgeBaseStatus::Active)->count())->toBe(10)
         ->and(PromptTemplate::query()->where('status', PromptTemplateStatus::Active)->count())->toBe(3);
 });
 

@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\User;
 use Database\Factories\VoiceCallFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -85,6 +86,16 @@ class VoiceCall extends Model
     public function isTerminal(): bool
     {
         return $this->status?->isTerminal() ?? false;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status?->isActive() ?? false;
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereIn('status', VoiceCallStatus::activeStatuses());
     }
 
     protected static function newFactory(): VoiceCallFactory

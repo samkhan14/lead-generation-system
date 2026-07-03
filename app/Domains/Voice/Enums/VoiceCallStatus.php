@@ -4,6 +4,7 @@ namespace App\Domains\Voice\Enums;
 
 enum VoiceCallStatus: string
 {
+    case Pending = 'pending';
     case Queued = 'queued';
     case Ringing = 'ringing';
     case InProgress = 'in_progress';
@@ -28,5 +29,28 @@ enum VoiceCallStatus: string
             self::Cancelled,
             self::NoAnswer,
         ], true);
+    }
+
+    public function isActive(): bool
+    {
+        return in_array($this, [
+            self::Pending,
+            self::Queued,
+            self::Ringing,
+            self::InProgress,
+        ], true);
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function activeStatuses(): array
+    {
+        return [
+            self::Pending,
+            self::Queued,
+            self::Ringing,
+            self::InProgress,
+        ];
     }
 }

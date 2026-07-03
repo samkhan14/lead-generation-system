@@ -17,6 +17,7 @@ use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
+    config(['queue.default' => 'sync']);
 });
 
 test('lead show includes workforce panel data for permitted agent', function () {
