@@ -133,9 +133,10 @@ test('bulk outbound calls queue multiple leads for same employee', function () {
         createLead(['phone' => '+14155550103']),
     ]);
 
-    $queued = app(VoiceCallDispatcher::class)->queueBulkOutbound($employee, $leads);
+    $result = app(VoiceCallDispatcher::class)->queueBulkOutbound($employee, $leads);
 
-    expect($queued)->toBe(3)
+    expect($result->queued)->toBe(3)
+        ->and($result->skipped)->toBe(0)
         ->and(VoiceCall::query()->where('ai_employee_id', $employee->id)->count())->toBe(3)
         ->and(VoiceCall::query()->where('external_call_id', 'bulk_1')->exists())->toBeTrue()
         ->and(VoiceCall::query()->where('external_call_id', 'bulk_3')->exists())->toBeTrue();

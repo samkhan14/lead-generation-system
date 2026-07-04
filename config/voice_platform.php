@@ -57,4 +57,9 @@ return [
         'max_active_calls_per_employee' => (int) env('VOICE_MAX_ACTIVE_CALLS_PER_EMPLOYEE', 50),
     ],
 
+    'bulk' => [
+        /** Max leads selectable per bulk call action from the UI. */
+        'max_leads_per_request' => (int) env('VOICE_BULK_MAX_LEADS', 50),
+    ],
+
 ];

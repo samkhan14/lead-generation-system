@@ -1,11 +1,13 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import BulkVoiceCallModal from '@/Components/Admin/BulkVoiceCallModal.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
 import VerificationBadge from '@/Components/Admin/VerificationBadge.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
     leads: {
@@ -31,9 +33,78 @@ const props = defineProps({
             sorts: [],
         }),
     },
+    voiceCallOptions: {
+        type: Object,
+        default: () => ({
+            can_start_voice_call: false,
+            voice_call_blockers: [],
+            voice_employees: [],
+            default_employee_id: null,
+            max_bulk_leads: 50,
+        }),
+    },
 });
 
+const page = usePage();
 const { can } = useAuth();
+
+const selectedIds = ref([]);
+const showBulkCallModal = ref(false);
+
+watch(() => props.leads.data, () => {
+    const visibleIds = new Set(props.leads.data.map((lead) => lead.id));
+    selectedIds.value = selectedIds.value.filter((id) => visibleIds.has(id));
+});
+
+const selectedLeads = computed(() =>
+    props.leads.data.filter((lead) => selectedIds.value.includes(lead.id)),
+);
+
+const allOnPageSelected = computed(() =>
+    props.leads.data.length > 0
+    && props.leads.data.every((lead) => selectedIds.value.includes(lead.id)),
+);
+
+const someOnPageSelected = computed(() =>
+    props.leads.data.some((lead) => selectedIds.value.includes(lead.id)),
+);
+
+const bulkResult = computed(() => page.props.flash?.bulk_voice_call_result ?? null);
+
+const toggleLead = (leadId) => {
+    if (selectedIds.value.includes(leadId)) {
+        selectedIds.value = selectedIds.value.filter((id) => id !== leadId);
+    } else if (selectedIds.value.length < props.voiceCallOptions.max_bulk_leads) {
+        selectedIds.value = [...selectedIds.value, leadId];
+    }
+};
+
+const toggleAllOnPage = () => {
+    if (allOnPageSelected.value) {
+        const pageIds = new Set(props.leads.data.map((lead) => lead.id));
+        selectedIds.value = selectedIds.value.filter((id) => !pageIds.has(id));
+    } else {
+        const merged = new Set(selectedIds.value);
+        for (const lead of props.leads.data) {
+            if (merged.size >= props.voiceCallOptions.max_bulk_leads) {
+                break;
+            }
+            merged.add(lead.id);
+        }
+        selectedIds.value = [...merged];
+    }
+};
+
+const clearSelection = () => {
+    selectedIds.value = [];
+};
+
+const openBulkCallModal = () => {
+    if (selectedLeads.value.length === 0) {
+        return;
+    }
+    showBulkCallModal.value = true;
+};
 
 const local = ref({
     q: props.filters.q ?? '',
@@ -399,6 +470,39 @@ const locationLabel = (lead) => {
             </form>
         </div>
 
+        <div
+            v-if="bulkResult"
+            class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+        >
+            Queued <strong>{{ bulkResult.queued }}</strong> voice call{{ bulkResult.queued === 1 ? '' : 's' }}.
+            <span v-if="bulkResult.skipped > 0">
+                Skipped {{ bulkResult.skipped }} (duplicate active call, missing phone, or limit reached).
+            </span>
+        </div>
+
+        <div
+            v-if="page.props.errors?.bulk_voice_call"
+            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+            {{ page.props.errors.bulk_voice_call }}
+        </div>
+
+        <div
+            v-if="voiceCallOptions.can_start_voice_call && selectedIds.length > 0"
+            class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3"
+        >
+            <div class="text-sm text-violet-900">
+                <span class="font-medium">{{ selectedIds.length }}</span> lead{{ selectedIds.length === 1 ? '' : 's' }} selected
+                <span class="text-violet-700">(max {{ voiceCallOptions.max_bulk_leads }} per batch)</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <SecondaryButton type="button" @click="clearSelection">Clear</SecondaryButton>
+                <PrimaryButton type="button" @click="openBulkCallModal">
+                    Start bulk AI voice calls
+                </PrimaryButton>
+            </div>
+        </div>
+
         <div class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
                 <div class="text-sm text-slate-600">
@@ -415,6 +519,15 @@ const locationLabel = (lead) => {
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
+                            <th v-if="voiceCallOptions.can_start_voice_call" class="px-4 py-3 text-left">
+                                <input
+                                    type="checkbox"
+                                    class="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                                    :checked="allOnPageSelected"
+                                    :indeterminate="someOnPageSelected && !allOnPageSelected"
+                                    @change="toggleAllOnPage"
+                                />
+                            </th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Lead</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Location</th>
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Contact</th>
@@ -429,6 +542,15 @@ const locationLabel = (lead) => {
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <tr v-for="lead in leads.data" :key="lead.id" class="hover:bg-slate-50">
+                            <td v-if="voiceCallOptions.can_start_voice_call" class="px-4 py-3">
+                                <input
+                                    type="checkbox"
+                                    class="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                                    :checked="selectedIds.includes(lead.id)"
+                                    :disabled="!lead.phone && !selectedIds.includes(lead.id)"
+                                    @change="toggleLead(lead.id)"
+                                />
+                            </td>
                             <td class="px-4 py-3 text-sm">
                                 <Link :href="route('leads.show', lead.id)" class="font-medium text-indigo-600 hover:text-indigo-800">
                                     {{ lead.full_name }}
@@ -499,7 +621,7 @@ const locationLabel = (lead) => {
                             </td>
                         </tr>
                         <tr v-if="leads.data.length === 0">
-                            <td colspan="10" class="px-4 py-8 text-center text-sm text-slate-500">
+                            <td :colspan="voiceCallOptions.can_start_voice_call ? 11 : 10" class="px-4 py-8 text-center text-sm text-slate-500">
                                 No leads match these filters.
                             </td>
                         </tr>
@@ -528,5 +650,12 @@ const locationLabel = (lead) => {
                 </div>
             </div>
         </div>
+
+        <BulkVoiceCallModal
+            :show="showBulkCallModal"
+            :selected-leads="selectedLeads"
+            :voice-call-options="voiceCallOptions"
+            @close="showBulkCallModal = false"
+        />
     </AdminLayout>
 </template>

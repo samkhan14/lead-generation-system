@@ -295,6 +295,65 @@ class LeadWorkforcePanelService
         return $blockers;
     }
 
+    /**
+     * Shared voice-call options for lead list bulk actions and detail panel.
+     *
+     * @return array<string, mixed>
+     */
+    public function voiceCallOptions(?User $viewer = null): array
+    {
+        $canStartVoice = $viewer?->can('voice.calls.create') ?? false;
+        $voiceEmployees = $this->voiceEmployees();
+        $defaultEmployee = $this->resolveDefaultEmployee($voiceEmployees);
+        $usableProviders = VoiceProvider::query()->selectable()->get()->filter->isUsable();
+
+        return [
+            'can_start_voice_call' => $canStartVoice
+                && $defaultEmployee !== null
+                && $usableProviders->isNotEmpty(),
+            'voice_call_blockers' => $this->bulkVoiceCallBlockers(
+                $viewer,
+                $canStartVoice,
+                $defaultEmployee,
+                $usableProviders->isNotEmpty(),
+            ),
+            'voice_employees' => $voiceEmployees,
+            'default_employee_id' => $defaultEmployee['id'] ?? null,
+            'max_bulk_leads' => (int) config('voice_platform.bulk.max_leads_per_request', 50),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function bulkVoiceCallBlockers(
+        ?User $viewer,
+        ?bool $canStartVoice = null,
+        ?array $defaultEmployee = null,
+        ?bool $hasUsableProvider = null,
+    ): array {
+        $canStartVoice ??= $viewer?->can('voice.calls.create') ?? false;
+        $voiceEmployees = $this->voiceEmployees();
+        $defaultEmployee ??= $this->resolveDefaultEmployee($voiceEmployees);
+        $hasUsableProvider ??= VoiceProvider::query()->selectable()->get()->filter->isUsable()->isNotEmpty();
+
+        $blockers = [];
+
+        if (! $canStartVoice) {
+            $blockers[] = 'You do not have permission to start voice calls.';
+        }
+
+        if ($defaultEmployee === null) {
+            $blockers[] = 'No voice-capable AI employee is configured.';
+        }
+
+        if (! $hasUsableProvider) {
+            $blockers[] = 'No active voice provider with API credentials.';
+        }
+
+        return $blockers;
+    }
+
     public function resolveEmployee(?int $employeeId): AiEmployee
     {
         $eligibleRoles = config('voice_platform.eligible_employee_roles', []);

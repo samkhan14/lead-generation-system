@@ -127,6 +127,7 @@ class LeadController extends Controller
                     ['value' => 'company_desc', 'label' => 'Company: Z–A'],
                 ],
             ],
+            'voiceCallOptions' => $this->workforcePanel->voiceCallOptions($request->user()),
         ]);
     }
 

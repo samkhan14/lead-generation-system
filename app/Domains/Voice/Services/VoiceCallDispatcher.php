@@ -3,6 +3,7 @@
 namespace App\Domains\Voice\Services;
 
 use App\Domains\AI\Models\AiEmployee;
+use App\Domains\Voice\DataTransferObjects\BulkVoiceCallResult;
 use App\Domains\Voice\Enums\VoiceCallStatus;
 use App\Domains\Voice\Jobs\InitiateVoiceCall;
 use App\Domains\Voice\Models\VoiceCall;
@@ -45,22 +46,52 @@ class VoiceCallDispatcher
         AiEmployee $employee,
         iterable $leads,
         ?User $initiator = null,
-    ): int {
+    ): BulkVoiceCallResult {
         $queued = 0;
+        $skipped = 0;
+        $queuedUuids = [];
+        $skippedDetails = [];
 
         foreach ($leads as $lead) {
             if (! $lead instanceof Lead) {
                 continue;
             }
 
-            try {
-                $this->queueOutbound($employee, $lead, $initiator);
-                $queued++;
-            } catch (\Illuminate\Validation\ValidationException) {
+            if (! filled($lead->phone)) {
+                $skipped++;
+                $skippedDetails[] = [
+                    'lead_id' => $lead->id,
+                    'reason' => 'Lead has no phone number.',
+                ];
+
                 continue;
+            }
+
+            try {
+                $call = $this->queueOutbound($employee, $lead, $initiator);
+                $queued++;
+                $queuedUuids[] = $call->uuid;
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                $skipped++;
+                $skippedDetails[] = [
+                    'lead_id' => $lead->id,
+                    'reason' => collect($exception->errors())->flatten()->first()
+                        ?? 'Could not queue call.',
+                ];
+            } catch (\RuntimeException $exception) {
+                $skipped++;
+                $skippedDetails[] = [
+                    'lead_id' => $lead->id,
+                    'reason' => $exception->getMessage(),
+                ];
             }
         }
 
-        return $queued;
+        return new BulkVoiceCallResult(
+            queued: $queued,
+            skipped: $skipped,
+            queuedCallUuids: $queuedUuids,
+            skippedDetails: $skippedDetails,
+        );
     }
 }
