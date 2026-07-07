@@ -62,6 +62,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'email.campaigns.send',
             'email.sends.view',
             'email.sends.create',
+            'crm.deals.manage',
+            'crm.tasks.view',
+            'crm.tasks.manage',
+            'crm.quotes.manage',
         ];
 
         foreach ($permissions as $permission) {

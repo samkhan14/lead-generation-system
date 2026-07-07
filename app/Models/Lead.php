@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Domains\Crm\Models\Deal;
+use App\Domains\Crm\Models\LeadActivity;
+use App\Domains\Crm\Models\Quote;
+use App\Domains\Crm\Models\Task;
 use App\Support\LeadIdentifiers;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -51,6 +55,10 @@ class Lead extends Model
         static::creating(function (Lead $lead): void {
             if (empty($lead->uuid)) {
                 $lead->uuid = (string) Str::uuid();
+            }
+
+            if (empty($lead->status)) {
+                $lead->status = config('lead_pipeline.default_stage', 'new');
             }
         });
 
@@ -110,5 +118,25 @@ class Lead extends Model
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(LeadActivity::class);
+    }
+
+    public function deals(): HasMany
+    {
+        return $this->hasMany(Deal::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class);
     }
 }

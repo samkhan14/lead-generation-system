@@ -11,6 +11,10 @@ defineProps({
         type: Array,
         required: true,
     },
+    due_tasks: {
+        type: Array,
+        default: () => [],
+    },
 });
 </script>
 
@@ -23,7 +27,7 @@ defineProps({
         </template>
 
         <div class="row g-4 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card h-100">
                     <div class="card-body">
                         <small class="text-body-secondary">Total leads</small>
@@ -31,7 +35,7 @@ defineProps({
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card h-100">
                     <div class="card-body">
                         <small class="text-body-secondary">With scores</small>
@@ -39,7 +43,7 @@ defineProps({
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="card h-100">
                     <div class="card-body">
                         <small class="text-body-secondary">Added today</small>
@@ -47,6 +51,37 @@ defineProps({
                     </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <small class="text-body-secondary">Open tasks</small>
+                        <h3 class="mb-0 mt-2">{{ stats.open_tasks ?? 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="due_tasks.length" class="card mb-4">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title mb-0">Tasks due soon</h5>
+                <Link :href="route('tasks.index')" class="link-primary small">View all</Link>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li
+                    v-for="task in due_tasks"
+                    :key="task.id"
+                    class="list-group-item d-flex align-items-center justify-content-between"
+                >
+                    <div>
+                        <span class="fw-medium">{{ task.title }}</span>
+                        <span v-if="task.is_overdue" class="badge bg-label-danger ms-2">Overdue</span>
+                        <div v-if="task.lead" class="small text-muted">
+                            <Link :href="route('leads.show', task.lead.id)" class="link-primary">{{ task.lead.name }}</Link>
+                        </div>
+                    </div>
+                    <span class="small text-muted">{{ task.due_at ? new Date(task.due_at).toLocaleDateString() : 'No date' }}</span>
+                </li>
+            </ul>
         </div>
 
         <div class="card">

@@ -118,6 +118,8 @@ const local = ref({
     subreddit: props.filters.subreddit ?? '',
     lead_kind: props.filters.lead_kind ?? '',
     posted_within: props.filters.posted_within ?? '',
+    status: props.filters.status ?? '',
+    assigned_to: props.filters.assigned_to ?? '',
     sort: props.filters.sort ?? 'created_desc',
     per_page: props.filters.per_page ?? 15,
     temperature: props.filters.temperature ?? null,
@@ -136,6 +138,8 @@ const hasActiveFilters = computed(() => {
         || local.value.subreddit
         || local.value.lead_kind
         || local.value.posted_within
+        || local.value.status
+        || local.value.assigned_to
         || local.value.temperature
         || local.value.sort !== 'created_desc',
     );
@@ -158,6 +162,8 @@ const buildParams = (overrides = {}) => {
         subreddit: local.value.subreddit || undefined,
         lead_kind: local.value.lead_kind || undefined,
         posted_within: local.value.posted_within || undefined,
+        status: local.value.status || undefined,
+        assigned_to: local.value.assigned_to || undefined,
         sort: local.value.sort !== 'created_desc' ? local.value.sort : undefined,
         per_page: local.value.per_page,
         temperature: local.value.temperature || undefined,
@@ -198,6 +204,8 @@ const clearFilters = () => {
         subreddit: '',
         lead_kind: '',
         posted_within: '',
+        status: '',
+        assigned_to: '',
         sort: 'created_desc',
         per_page: local.value.per_page,
         temperature: null,
@@ -225,9 +233,14 @@ const locationLabel = (lead) => {
         <template #header>
             <div class="d-flex w-100 align-items-center justify-content-between gap-3">
                 <h4 class="mb-0 fw-bold">Leads</h4>
-                <Link v-if="can('leads.create')" :href="route('leads.create')">
-                    <PrimaryButton type="button">New Lead</PrimaryButton>
-                </Link>
+                <div class="d-flex gap-2">
+                    <Link :href="route('leads.pipeline')">
+                        <SecondaryButton type="button">Pipeline</SecondaryButton>
+                    </Link>
+                    <Link v-if="can('leads.create')" :href="route('leads.create')">
+                        <PrimaryButton type="button">New Lead</PrimaryButton>
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -364,6 +377,37 @@ const locationLabel = (lead) => {
                                     <option v-for="pitch in filterOptions.pitch_types" :key="pitch.value" :value="pitch.value">
                                         {{ pitch.label }}
                                     </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Pipeline stage</label>
+                                <select
+                                    v-model="local.status"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">All stages</option>
+                                    <option
+                                        v-for="stage in filterOptions.pipeline_stages ?? []"
+                                        :key="stage.value"
+                                        :value="stage.value"
+                                    >
+                                        {{ stage.label }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Assignment</label>
+                                <select
+                                    v-model="local.assigned_to"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">Anyone</option>
+                                    <option value="me">Assigned to me</option>
+                                    <option value="unassigned">Unassigned</option>
                                 </select>
                             </div>
 

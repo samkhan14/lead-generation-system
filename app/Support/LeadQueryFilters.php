@@ -26,6 +26,8 @@ class LeadQueryFilters
         $query = static::applySubreddit($query, $filters['subreddit'] ?? null);
         $query = static::applyLeadKind($query, $filters['lead_kind'] ?? null);
         $query = static::applyPostedWithin($query, $filters['posted_within'] ?? null);
+        $query = static::applyPipelineStage($query, $filters['status'] ?? null);
+        $query = static::applyAssignedTo($query, $filters['assigned_to'] ?? null);
         $query = static::applySort($query, $filters['sort'] ?? 'created_desc');
 
         return $query;
@@ -225,6 +227,32 @@ class LeadQueryFilters
                 ->where('website', '!=', ''),
             default => $query,
         };
+    }
+
+    public static function applyPipelineStage(Builder $query, ?string $status): Builder
+    {
+        if (! array_key_exists($status ?? '', config('lead_pipeline.stages', []))) {
+            return $query;
+        }
+
+        return $query->where('status', $status);
+    }
+
+    public static function applyAssignedTo(Builder $query, int|string|null $assignedTo): Builder
+    {
+        if ($assignedTo === 'unassigned') {
+            return $query->whereNull('assigned_to');
+        }
+
+        if ($assignedTo === 'me' && auth()->check()) {
+            return $query->where('assigned_to', auth()->id());
+        }
+
+        if (is_numeric($assignedTo)) {
+            return $query->where('assigned_to', (int) $assignedTo);
+        }
+
+        return $query;
     }
 
     public static function applySort(Builder $query, ?string $sort): Builder

@@ -3,6 +3,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import TemperatureBadge from '@/Components/Admin/TemperatureBadge.vue';
 import VerificationBadge from '@/Components/Admin/VerificationBadge.vue';
 import WebsiteAnalysisPanel from '@/Components/Admin/WebsiteAnalysisPanel.vue';
+import LeadCrmPanel from '@/Components/Admin/LeadCrmPanel.vue';
 import LeadWorkforcePanel from '@/Components/Admin/LeadWorkforcePanel.vue';
 import IntelligenceScoreCard from '@/Components/Admin/IntelligenceScoreCard.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -17,6 +18,10 @@ const props = defineProps({
         required: true,
     },
     workforce: {
+        type: Object,
+        default: () => ({}),
+    },
+    crm: {
         type: Object,
         default: () => ({}),
     },
@@ -151,6 +156,9 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                     </span>
                 </div>
                 <div class="d-flex gap-2">
+                    <Link v-if="can('leads.update')" :href="route('leads.edit', lead.id)">
+                        <SecondaryButton>Edit</SecondaryButton>
+                    </Link>
                     <Link :href="route('leads.index')">
                         <SecondaryButton>Back to Leads</SecondaryButton>
                     </Link>
@@ -570,6 +578,9 @@ const formatPhoneLink = (phone) => phone?.replace(/[^\d+]/g, '') ?? '';
                     </div>
                 </div>
             </div>
+
+            <!-- CRM -->
+            <LeadCrmPanel v-if="crm.timeline !== undefined" :lead="lead" :crm="crm" />
 
             <!-- AI Workforce -->
             <LeadWorkforcePanel

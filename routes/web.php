@@ -13,9 +13,14 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\VoiceCallController;
 use App\Http\Controllers\Admin\VoiceProviderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeadActivityController;
 use App\Http\Controllers\LeadBulkVoiceCallController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LeadDealController;
+use App\Http\Controllers\LeadPipelineController;
+use App\Http\Controllers\LeadQuoteController;
 use App\Http\Controllers\LeadVoiceCallController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScraperController;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +34,20 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    Route::resource('leads', LeadController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::resource('leads', LeadController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+    Route::get('/leads-pipeline', [LeadPipelineController::class, 'index'])->name('leads.pipeline');
+    Route::post('/leads/{lead}/activities', [LeadActivityController::class, 'store'])->name('leads.activities.store');
+    Route::post('/leads/{lead}/deals', [LeadDealController::class, 'store'])->name('leads.deals.store');
+    Route::put('/leads/{lead}/deals/{deal}', [LeadDealController::class, 'update'])->name('leads.deals.update');
+    Route::delete('/leads/{lead}/deals/{deal}', [LeadDealController::class, 'destroy'])->name('leads.deals.destroy');
+    Route::post('/leads/{lead}/quotes', [LeadQuoteController::class, 'store'])->name('leads.quotes.store');
+    Route::get('/leads/{lead}/quotes/{quote}', [LeadQuoteController::class, 'show'])->name('leads.quotes.show');
+    Route::post('/leads/{lead}/quotes/{quote}/send', [LeadQuoteController::class, 'markSent'])->name('leads.quotes.send');
+    Route::post('/leads/{lead}/tasks', [TaskController::class, 'store'])->name('leads.tasks.store');
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])->name('tasks.complete');
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
     Route::post('/leads/{lead}/verify', [LeadController::class, 'reverify'])->name('leads.reverify');
     Route::post('/leads/voice-calls/bulk', [LeadBulkVoiceCallController::class, 'store'])->name('leads.voice-calls.bulk');
     Route::post('/leads/{lead}/voice-calls', [LeadVoiceCallController::class, 'store'])->name('leads.voice-calls.store');

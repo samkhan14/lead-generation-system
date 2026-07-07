@@ -62,6 +62,7 @@ function createLead(array $attributes = []): Lead
         'first_name' => 'John',
         'last_name' => 'Smith',
         'email' => 'john@example.com',
+        'phone' => '+15551234567',
     ], $attributes));
 
     app(LeadScoringService::class)->score($lead);

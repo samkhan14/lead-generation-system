@@ -48,6 +48,24 @@ defineProps({
             </SidebarLink>
 
             <SidebarLink
+                v-if="can('leads.view')"
+                :href="route('leads.pipeline')"
+                :active="route().current('leads.pipeline')"
+                icon="ri-kanban-view"
+            >
+                Pipeline
+            </SidebarLink>
+
+            <SidebarLink
+                v-if="can('crm.tasks.view')"
+                :href="route('tasks.index')"
+                :active="route().current('tasks.*')"
+                icon="ri-checkbox-line"
+            >
+                Tasks
+            </SidebarLink>
+
+            <SidebarLink
                 v-if="can('scraper.view')"
                 :href="route('scraper.index')"
                 :active="route().current('scraper.*')"
