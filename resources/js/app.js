@@ -1,4 +1,6 @@
 import '../css/app.css';
+import '../scss/materio/app.scss';
+import './materio';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/vue3';
@@ -22,6 +24,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: '#8c57ff',
     },
 });

@@ -1,0 +1,27 @@
+// Project overrides + essentials ported from Materio demo.css
+
+.menu .app-brand.demo {
+  height: 64px;
+}
+
+.app-brand-logo.demo svg {
+  width: 30px;
+  height: 24px;
+}
+
+.app-brand-text.demo {
+  font-size: 1.25rem;
+}
+
+.authentication-wrapper .app-brand-text.demo {
+  font-size: 1.5rem;
+  text-transform: capitalize;
+}
+
+.layout-navbar-fixed .layout-wrapper:not(.layout-without-menu) .layout-page {
+  padding-top: 64px !important;
+}
+
+.content-wrapper .navbar {
+  z-index: auto;
+}
