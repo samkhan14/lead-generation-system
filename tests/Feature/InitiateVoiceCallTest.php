@@ -22,9 +22,10 @@ beforeEach(function () {
 test('knowledge base seeder loads production company articles', function () {
     $this->seed(KnowledgeBaseSeeder::class);
 
-    expect(KnowledgeBase::query()->active()->count())->toBe(10)
+    expect(KnowledgeBase::query()->active()->count())->toBe(15)
         ->and(KnowledgeBase::query()->where('slug', 'company-overview')->exists())->toBeTrue()
         ->and(KnowledgeBase::query()->where('slug', 'voice-sales-guidelines')->exists())->toBeTrue()
+        ->and(KnowledgeBase::query()->where('slug', 'marketing-sales-guidelines')->exists())->toBeTrue()
         ->and(KnowledgeBase::query()->where('slug', 'pricing-philosophy')->exists())->toBeTrue();
 });
 
@@ -37,7 +38,7 @@ test('context builder loads seeded knowledge base articles', function () {
         ]),
     );
 
-    expect($context->knowledgeArticles)->toHaveCount(10)
+    expect($context->knowledgeArticles)->toHaveCount(15)
         ->and(collect($context->knowledgeArticles)->pluck('slug'))->toContain('engagement-process');
 });
 

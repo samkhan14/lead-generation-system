@@ -159,12 +159,15 @@ test('service catalog returns active knowledge for ai consumption', function () 
         ->and(collect($knowledge)->pluck('name'))->not->toContain('Archived Offer');
 });
 
-test('business service seeder loads fifteen production services', function () {
+test('business service seeder loads the full production catalog', function () {
     $this->seed(\Database\Seeders\ServiceSeeder::class);
 
-    expect(Service::query()->where('status', ServiceStatus::Active)->count())->toBe(15)
+    // 15 core (dev/AI/automation/consulting) + 8 digital marketing services.
+    expect(Service::query()->where('status', ServiceStatus::Active)->count())->toBe(23)
         ->and(Service::query()->where('slug', 'laravel-development')->exists())->toBeTrue()
         ->and(Service::query()->where('slug', 'ai-employees-voice-agents')->exists())->toBeTrue()
+        ->and(Service::query()->where('slug', 'search-engine-optimization')->exists())->toBeTrue()
+        ->and(Service::query()->where('slug', 'google-ads-ppc')->exists())->toBeTrue()
         ->and(Service::query()->where('slug', 'basic-website')->exists())->toBeFalse();
 
     $laravel = Service::query()->where('slug', 'laravel-development')->first();
@@ -174,6 +177,15 @@ test('business service seeder loads fifteen production services', function () {
         ->detailed_description->not->toBeEmpty()
         ->discovery_questions->not->toBeEmpty()
         ->technologies->toContain('Laravel');
+
+    $seo = Service::query()->where('slug', 'search-engine-optimization')->first();
+
+    expect($seo)
+        ->short_description->not->toBeEmpty()
+        ->detailed_description->not->toBeEmpty()
+        ->discovery_questions->not->toBeEmpty()
+        ->faqs->not->toBeEmpty()
+        ->objections->not->toBeEmpty();
 });
 
 test('service catalog paginate supports search and status filters', function () {

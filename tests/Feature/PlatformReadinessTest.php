@@ -41,8 +41,8 @@ test('ai and voice seeders enable platform without api keys', function () {
         ->and($alex->ai_provider_id)->not->toBeNull()
         ->and($alex->ai_model_id)->not->toBeNull();
 
-    expect(KnowledgeBase::query()->where('status', KnowledgeBaseStatus::Active)->count())->toBe(10)
-        ->and(PromptTemplate::query()->where('status', PromptTemplateStatus::Active)->count())->toBe(3);
+    expect(KnowledgeBase::query()->where('status', KnowledgeBaseStatus::Active)->count())->toBe(15)
+        ->and(PromptTemplate::query()->where('status', PromptTemplateStatus::Active)->count())->toBe(6);
 });
 
 test('active voice providers without keys are not usable for calls', function () {

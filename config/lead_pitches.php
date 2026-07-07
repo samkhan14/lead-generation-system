@@ -57,9 +57,96 @@ return [
             'reason' => 'This lead is an active Reddit post showing real intent — a genuine, helpful public reply converts far better than a cold pitch.',
             'opener' => 'Reply in-thread with a specific, useful answer to their question first (no hard sell), then offer to share a quick example or DM the details.',
         ],
+
+        /*
+        |----------------------------------------------------------------------
+        | Digital marketing agency pitches (Phase 8A)
+        |----------------------------------------------------------------------
+        | Matching lives in App\Services\LeadPitchService::matchesType() and the
+        | SQL mirror in App\Support\LeadQueryFilters::applyPitchType(). Source
+        | groups below are the single source of truth for both.
+        */
+        'local_seo' => [
+            'label' => 'Local SEO',
+            'service' => 'Local SEO & Google Business Profile',
+            'service_slug' => 'local-seo',
+            'priority' => 'high',
+            'reason' => 'This is a local business with a website but discovered through a directory — a strong fit for local SEO and map-pack visibility.',
+            'opener' => 'Customers in your area are searching for what you do. We can optimize your Google Business Profile and local presence so you show up in the map pack and win more nearby calls and visits.',
+        ],
+        'seo_growth' => [
+            'label' => 'SEO / organic growth',
+            'service' => 'Search Engine Optimization (SEO)',
+            'service_slug' => 'search-engine-optimization',
+            'priority' => 'high',
+            'reason' => 'This lead was found on a B2B/agency directory, where buyers actively invest in organic search growth.',
+            'opener' => 'We help businesses like yours turn organic search into a steady, lower-cost lead channel — technical fixes, content, and authority building tied to real pipeline, not vanity rankings.',
+        ],
+        'google_ads' => [
+            'label' => 'Google Ads / PPC',
+            'service' => 'Google Ads & PPC Management',
+            'service_slug' => 'google-ads-ppc',
+            'priority' => 'medium',
+            'reason' => 'The business is reachable (phone + website), making it a good candidate for immediate, trackable paid-search leads.',
+            'opener' => 'If you want leads now, we can run profitable Google Ads with proper conversion tracking so every dollar maps to a call or form — not just clicks.',
+        ],
+        'social_media_growth' => [
+            'label' => 'Social media marketing',
+            'service' => 'Social Media Marketing & Management',
+            'service_slug' => 'social-media-marketing',
+            'priority' => 'medium',
+            'reason' => 'A local business with a thin review/engagement footprint has clear room to build awareness and trust on social.',
+            'opener' => 'Your online presence has room to grow. We can build a consistent social presence — content and community — that keeps your brand top-of-mind and feeds repeat customers.',
+        ],
+        'content_marketing' => [
+            'label' => 'Content marketing',
+            'service' => 'Content Marketing & Strategy',
+            'service_slug' => 'content-marketing',
+            'priority' => 'low',
+            'reason' => 'B2B/agency leads with a website benefit from content that ranks, educates buyers, and compounds into pipeline.',
+            'opener' => 'We can turn your expertise into content that ranks and converts — articles, lead magnets, and email mapped to how your buyers actually research and decide.',
+        ],
     ],
 
     'reviews_growth_threshold' => 20,
     'reputation_rating_threshold' => 4.0,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Source groups (single source of truth for marketing pitch matching)
+    |--------------------------------------------------------------------------
+    | local_sources  = directory/listing sources for local businesses.
+    | agency_sources = B2B/agency directories whose leads buy marketing services.
+    */
+    'local_sources' => [
+        'google_maps', 'yelp', 'openstreetmap', 'bing_places',
+        'hotfrog', 'yellow_pages', 'manta', 'foursquare',
+    ],
+
+    'agency_sources' => [
+        'the_manifest', 'goodfirms', 'designrush', 'upcity',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Marketing pitch routing (Phase 8B)
+    |--------------------------------------------------------------------------
+    */
+    'marketing_pitch_types' => [
+        'local_seo',
+        'seo_growth',
+        'google_ads',
+        'social_media_growth',
+        'content_marketing',
+        // Legacy local pitches that Maya handles (same buyer, marketing services)
+        'reviews_growth',
+        'reputation_repair',
+        'gbp_optimization',
+    ],
+
+    'preferred_employee' => [
+        'marketing' => 'Maya — SEO & Marketing Specialist',
+        'default' => 'Alex — Voice Sales Agent',
+    ],
 
 ];

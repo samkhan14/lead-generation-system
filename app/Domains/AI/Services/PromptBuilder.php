@@ -5,11 +5,13 @@ namespace App\Domains\AI\Services;
 use App\Domains\AI\Contracts\PromptableContextInterface;
 use App\Domains\AI\DataTransferObjects\PromptContext;
 use App\Domains\BusinessKnowledge\Services\ServiceKnowledgeFormatter;
+use App\Services\LeadPitchService;
 
 class PromptBuilder implements PromptableContextInterface
 {
     public function __construct(
         private ServiceKnowledgeFormatter $serviceKnowledgeFormatter,
+        private LeadPitchService $pitchService,
     ) {}
 
     public function buildInstructions(PromptContext $context): string
@@ -102,6 +104,27 @@ class PromptBuilder implements PromptableContextInterface
             $lines[] = '- Notes: '.$lead->notes;
         }
 
+        if ($pitchBlock = $this->formatPitchRecommendation($lead)) {
+            $lines[] = $pitchBlock;
+        }
+
         return implode("\n", $lines);
+    }
+
+    private function formatPitchRecommendation(\App\Models\Lead $lead): ?string
+    {
+        $primary = $this->pitchService->primaryRecommendation($lead);
+
+        if ($primary === null) {
+            return null;
+        }
+
+        return implode("\n", [
+            'Recommended pitch (use as primary outreach angle):',
+            "- Service: {$primary['service']}",
+            "- Priority: {$primary['priority']}",
+            "- Reason: {$primary['reason']}",
+            "- Suggested opener: {$primary['opener']}",
+        ]);
     }
 }

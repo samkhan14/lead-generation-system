@@ -56,6 +56,8 @@ class LeadPitchService
         $ratingThreshold = (float) config('lead_pitches.reputation_rating_threshold', 4.0);
         $rating = data_get($lead->metadata, 'rating');
         $reviewCount = data_get($lead->metadata, 'review_count');
+        $localSources = (array) config('lead_pitches.local_sources', []);
+        $agencySources = (array) config('lead_pitches.agency_sources', []);
 
         return match ($type) {
             'website_build' => blank($lead->website),
@@ -65,6 +67,12 @@ class LeadPitchService
             'gbp_optimization' => $lead->source === 'google_maps',
             'phone_outreach' => filled($lead->phone) && blank($lead->email),
             'reddit_outreach' => $lead->source === 'reddit',
+            'local_seo' => in_array($lead->source, $localSources, true) && filled($lead->website),
+            'seo_growth' => in_array($lead->source, $agencySources, true),
+            'google_ads' => filled($lead->website) && filled($lead->phone),
+            'social_media_growth' => in_array($lead->source, $localSources, true)
+                && is_numeric($reviewCount) && (int) $reviewCount < $reviewThreshold,
+            'content_marketing' => in_array($lead->source, $agencySources, true) && filled($lead->website),
             default => false,
         };
     }

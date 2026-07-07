@@ -12,6 +12,10 @@ use App\Models\User;
 
 class LeadWorkforcePanelService
 {
+    public function __construct(
+        private LeadPitchService $pitchService,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -22,7 +26,7 @@ class LeadWorkforcePanelService
         $canStartVoice = $viewer?->can('voice.calls.create') ?? false;
 
         $voiceEmployees = $this->voiceEmployees();
-        $defaultEmployee = $this->resolveDefaultEmployee($voiceEmployees);
+        $defaultEmployee = $this->resolveDefaultEmployee($voiceEmployees, $lead);
         $usableProviders = VoiceProvider::query()->selectable()->get()->filter->isUsable();
 
         $aiActivities = $canViewAi ? $this->aiActivities($lead) : [];
@@ -244,10 +248,22 @@ class LeadWorkforcePanelService
      * @param  array<int, array{id: int, name: string}>  $employees
      * @return array{id: int, name: string}|null
      */
-    private function resolveDefaultEmployee(array $employees): ?array
+    private function resolveDefaultEmployee(array $employees, ?Lead $lead = null): ?array
     {
         if ($employees === []) {
             return null;
+        }
+
+        if ($lead !== null) {
+            $pitchPreferred = $this->resolvePitchPreferredEmployeeName($lead);
+
+            if ($pitchPreferred !== null) {
+                $match = collect($employees)->firstWhere('name', $pitchPreferred);
+
+                if ($match !== null) {
+                    return ['id' => $match['id'], 'name' => $match['name']];
+                }
+            }
         }
 
         $preferredName = config('voice_platform.default_voice_employee_name');
@@ -263,6 +279,23 @@ class LeadWorkforcePanelService
         $first = $employees[0];
 
         return ['id' => $first['id'], 'name' => $first['name']];
+    }
+
+    private function resolvePitchPreferredEmployeeName(Lead $lead): ?string
+    {
+        $primary = $this->pitchService->primaryRecommendation($lead);
+
+        if ($primary === null) {
+            return null;
+        }
+
+        $marketingTypes = (array) config('lead_pitches.marketing_pitch_types', []);
+
+        if (in_array($primary['type'], $marketingTypes, true)) {
+            return config('lead_pitches.preferred_employee.marketing');
+        }
+
+        return config('lead_pitches.preferred_employee.default');
     }
 
     /**

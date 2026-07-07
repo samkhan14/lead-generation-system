@@ -97,27 +97,46 @@ class AiProviderSeeder extends Seeder
             ? AiModel::query()->where('ai_provider_id', $openAi->id)->where('slug', 'gpt-4o-mini')->first()
             : null;
 
-        AiEmployee::query()->updateOrCreate(
-            ['name' => 'Alex — Voice Sales Agent'],
+        $employees = [
             [
-                'role' => AiEmployeeRole::VoiceSales,
+                'name' => 'Alex — Voice Sales Agent',
                 'department' => 'Sales',
                 'description' => 'Outbound voice agent for qualified CRM leads. Uses service catalog and lead context.',
                 'system_prompt' => 'You are a professional sales agent for a digital agency. Be helpful, concise, and never invent services or pricing not in the knowledge base.',
                 'behavior_prompt' => 'Qualify the lead, recommend one relevant service, handle objections calmly, and suggest booking a call when interest is clear.',
-                'knowledge_sources' => ['services', 'knowledge_bases', 'lead'],
-                'allowed_actions' => ['schedule_meeting', 'log_outcome'],
-                'allowed_tools' => [],
-                'memory_enabled' => true,
-                'context_window' => 8192,
-                'temperature' => 0.7,
-                'ai_provider_id' => $openAi?->id,
-                'ai_model_id' => $model?->id,
-                'language' => 'en',
-                'status' => AiEmployeeStatus::Active,
-                'created_by' => $authorId,
-                'updated_by' => $authorId,
             ],
-        );
+            [
+                'name' => 'Maya — SEO & Marketing Specialist',
+                'department' => 'Marketing',
+                'description' => 'Outbound voice agent specialized in digital marketing services (SEO, local SEO, Google Ads, social, content). Uses service catalog and lead context.',
+                'system_prompt' => 'You are Maya, a digital marketing specialist for an agency. You explain SEO, local SEO, Google Ads, social media, and content marketing in plain language. Be helpful and concise, and never invent services, results, or pricing not in the knowledge base.',
+                'behavior_prompt' => 'Diagnose the lead\'s likely marketing gap (no website, weak local presence, low reviews, no organic traffic), recommend the single most relevant marketing service, handle objections with evidence, and suggest a short audit or discovery call when interest is clear.',
+            ],
+        ];
+
+        foreach ($employees as $employee) {
+            AiEmployee::query()->updateOrCreate(
+                ['name' => $employee['name']],
+                [
+                    'role' => AiEmployeeRole::VoiceSales,
+                    'department' => $employee['department'],
+                    'description' => $employee['description'],
+                    'system_prompt' => $employee['system_prompt'],
+                    'behavior_prompt' => $employee['behavior_prompt'],
+                    'knowledge_sources' => ['services', 'knowledge_bases', 'lead'],
+                    'allowed_actions' => ['schedule_meeting', 'log_outcome'],
+                    'allowed_tools' => [],
+                    'memory_enabled' => true,
+                    'context_window' => 8192,
+                    'temperature' => 0.7,
+                    'ai_provider_id' => $openAi?->id,
+                    'ai_model_id' => $model?->id,
+                    'language' => 'en',
+                    'status' => AiEmployeeStatus::Active,
+                    'created_by' => $authorId,
+                    'updated_by' => $authorId,
+                ],
+            );
+        }
     }
 }

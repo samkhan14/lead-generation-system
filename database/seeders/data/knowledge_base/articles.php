@@ -7,13 +7,15 @@ return [
         'category' => 'company',
         'tags' => ['company', 'overview', 'positioning'],
         'content' => <<<'TEXT'
-We are a senior full-stack software engineering practice focused on scalable business software — not template websites.
+We are a senior full-stack software engineering practice and digital marketing agency focused on scalable business growth — not template websites.
 
 We build custom Laravel applications, SaaS products, CRMs, internal business systems, AI automations, and voice-enabled sales workflows for startups, SMBs, SaaS founders, and growing companies in the United States, Canada, United Kingdom, Australia, and Europe.
 
+We also deliver digital marketing services: SEO, local SEO, Google Ads, social media, content marketing, email automation, CRO, and marketing analytics — with reporting tied to leads and revenue.
+
 Our work combines strong backend engineering (Laravel, PHP, PostgreSQL/MySQL) with modern frontends (Vue.js, React, Inertia.js) and production DevOps (Docker, AWS, CI/CD).
 
-We sell outcomes: faster operations, better lead handling, reliable internal tools, and AI-assisted workflows that teams can trust in production.
+We sell outcomes: faster operations, better lead handling, reliable internal tools, AI-assisted workflows, and measurable marketing ROI that teams can trust in production.
 TEXT,
     ],
     [

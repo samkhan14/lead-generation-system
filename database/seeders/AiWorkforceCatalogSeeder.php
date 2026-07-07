@@ -39,6 +39,30 @@ class AiWorkforceCatalogSeeder extends Seeder
                 'variables' => ['lead_name', 'company', 'services_summary'],
                 'tags' => ['voice', 'opening'],
             ],
+            [
+                'slug' => 'marketing-voice-system',
+                'name' => 'Marketing Voice — System Prompt',
+                'category' => PromptTemplateCategory::System,
+                'content' => 'You are Maya, a digital marketing specialist for a full-service agency. Be warm, concise, and helpful. Use only facts from the knowledge base and marketing service catalog. Never invent pricing, guaranteed rankings, or ROAS figures.',
+                'variables' => ['lead_name', 'company', 'recommended_service', 'pitch_opener'],
+                'tags' => ['voice', 'marketing', 'sales'],
+            ],
+            [
+                'slug' => 'marketing-voice-behavior',
+                'name' => 'Marketing Voice — Behavior Prompt',
+                'category' => PromptTemplateCategory::Behavior,
+                'content' => 'Use the lead pitch recommendation when present. Ask 2–3 discovery questions from the recommended service catalog entry. Recommend one marketing service. Handle objections using approved marketing responses. Suggest a free audit or discovery call when interest is clear.',
+                'variables' => ['pitch_reason', 'recommended_service'],
+                'tags' => ['voice', 'marketing', 'sales'],
+            ],
+            [
+                'slug' => 'marketing-voice-opening',
+                'name' => 'Marketing Voice Call Opening',
+                'category' => PromptTemplateCategory::Outreach,
+                'content' => 'Hi {{lead_name}}, this is Maya from {{company}}\'s marketing team — I noticed {{pitch_reason}}. Do you have a quick minute to talk about {{recommended_service}}?',
+                'variables' => ['lead_name', 'company', 'recommended_service', 'pitch_reason', 'pitch_opener'],
+                'tags' => ['voice', 'marketing', 'opening'],
+            ],
         ];
 
         foreach ($promptTemplates as $template) {

@@ -187,6 +187,8 @@ class LeadQueryFilters
 
         $reviewThreshold = (int) config('lead_pitches.reviews_growth_threshold', 20);
         $ratingThreshold = (float) config('lead_pitches.reputation_rating_threshold', 4.0);
+        $localSources = (array) config('lead_pitches.local_sources', []);
+        $agencySources = (array) config('lead_pitches.agency_sources', []);
 
         return match ($pitchType) {
             'website_build' => $query->where(function (Builder $query): void {
@@ -203,6 +205,24 @@ class LeadQueryFilters
                     $query->whereNull('email')->orWhere('email', '=', '');
                 }),
             'reddit_outreach' => $query->where('source', 'reddit'),
+            'local_seo' => $query
+                ->whereIn('source', $localSources)
+                ->whereNotNull('website')
+                ->where('website', '!=', ''),
+            'seo_growth' => $query->whereIn('source', $agencySources),
+            'google_ads' => $query
+                ->whereNotNull('website')->where('website', '!=', '')
+                ->whereNotNull('phone')->where('phone', '!=', ''),
+            'social_media_growth' => static::applyNumericMetadataFilter(
+                $query->whereIn('source', $localSources),
+                'review_count',
+                '<',
+                $reviewThreshold,
+            ),
+            'content_marketing' => $query
+                ->whereIn('source', $agencySources)
+                ->whereNotNull('website')
+                ->where('website', '!=', ''),
             default => $query,
         };
     }

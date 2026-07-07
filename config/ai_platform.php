@@ -60,4 +60,22 @@ return [
         'voice_max_catalog_chars' => 4500,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Department-based service catalog filtering (AI / voice context)
+    |--------------------------------------------------------------------------
+    |
+    | Limits which services appear in an employee's prompt. Tags must match
+    | entries in database/seeders/data/business_services/*.php.
+    |
+    */
+    'department_service_filters' => [
+        'Marketing' => [
+            'require_any_tag' => ['digital-marketing'],
+        ],
+        'Sales' => [
+            'exclude_tags' => ['digital-marketing'],
+        ],
+    ],
+
 ];

@@ -42,8 +42,15 @@ class KnowledgeBaseSeeder extends Seeder
      */
     private function loadDefinitions(): array
     {
-        $path = __DIR__.'/data/knowledge_base/articles.php';
+        $files = [
+            __DIR__.'/data/knowledge_base/articles.php',
+            __DIR__.'/data/knowledge_base/marketing_articles.php',
+        ];
 
-        return is_readable($path) ? require $path : [];
+        return collect($files)
+            ->filter(fn (string $path) => is_readable($path))
+            ->flatMap(fn (string $path) => require $path)
+            ->values()
+            ->all();
     }
 }
