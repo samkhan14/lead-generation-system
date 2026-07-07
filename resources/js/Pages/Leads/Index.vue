@@ -226,7 +226,7 @@ const locationLabel = (lead) => {
             <div class="d-flex w-100 align-items-center justify-content-between gap-3">
                 <h4 class="mb-0 fw-bold">Leads</h4>
                 <Link v-if="can('leads.create')" :href="route('leads.create')">
-                    <PrimaryButton>New Lead</PrimaryButton>
+                    <PrimaryButton type="button">New Lead</PrimaryButton>
                 </Link>
             </div>
         </template>
