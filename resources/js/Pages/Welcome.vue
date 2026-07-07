@@ -27,7 +27,7 @@ defineProps({
         <Head title="Welcome" />
 
         <div class="text-center mb-6">
-            <h4 class="mb-2">Lead CRM</h4>
+            <h4 class="mb-2">SalesIntel</h4>
             <p class="text-muted mb-0">AI-powered lead management and outreach</p>
         </div>
 

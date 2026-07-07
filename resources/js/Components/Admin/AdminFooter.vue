@@ -3,7 +3,7 @@
         <div class="container-xxl">
             <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column gap-2">
                 <div class="text-body">
-                    © {{ new Date().getFullYear() }} Lead CRM
+                    © {{ new Date().getFullYear() }} SalesIntel
                 </div>
                 <div class="text-body-secondary small">
                     Template

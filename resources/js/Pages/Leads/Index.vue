@@ -271,7 +271,7 @@ const locationLabel = (lead) => {
                 <div class="card-body">
                     <form @submit.prevent="applyFilters">
                         <div class="row g-3">
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Search</label>
                                 <input
                                     v-model="local.q"
@@ -281,7 +281,7 @@ const locationLabel = (lead) => {
                                 />
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Country</label>
                                 <select
                                     v-model="local.country"
@@ -295,7 +295,7 @@ const locationLabel = (lead) => {
                                 </select>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">City</label>
                                 <input
                                     v-model="local.city"
@@ -309,7 +309,7 @@ const locationLabel = (lead) => {
                                 </datalist>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Area</label>
                                 <input
                                     v-model="local.area"
@@ -323,7 +323,7 @@ const locationLabel = (lead) => {
                                 </datalist>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Scrape keyword</label>
                                 <select
                                     v-model="local.keyword"
@@ -337,7 +337,7 @@ const locationLabel = (lead) => {
                                 </select>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Source</label>
                                 <select
                                     v-model="local.source"
@@ -350,8 +350,10 @@ const locationLabel = (lead) => {
                                     </option>
                                 </select>
                             </div>
+                        </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
                                 <label class="form-label">Pitch type</label>
                                 <select
                                     v-model="local.pitch_type"
@@ -365,7 +367,7 @@ const locationLabel = (lead) => {
                                 </select>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Website</label>
                                 <select
                                     v-model="local.has_website"
@@ -379,7 +381,7 @@ const locationLabel = (lead) => {
                             </div>
 
                             <template v-if="showRedditFilters">
-                                <div class="col-md-6 col-lg-4 col-xl">
+                                <div class="col-md-4">
                                     <label class="form-label">Subreddit</label>
                                     <select
                                         v-model="local.subreddit"
@@ -393,7 +395,7 @@ const locationLabel = (lead) => {
                                     </select>
                                 </div>
 
-                                <div class="col-md-6 col-lg-4 col-xl">
+                                <div class="col-md-4">
                                     <label class="form-label">Reddit intent</label>
                                     <select
                                         v-model="local.lead_kind"
@@ -407,7 +409,7 @@ const locationLabel = (lead) => {
                                     </select>
                                 </div>
 
-                                <div class="col-md-6 col-lg-4 col-xl">
+                                <div class="col-md-4">
                                     <label class="form-label">Posted</label>
                                     <select
                                         v-model="local.posted_within"
@@ -422,7 +424,7 @@ const locationLabel = (lead) => {
                                 </div>
                             </template>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Sort</label>
                                 <select
                                     v-model="local.sort"
@@ -435,7 +437,7 @@ const locationLabel = (lead) => {
                                 </select>
                             </div>
 
-                            <div class="col-md-6 col-lg-4 col-xl">
+                            <div class="col-md-4">
                                 <label class="form-label">Per page</label>
                                 <select
                                     v-model.number="local.per_page"

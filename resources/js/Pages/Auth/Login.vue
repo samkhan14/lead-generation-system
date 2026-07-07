@@ -5,12 +5,9 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 
 defineProps({
-    canResetPassword: {
-        type: Boolean,
-    },
     status: {
         type: String,
     },
@@ -72,15 +69,7 @@ const submit = () => {
                 </div>
             </div>
 
-            <div class="d-flex align-items-center justify-content-end gap-3">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="small link-primary"
-                >
-                    Forgot your password?
-                </Link>
-
+            <div class="d-flex justify-content-end">
                 <PrimaryButton :disabled="form.processing">
                     Log in
                 </PrimaryButton>

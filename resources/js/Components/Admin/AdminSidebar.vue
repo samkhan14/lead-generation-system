@@ -18,7 +18,7 @@ defineProps({
                 <span class="app-brand-logo demo">
                     <ApplicationLogo class="h-auto w-auto" style="height: 24px; width: auto;" />
                 </span>
-                <span class="app-brand-text demo menu-text fw-bold ms-2">Lead CRM</span>
+                <span class="app-brand-text demo menu-text fw-bold ms-2">SalesIntel</span>
             </Link>
 
             <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

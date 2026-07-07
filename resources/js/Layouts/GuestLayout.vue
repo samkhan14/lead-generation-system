@@ -20,7 +20,7 @@ useMaterio({
                                 <span class="app-brand-logo demo">
                                     <ApplicationLogo style="height: 32px; width: auto;" />
                                 </span>
-                                <span class="app-brand-text demo text-heading fw-bold">Lead CRM</span>
+                                <span class="app-brand-text demo text-heading fw-bold">SalesIntel</span>
                             </Link>
                         </div>
 
