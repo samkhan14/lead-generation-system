@@ -51,6 +51,17 @@ class RolesAndPermissionsSeeder extends Seeder
             'voice.providers.delete',
             'voice.calls.view',
             'voice.calls.create',
+            'email.providers.view',
+            'email.providers.create',
+            'email.providers.update',
+            'email.providers.delete',
+            'email.campaigns.view',
+            'email.campaigns.create',
+            'email.campaigns.update',
+            'email.campaigns.delete',
+            'email.campaigns.send',
+            'email.sends.view',
+            'email.sends.create',
         ];
 
         foreach ($permissions as $permission) {

@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'voice_call_started' => fn () => $request->session()->get('voice_call_started'),
                 'bulk_voice_call_result' => fn () => $request->session()->get('bulk_voice_call_result'),
+                'enhanced_content' => fn () => $request->session()->get('enhanced_content'),
             ],
         ];
     }

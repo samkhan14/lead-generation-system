@@ -4,6 +4,9 @@ use App\Http\Controllers\Admin\AiEmployeeController;
 use App\Http\Controllers\Admin\AiLogController;
 use App\Http\Controllers\Admin\AiModelController;
 use App\Http\Controllers\Admin\AiProviderController;
+use App\Http\Controllers\Admin\EmailCampaignController;
+use App\Http\Controllers\Admin\EmailProviderController;
+use App\Http\Controllers\Admin\EmailSendController;
 use App\Http\Controllers\Admin\KnowledgeBaseController;
 use App\Http\Controllers\Admin\PromptTemplateController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -76,6 +79,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('calls', VoiceCallController::class)
                 ->parameters(['calls' => 'voiceCall'])
                 ->only(['index', 'show']);
+        });
+
+        Route::prefix('email')->name('email.')->group(function () {
+            Route::resource('providers', EmailProviderController::class)
+                ->parameters(['providers' => 'emailProvider'])
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+
+            Route::resource('campaigns', EmailCampaignController::class)
+                ->parameters(['campaigns' => 'emailCampaign'])
+                ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+
+            Route::post('campaigns/{emailCampaign}/test', [EmailCampaignController::class, 'sendTest'])
+                ->name('campaigns.test');
+            Route::post('campaigns/{emailCampaign}/send', [EmailCampaignController::class, 'dispatch'])
+                ->name('campaigns.send');
+            Route::post('campaigns/{emailCampaign}/enhance', [EmailCampaignController::class, 'enhance'])
+                ->name('campaigns.enhance');
+            Route::post('enhance-content', [EmailCampaignController::class, 'enhancePreview'])
+                ->name('enhance-content');
+
+            Route::resource('sends', EmailSendController::class)
+                ->parameters(['sends' => 'emailSend'])
+                ->only(['index', 'create', 'store', 'show']);
         });
     });
 });

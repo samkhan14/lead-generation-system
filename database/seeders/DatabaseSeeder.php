@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             VoiceProviderSeeder::class,
             KnowledgeBaseSeeder::class,
             AiWorkforceCatalogSeeder::class,
+            EmailProviderSeeder::class,
         ]);
     }
 }
