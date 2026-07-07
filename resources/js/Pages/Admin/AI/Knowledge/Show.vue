@@ -26,42 +26,65 @@ const confirmDelete = () => {
         onSuccess: () => { showDeleteModal.value = false; },
     });
 };
+
+const statusClass = (status) => ({
+    active: 'bg-label-success',
+    draft: 'bg-label-warning',
+    archived: 'bg-label-secondary',
+    disabled: 'bg-label-secondary',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
     <Head :title="entry.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
-                    <Link :href="route('admin.ai.knowledge.index')" class="text-sm text-slate-500 hover:text-slate-700">← Back to knowledge</Link>
-                    <h1 class="mt-1 text-xl font-semibold text-slate-900">{{ entry.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ entry.slug }} · {{ entry.category }}</p>
+                    <Link :href="route('admin.ai.knowledge.index')" class="small text-muted text-decoration-none">Back to knowledge</Link>
+                    <h1 class="h4 mb-1 mt-1">{{ entry.name }}</h1>
+                    <p class="text-muted mb-0">{{ entry.slug }} / {{ entry.category }}</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <PrimaryButton v-if="can('ai.knowledge.update')" type="button" @click="showEditModal = true">Edit</PrimaryButton>
                     <DangerButton v-if="can('ai.knowledge.delete')" type="button" @click="showDeleteModal = true">Delete</DangerButton>
                 </div>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success" role="alert">{{ page.props.flash.success }}</div>
 
-        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 class="text-base font-semibold text-slate-900">Content</h2>
-            <pre class="mt-4 whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-sm text-slate-700">{{ entry.content }}</pre>
-        </section>
+        <div class="vstack gap-4">
+            <section class="card">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <h5 class="card-title mb-0">Content</h5>
+                    <span class="badge text-capitalize" :class="statusClass(entry.status)">{{ entry.status }}</span>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-body-tertiary border rounded p-3 mb-0 small text-body" style="white-space: pre-wrap;">{{ entry.content }}</pre>
+                </div>
+            </section>
+            <div class="card">
+                <div class="card-body d-flex flex-wrap gap-2">
+                    <span class="badge bg-label-primary text-capitalize">{{ entry.category?.replace('_', ' ') }}</span>
+                    <span class="text-muted small">Slug: {{ entry.slug }}</span>
+                </div>
+            </div>
+        </div>
 
         <KnowledgeBaseFormModal :show="showEditModal" mode="edit" :entry="entry" :status-options="statusOptions" :category-options="categoryOptions" @close="showEditModal = false" />
 
         <Modal :show="showDeleteModal" max-width="md" @close="showDeleteModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-slate-900">Delete entry?</h2>
-                <p class="mt-2 text-sm text-slate-600">Remove {{ entry.name }}.</p>
-                <div class="mt-6 flex justify-end gap-3">
-                    <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
-                    <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
-                </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Delete entry?</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="showDeleteModal = false" />
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Remove {{ entry.name }}.</p>
+            </div>
+            <div class="modal-footer">
+                <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
+                <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
             </div>
         </Modal>
     </AdminLayout>

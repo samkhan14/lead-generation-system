@@ -11,23 +11,48 @@ defineProps({
     <Head title="Email Send" />
     <AdminLayout>
         <template #header>
-            <h1 class="text-xl font-semibold text-slate-900">Email send #{{ send.id }}</h1>
+            <h4 class="mb-0 fw-bold">Email send #{{ send.id }}</h4>
         </template>
 
-        <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between"><dt class="text-slate-500">To</dt><dd>{{ send.to_email }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Subject</dt><dd>{{ send.subject }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Status</dt><dd class="capitalize">{{ send.status }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Provider message ID</dt><dd class="max-w-xs truncate">{{ send.provider_message_id || '—' }}</dd></div>
-                    <div v-if="send.error_message" class="rounded bg-red-50 p-3 text-red-700">{{ send.error_message }}</div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Sent at</dt><dd>{{ send.sent_at || '—' }}</dd></div>
-                </dl>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <dl class="row g-3 mb-0 small">
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">To</dt>
+                                <dd class="mb-0">{{ send.to_email }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Subject</dt>
+                                <dd class="mb-0">{{ send.subject }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Status</dt>
+                                <dd class="mb-0 text-capitalize">{{ send.status }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Provider message ID</dt>
+                                <dd class="mb-0 text-truncate" style="max-width: 12rem;">{{ send.provider_message_id || '—' }}</dd>
+                            </div>
+                            <div v-if="send.error_message" class="col-12">
+                                <div class="alert alert-danger mb-0 small">{{ send.error_message }}</div>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Sent at</dt>
+                                <dd class="mb-0">{{ send.sent_at || '—' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
             </div>
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <h2 class="font-semibold text-slate-900">Body preview</h2>
-                <div class="prose prose-sm mt-4 max-w-none" v-html="send.html_body" />
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Body preview</h5>
+                        <div class="small" v-html="send.html_body" />
+                    </div>
+                </div>
             </div>
         </div>
     </AdminLayout>

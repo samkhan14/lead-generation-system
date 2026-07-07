@@ -2,6 +2,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AiEmployeeFormModal from '@/Components/Admin/AiEmployeeFormModal.vue';
 import DataTable from '@/Components/Admin/DataTable.vue';
+import Pagination from '@/Components/Admin/Pagination.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
@@ -41,62 +42,61 @@ const reload = () => {
     <Head title="AI Employees" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">AI Employees</h1>
-                    <p class="text-sm text-slate-500">Configured AI agents for sales, voice, and support</p>
+                    <h4 class="mb-0 fw-bold">AI Employees</h4>
+                    <p class="small text-muted mb-0">Configured AI agents for sales, voice, and support</p>
                 </div>
                 <PrimaryButton v-if="can('ai.employees.create')" type="button" @click="showCreateModal = true">Add employee</PrimaryButton>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
 
         <DataTable title="Employees" :is-empty="!employees.data.length" empty-message="No AI employees yet.">
             <template #toolbar>
-                <div class="flex flex-wrap items-end gap-3">
-                    <div class="min-w-[200px] flex-1">
-                        <label class="text-xs font-medium text-slate-500">Search</label>
-                        <input v-model="local.q" type="search" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @keyup.enter="reload" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label">Search</label>
+                        <input v-model="local.q" type="search" class="form-control form-control-sm" @keyup.enter="reload" />
                     </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500">Role</label>
-                        <select v-model="local.role" class="mt-1 block rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @change="reload">
+                    <div class="col-md-4">
+                        <label class="form-label">Role</label>
+                        <select v-model="local.role" class="form-select form-select-sm" @change="reload">
                             <option value="">All</option>
                             <option v-for="option in roleOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                     </div>
-                    <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    <div class="col-md-auto">
+                        <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    </div>
                 </div>
             </template>
             <template #head>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Employee</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Role</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Model</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
+                    <th>Employee</th>
+                    <th>Role</th>
+                    <th>Model</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </template>
-            <tr v-for="employee in employees.data" :key="employee.id" class="hover:bg-slate-50">
-                <td class="px-4 py-3">
-                    <div class="font-medium text-slate-900">{{ employee.name }}</div>
-                    <div class="text-xs text-slate-500">{{ employee.department || '—' }}</div>
+            <tr v-for="employee in employees.data" :key="employee.id">
+                <td>
+                    <div class="fw-medium">{{ employee.name }}</div>
+                    <div class="small text-muted">{{ employee.department || '—' }}</div>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ employee.role_label || employee.role }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ employee.model?.name ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ employee.status }}</td>
-                <td class="px-4 py-3 text-right">
-                    <Link :href="route('admin.ai.employees.show', employee.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View</Link>
+                <td class="text-muted">{{ employee.role_label || employee.role }}</td>
+                <td class="text-muted">{{ employee.model?.name ?? '—' }}</td>
+                <td>
+                    <span class="badge bg-label-secondary text-capitalize">{{ employee.status }}</span>
+                </td>
+                <td class="text-end">
+                    <Link :href="route('admin.ai.employees.show', employee.id)" class="link-primary small fw-medium">View</Link>
                 </td>
             </tr>
             <template #footer>
-                <div v-if="employees.links?.length > 3" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-6">
-                    <p class="text-sm text-slate-500">Showing {{ employees.from ?? 0 }}–{{ employees.to ?? 0 }} of {{ employees.total }}</p>
-                    <div class="flex flex-wrap gap-1">
-                        <Link v-for="link in employees.links" :key="link.label" :href="link.url || '#'" class="rounded px-3 py-1 text-sm" :class="[link.active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100', !link.url ? 'pointer-events-none opacity-40' : '']" v-html="link.label" />
-                    </div>
-                </div>
+                <Pagination :paginator="employees" item-label="employees" />
             </template>
         </DataTable>
 

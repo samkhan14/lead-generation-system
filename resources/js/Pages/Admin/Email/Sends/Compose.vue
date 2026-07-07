@@ -36,47 +36,51 @@ const submit = () => {
     <Head title="Compose Email" />
     <AdminLayout>
         <template #header>
-            <h1 class="text-xl font-semibold text-slate-900">Send single email</h1>
+            <h4 class="mb-0 fw-bold">Send single email</h4>
         </template>
 
-        <form class="mx-auto max-w-3xl space-y-6" @submit.prevent="submit">
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <InputLabel for="to_email" value="To email" />
-                        <TextInput id="to_email" v-model="form.to_email" type="email" class="mt-1 block w-full" required />
-                        <InputError class="mt-1" :message="form.errors.to_email" />
+        <form class="mx-auto vstack gap-4" style="max-width: 48rem;" @submit.prevent="submit">
+            <div class="card">
+                <div class="card-body vstack gap-3">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <InputLabel for="to_email" value="To email" />
+                            <TextInput id="to_email" v-model="form.to_email" type="email" class="mt-1" required />
+                            <InputError class="mt-1" :message="form.errors.to_email" />
+                        </div>
+                        <div class="col-sm-6">
+                            <InputLabel for="to_name" value="To name" />
+                            <TextInput id="to_name" v-model="form.to_name" class="mt-1" />
+                        </div>
                     </div>
                     <div>
-                        <InputLabel for="to_name" value="To name" />
-                        <TextInput id="to_name" v-model="form.to_name" class="mt-1 block w-full" />
+                        <InputLabel for="subject" value="Subject" />
+                        <TextInput id="subject" v-model="form.subject" class="mt-1" required />
+                        <InputError class="mt-1" :message="form.errors.subject" />
+                    </div>
+                    <div>
+                        <InputLabel for="provider" value="Provider" />
+                        <select id="provider" v-model="form.email_provider_id" class="form-select mt-1">
+                            <option value="">Auto</option>
+                            <option v-for="p in providers.data" :key="p.id" :value="p.id">{{ p.name }}</option>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input id="is_test" v-model="form.is_test" type="checkbox" class="form-check-input" />
+                        <label class="form-check-label small" for="is_test">Mark as test send</label>
                     </div>
                 </div>
-                <div>
-                    <InputLabel for="subject" value="Subject" />
-                    <TextInput id="subject" v-model="form.subject" class="mt-1 block w-full" required />
-                    <InputError class="mt-1" :message="form.errors.subject" />
-                </div>
-                <div>
-                    <InputLabel for="provider" value="Provider" />
-                    <select id="provider" v-model="form.email_provider_id" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm">
-                        <option value="">Auto</option>
-                        <option v-for="p in providers.data" :key="p.id" :value="p.id">{{ p.name }}</option>
-                    </select>
-                </div>
-                <label class="flex items-center gap-2 text-sm text-slate-600">
-                    <input v-model="form.is_test" type="checkbox" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                    Mark as test send
-                </label>
             </div>
 
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <InputLabel value="Email body" />
-                <EmailHtmlEditor v-model="form.html_body" class="mt-2" />
-                <InputError class="mt-2" :message="form.errors.html_body || form.errors.email" />
+            <div class="card">
+                <div class="card-body">
+                    <InputLabel value="Email body" />
+                    <EmailHtmlEditor v-model="form.html_body" class="mt-2" />
+                    <InputError class="mt-2" :message="form.errors.html_body || form.errors.email" />
+                </div>
             </div>
 
-            <div class="flex justify-end gap-3">
+            <div class="d-flex justify-content-end gap-2">
                 <SecondaryButton type="button" @click="router.visit(route('admin.email.sends.index'))">Cancel</SecondaryButton>
                 <PrimaryButton :disabled="form.processing">Queue email</PrimaryButton>
             </div>

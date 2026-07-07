@@ -35,64 +35,89 @@ const confirmDelete = () => {
     <Head :title="employee.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
                 <div>
-                    <Link :href="route('admin.ai.employees.index')" class="text-sm text-slate-500 hover:text-slate-700">← Back to employees</Link>
-                    <h1 class="mt-1 text-xl font-semibold text-slate-900">{{ employee.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ employee.role_label }} · {{ employee.status }}</p>
+                    <Link :href="route('admin.ai.employees.index')" class="small text-muted">← Back to employees</Link>
+                    <h4 class="mt-1 mb-0 fw-bold">{{ employee.name }}</h4>
+                    <p class="small text-muted mb-0">{{ employee.role_label }} · {{ employee.status }}</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <PrimaryButton v-if="can('ai.employees.update')" type="button" @click="showEditModal = true">Edit</PrimaryButton>
                     <DangerButton v-if="can('ai.employees.delete')" type="button" @click="showDeleteModal = true">Delete</DangerButton>
                 </div>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="space-y-6 lg:col-span-2">
-                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">Overview</h2>
-                    <p class="mt-3 whitespace-pre-wrap text-sm text-slate-600">{{ employee.description || 'No description.' }}</p>
-                </section>
-                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">System prompt</h2>
-                    <pre class="mt-3 whitespace-pre-wrap text-sm text-slate-600">{{ employee.system_prompt || '—' }}</pre>
-                </section>
-                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">Behavior prompt</h2>
-                    <pre class="mt-3 whitespace-pre-wrap text-sm text-slate-600">{{ employee.behavior_prompt || '—' }}</pre>
-                </section>
+        <div class="row g-4">
+            <div class="col-lg-8 vstack gap-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Overview</h5>
+                        <p class="mb-0 text-muted" style="white-space: pre-wrap;">{{ employee.description || 'No description.' }}</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">System prompt</h5>
+                        <pre class="mb-0 small text-muted" style="white-space: pre-wrap;">{{ employee.system_prompt || '—' }}</pre>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Behavior prompt</h5>
+                        <pre class="mb-0 small text-muted" style="white-space: pre-wrap;">{{ employee.behavior_prompt || '—' }}</pre>
+                    </div>
+                </div>
             </div>
-            <aside class="space-y-6">
-                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">Runtime</h2>
-                    <dl class="mt-4 space-y-3 text-sm">
-                        <div><dt class="text-slate-500">Operational</dt><dd class="font-medium" :class="employee.is_operational ? 'text-emerald-600' : 'text-amber-600'">{{ employee.is_operational ? 'Yes' : 'No' }}</dd></div>
-                        <div><dt class="text-slate-500">Provider</dt><dd class="font-medium text-slate-900">{{ employee.provider?.name ?? '—' }}</dd></div>
-                        <div><dt class="text-slate-500">Model</dt><dd class="font-medium text-slate-900">{{ employee.model?.name ?? '—' }}</dd></div>
-                        <div><dt class="text-slate-500">Temperature</dt><dd class="font-medium text-slate-900">{{ employee.temperature }}</dd></div>
-                        <div><dt class="text-slate-500">Context window</dt><dd class="font-medium text-slate-900">{{ employee.context_window?.toLocaleString() }}</dd></div>
-                    </dl>
-                </section>
-                <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">Knowledge sources</h2>
-                    <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-600">
-                        <li v-for="source in employee.knowledge_sources || []" :key="source">{{ source }}</li>
-                        <li v-if="!(employee.knowledge_sources || []).length" class="list-none pl-0 text-slate-400">None</li>
-                    </ul>
-                </section>
-            </aside>
+            <div class="col-lg-4 vstack gap-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Runtime</h5>
+                        <dl class="row g-3 mb-0 small">
+                            <div class="col-12">
+                                <dt class="text-muted mb-1">Operational</dt>
+                                <dd class="mb-0 fw-medium" :class="employee.is_operational ? 'text-success' : 'text-warning'">{{ employee.is_operational ? 'Yes' : 'No' }}</dd>
+                            </div>
+                            <div class="col-12">
+                                <dt class="text-muted mb-1">Provider</dt>
+                                <dd class="mb-0 fw-medium">{{ employee.provider?.name ?? '—' }}</dd>
+                            </div>
+                            <div class="col-12">
+                                <dt class="text-muted mb-1">Model</dt>
+                                <dd class="mb-0 fw-medium">{{ employee.model?.name ?? '—' }}</dd>
+                            </div>
+                            <div class="col-12">
+                                <dt class="text-muted mb-1">Temperature</dt>
+                                <dd class="mb-0 fw-medium">{{ employee.temperature }}</dd>
+                            </div>
+                            <div class="col-12">
+                                <dt class="text-muted mb-1">Context window</dt>
+                                <dd class="mb-0 fw-medium">{{ employee.context_window?.toLocaleString() }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Knowledge sources</h5>
+                        <ul class="mb-0 small text-muted ps-3">
+                            <li v-for="source in employee.knowledge_sources || []" :key="source">{{ source }}</li>
+                            <li v-if="!(employee.knowledge_sources || []).length" class="list-unstyled text-muted">None</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <AiEmployeeFormModal :show="showEditModal" mode="edit" :employee="employee" :status-options="statusOptions" :role-options="roleOptions" :provider-options="providerOptions" :model-options="modelOptions" :knowledge-source-options="knowledgeSourceOptions" @close="showEditModal = false" />
 
         <Modal :show="showDeleteModal" max-width="md" @close="showDeleteModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-slate-900">Delete employee?</h2>
-                <p class="mt-2 text-sm text-slate-600">Remove {{ employee.name }} from the workforce.</p>
-                <div class="mt-6 flex justify-end gap-3">
+            <div class="p-4 p-md-6">
+                <h5 class="mb-2">Delete employee?</h5>
+                <p class="text-muted small mb-0">Remove {{ employee.name }} from the workforce.</p>
+                <div class="d-flex justify-content-end gap-2 mt-4">
                     <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
                     <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
                 </div>

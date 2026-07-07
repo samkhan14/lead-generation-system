@@ -64,33 +64,39 @@ watch(() => props.show, (visible) => {
 
 <template>
     <Modal :show="show" max-width="lg" @close="close">
-        <div class="p-6">
-            <h2 class="text-lg font-semibold text-slate-900">Bulk AI Voice Calls</h2>
-            <p class="mt-1 text-sm text-slate-500">
-                Queue outbound calls for selected leads. Each call runs asynchronously on the voice queue — Retell can handle multiple concurrent calls.
+        <div class="modal-header">
+            <h5 class="modal-title">Bulk AI Voice Calls</h5>
+            <button type="button" class="btn-close" aria-label="Close" @click="close" />
+        </div>
+
+        <div class="modal-body">
+            <p class="text-muted mb-4">
+                Queue outbound calls for selected leads. Each call runs asynchronously on the voice queue.
             </p>
 
-            <div class="mt-4 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                <div class="flex justify-between gap-3">
-                    <span>Selected leads</span>
-                    <span class="font-medium">{{ selectedLeads.length }}</span>
-                </div>
-                <div class="flex justify-between gap-3">
-                    <span>Callable (with phone)</span>
-                    <span class="font-medium text-emerald-700">{{ callableLeads.length }}</span>
-                </div>
-                <div v-if="missingPhoneCount > 0" class="flex justify-between gap-3 text-amber-700">
-                    <span>Skipped (no phone)</span>
-                    <span class="font-medium">{{ missingPhoneCount }}</span>
+            <div class="card bg-label-secondary mb-4">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between gap-3 small mb-2">
+                        <span>Selected leads</span>
+                        <span class="fw-medium">{{ selectedLeads.length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between gap-3 small mb-2">
+                        <span>Callable (with phone)</span>
+                        <span class="fw-medium text-success">{{ callableLeads.length }}</span>
+                    </div>
+                    <div v-if="missingPhoneCount > 0" class="d-flex justify-content-between gap-3 small text-warning">
+                        <span>Skipped (no phone)</span>
+                        <span class="fw-medium">{{ missingPhoneCount }}</span>
+                    </div>
                 </div>
             </div>
 
-            <div v-if="voiceCallOptions.voice_employees.length > 1" class="mt-4">
+            <div v-if="voiceCallOptions.voice_employees.length > 1" class="mb-4">
                 <InputLabel for="bulk_ai_employee" value="AI employee" />
                 <select
                     id="bulk_ai_employee"
                     v-model="form.ai_employee_id"
-                    class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-violet-500 focus:ring-violet-500"
+                    class="form-select mt-1"
                 >
                     <option v-for="employee in voiceCallOptions.voice_employees" :key="employee.id" :value="employee.id">
                         {{ employee.name }}
@@ -98,19 +104,19 @@ watch(() => props.show, (visible) => {
                 </select>
             </div>
 
-            <div v-if="form.errors.lead_ids" class="mt-4 text-sm text-red-600">{{ form.errors.lead_ids }}</div>
-            <div v-if="form.errors.bulk_voice_call" class="mt-4 text-sm text-red-600">{{ form.errors.bulk_voice_call }}</div>
+            <div v-if="form.errors.lead_ids" class="text-danger small mb-2">{{ form.errors.lead_ids }}</div>
+            <div v-if="form.errors.bulk_voice_call" class="text-danger small mb-2">{{ form.errors.bulk_voice_call }}</div>
 
-            <p v-if="callableLeads.length === 0" class="mt-4 text-sm text-amber-700">
-                None of the selected leads have a phone number. Add phone numbers or select different leads.
-            </p>
-
-            <div class="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
-                <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
-                <PrimaryButton type="button" :disabled="form.processing || callableLeads.length === 0" @click="submit">
-                    Queue {{ callableLeads.length }} call{{ callableLeads.length === 1 ? '' : 's' }}
-                </PrimaryButton>
+            <div v-if="callableLeads.length === 0" class="alert alert-warning mb-0">
+                None of the selected leads have a phone number.
             </div>
+        </div>
+
+        <div class="modal-footer">
+            <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
+            <PrimaryButton type="button" :disabled="form.processing || callableLeads.length === 0" @click="submit">
+                Queue {{ callableLeads.length }} call{{ callableLeads.length === 1 ? '' : 's' }}
+            </PrimaryButton>
         </div>
     </Modal>
 </template>

@@ -26,46 +26,60 @@ const confirmDelete = () => {
         onSuccess: () => { showDeleteModal.value = false; },
     });
 };
+
+const statusClass = (status) => ({
+    active: 'bg-label-success',
+    disabled: 'bg-label-secondary',
+    deprecated: 'bg-label-warning',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
     <Head :title="model.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
-                    <Link :href="route('admin.ai.models.index')" class="text-sm text-slate-500 hover:text-slate-700">← Back to models</Link>
-                    <h1 class="mt-1 text-xl font-semibold text-slate-900">{{ model.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ model.slug }} · {{ model.provider?.name }}</p>
+                    <Link :href="route('admin.ai.models.index')" class="small text-muted text-decoration-none">Back to models</Link>
+                    <h1 class="h4 mb-1 mt-1">{{ model.name }}</h1>
+                    <p class="text-muted mb-0">{{ model.slug }} / {{ model.provider?.name }}</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <PrimaryButton v-if="can('ai.models.update')" type="button" @click="showEditModal = true">Edit</PrimaryButton>
                     <DangerButton v-if="can('ai.models.delete')" type="button" @click="showDeleteModal = true">Delete</DangerButton>
                 </div>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success" role="alert">{{ page.props.flash.success }}</div>
 
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <dl class="grid gap-4 sm:grid-cols-2 text-sm">
-                <div><dt class="text-slate-500">Status</dt><dd class="mt-1 font-medium capitalize text-slate-900">{{ model.status }}</dd></div>
-                <div><dt class="text-slate-500">Max tokens</dt><dd class="mt-1 font-medium text-slate-900">{{ model.max_tokens?.toLocaleString() ?? '—' }}</dd></div>
-                <div><dt class="text-slate-500">Input price / 1K</dt><dd class="mt-1 font-medium text-slate-900">${{ model.input_price_per_1k ?? '—' }}</dd></div>
-                <div><dt class="text-slate-500">Output price / 1K</dt><dd class="mt-1 font-medium text-slate-900">${{ model.output_price_per_1k ?? '—' }}</dd></div>
-            </dl>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Configuration</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row g-4 mb-0">
+                    <div class="col-12 col-sm-6"><dt class="text-muted small">Status</dt><dd class="mb-0 mt-1"><span class="badge text-capitalize" :class="statusClass(model.status)">{{ model.status }}</span></dd></div>
+                    <div class="col-12 col-sm-6"><dt class="text-muted small">Max tokens</dt><dd class="fw-medium mb-0 mt-1">{{ model.max_tokens?.toLocaleString() ?? 'None' }}</dd></div>
+                    <div class="col-12 col-sm-6"><dt class="text-muted small">Input price / 1K</dt><dd class="fw-medium mb-0 mt-1">${{ model.input_price_per_1k ?? 'None' }}</dd></div>
+                    <div class="col-12 col-sm-6"><dt class="text-muted small">Output price / 1K</dt><dd class="fw-medium mb-0 mt-1">${{ model.output_price_per_1k ?? 'None' }}</dd></div>
+                </dl>
+            </div>
         </div>
 
         <AiModelFormModal :show="showEditModal" mode="edit" :model="model" :status-options="statusOptions" :provider-options="providerOptions" @close="showEditModal = false" />
 
         <Modal :show="showDeleteModal" max-width="md" @close="showDeleteModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-slate-900">Delete model?</h2>
-                <p class="mt-2 text-sm text-slate-600">Remove {{ model.name }} from the catalog.</p>
-                <div class="mt-6 flex justify-end gap-3">
-                    <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
-                    <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
-                </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Delete model?</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="showDeleteModal = false" />
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Remove {{ model.name }} from the catalog.</p>
+            </div>
+            <div class="modal-footer">
+                <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
+                <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
             </div>
         </Modal>
     </AdminLayout>

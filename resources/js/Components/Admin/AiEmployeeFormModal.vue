@@ -111,102 +111,104 @@ const close = () => {
 
 <template>
     <Modal :show="show" max-width="2xl" @close="close">
-        <div class="max-h-[85vh] overflow-y-auto p-6">
-            <h2 class="text-lg font-semibold text-slate-900">{{ title }}</h2>
-            <form class="mt-6 space-y-4" @submit.prevent="submit">
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
+        <div class="p-4 p-md-6" style="max-height: 85vh; overflow-y: auto;">
+            <h5 class="mb-0">{{ title }}</h5>
+            <form class="mt-4" @submit.prevent="submit">
+                <div class="row g-3">
+                    <div class="col-sm-6">
                         <InputLabel for="employee_name" value="Name" />
-                        <TextInput id="employee_name" v-model="form.name" class="mt-1 block w-full" required />
+                        <TextInput id="employee_name" v-model="form.name" class="mt-1" required />
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
-                    <div>
+                    <div class="col-sm-6">
                         <InputLabel for="employee_role" value="Role" />
-                        <select id="employee_role" v-model="form.role" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="employee_role" v-model="form.role" class="form-select mt-1">
                             <option v-for="option in roleOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.role" />
                     </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
+                    <div class="col-sm-6">
                         <InputLabel for="employee_department" value="Department" />
-                        <TextInput id="employee_department" v-model="form.department" class="mt-1 block w-full" />
+                        <TextInput id="employee_department" v-model="form.department" class="mt-1" />
                         <InputError class="mt-2" :message="form.errors.department" />
                     </div>
-                    <div>
+                    <div class="col-sm-6">
                         <InputLabel for="employee_status" value="Status" />
-                        <select id="employee_status" v-model="form.status" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="employee_status" v-model="form.status" class="form-select mt-1">
                             <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.status" />
                     </div>
-                </div>
-                <div>
-                    <InputLabel for="employee_description" value="Description" />
-                    <textarea id="employee_description" v-model="form.description" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    <InputError class="mt-2" :message="form.errors.description" />
-                </div>
-                <div>
-                    <InputLabel for="employee_system_prompt" value="System prompt" />
-                    <textarea id="employee_system_prompt" v-model="form.system_prompt" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    <InputError class="mt-2" :message="form.errors.system_prompt" />
-                </div>
-                <div>
-                    <InputLabel for="employee_behavior_prompt" value="Behavior prompt" />
-                    <textarea id="employee_behavior_prompt" v-model="form.behavior_prompt" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    <InputError class="mt-2" :message="form.errors.behavior_prompt" />
-                </div>
-                <div>
-                    <InputLabel value="Knowledge sources" />
-                    <div class="mt-2 flex flex-wrap gap-3">
-                        <label v-for="option in knowledgeSourceOptions" :key="option.value" class="flex items-center gap-2 text-sm">
-                            <input type="checkbox" :checked="form.knowledge_sources.includes(option.value)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" @change="toggleSource(option.value)" />
-                            {{ option.label }}
-                        </label>
+                    <div class="col-12">
+                        <InputLabel for="employee_description" value="Description" />
+                        <textarea id="employee_description" v-model="form.description" rows="2" class="form-control mt-1" />
+                        <InputError class="mt-2" :message="form.errors.description" />
                     </div>
-                    <InputError class="mt-2" :message="form.errors.knowledge_sources" />
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
+                    <div class="col-12">
+                        <InputLabel for="employee_system_prompt" value="System prompt" />
+                        <textarea id="employee_system_prompt" v-model="form.system_prompt" rows="3" class="form-control mt-1" />
+                        <InputError class="mt-2" :message="form.errors.system_prompt" />
+                    </div>
+                    <div class="col-12">
+                        <InputLabel for="employee_behavior_prompt" value="Behavior prompt" />
+                        <textarea id="employee_behavior_prompt" v-model="form.behavior_prompt" rows="3" class="form-control mt-1" />
+                        <InputError class="mt-2" :message="form.errors.behavior_prompt" />
+                    </div>
+                    <div class="col-12">
+                        <InputLabel value="Knowledge sources" />
+                        <div class="d-flex flex-wrap gap-3 mt-2">
+                            <div v-for="option in knowledgeSourceOptions" :key="option.value" class="form-check">
+                                <input
+                                    :id="`knowledge_${option.value}`"
+                                    type="checkbox"
+                                    class="form-check-input"
+                                    :checked="form.knowledge_sources.includes(option.value)"
+                                    @change="toggleSource(option.value)"
+                                />
+                                <label class="form-check-label small" :for="`knowledge_${option.value}`">{{ option.label }}</label>
+                            </div>
+                        </div>
+                        <InputError class="mt-2" :message="form.errors.knowledge_sources" />
+                    </div>
+                    <div class="col-sm-6">
                         <InputLabel for="employee_provider" value="Primary provider" />
-                        <select id="employee_provider" v-model="form.ai_provider_id" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="employee_provider" v-model="form.ai_provider_id" class="form-select mt-1">
                             <option value="">None</option>
                             <option v-for="option in providerOptions" :key="option.id" :value="option.id">{{ option.name }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.ai_provider_id" />
                     </div>
-                    <div>
+                    <div class="col-sm-6">
                         <InputLabel for="employee_model" value="Primary model" />
-                        <select id="employee_model" v-model="form.ai_model_id" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="employee_model" v-model="form.ai_model_id" class="form-select mt-1">
                             <option value="">None</option>
                             <option v-for="option in filteredModels(form.ai_provider_id)" :key="option.id" :value="option.id">{{ option.name }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.ai_model_id" />
                     </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-3">
-                    <div>
+                    <div class="col-sm-4">
                         <InputLabel for="employee_context" value="Context window" />
-                        <TextInput id="employee_context" v-model="form.context_window" type="number" min="1024" class="mt-1 block w-full" required />
+                        <TextInput id="employee_context" v-model="form.context_window" type="number" min="1024" class="mt-1" required />
                         <InputError class="mt-2" :message="form.errors.context_window" />
                     </div>
-                    <div>
+                    <div class="col-sm-4">
                         <InputLabel for="employee_temperature" value="Temperature" />
-                        <TextInput id="employee_temperature" v-model="form.temperature" type="number" step="0.1" min="0" max="2" class="mt-1 block w-full" required />
+                        <TextInput id="employee_temperature" v-model="form.temperature" type="number" step="0.1" min="0" max="2" class="mt-1" required />
                         <InputError class="mt-2" :message="form.errors.temperature" />
                     </div>
-                    <div>
+                    <div class="col-sm-4">
                         <InputLabel for="employee_language" value="Language" />
-                        <TextInput id="employee_language" v-model="form.language" class="mt-1 block w-full" required />
+                        <TextInput id="employee_language" v-model="form.language" class="mt-1" required />
                         <InputError class="mt-2" :message="form.errors.language" />
                     </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input id="employee_memory" v-model="form.memory_enabled" type="checkbox" class="form-check-input" />
+                            <label class="form-check-label small" for="employee_memory">Enable conversation memory</label>
+                        </div>
+                    </div>
                 </div>
-                <label class="flex items-center gap-2 text-sm text-slate-700">
-                    <input v-model="form.memory_enabled" type="checkbox" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
-                    Enable conversation memory
-                </label>
-                <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
                     <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
                     <PrimaryButton type="submit" :disabled="form.processing">{{ submitLabel }}</PrimaryButton>
                 </div>

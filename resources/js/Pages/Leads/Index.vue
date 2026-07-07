@@ -223,257 +223,252 @@ const locationLabel = (lead) => {
 
     <AdminLayout>
         <template #header>
-            <div class="flex w-full items-center justify-between gap-4">
-                <h1 class="text-xl font-semibold text-slate-900">Leads</h1>
+            <div class="d-flex w-100 align-items-center justify-content-between gap-3">
+                <h4 class="mb-0 fw-bold">Leads</h4>
                 <Link v-if="can('leads.create')" :href="route('leads.create')">
                     <PrimaryButton>New Lead</PrimaryButton>
                 </Link>
             </div>
         </template>
 
-        <div class="mb-4 space-y-4">
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="mb-4">
+            <div class="btn-group mb-4" role="group" aria-label="Temperature filters">
                 <button
                     type="button"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                    :class="!local.temperature ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+                    class="btn btn-sm"
+                    :class="!local.temperature ? 'btn-primary' : 'btn-outline-secondary'"
                     @click="setTemperature(null)"
                 >
                     All
                 </button>
                 <button
                     type="button"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                    :class="isActive('hot') ? 'bg-red-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+                    class="btn btn-sm"
+                    :class="isActive('hot') ? 'btn-danger' : 'btn-outline-secondary'"
                     @click="setTemperature('hot')"
                 >
                     HOT
                 </button>
                 <button
                     type="button"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                    :class="isActive('warm') ? 'bg-amber-500 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+                    class="btn btn-sm"
+                    :class="isActive('warm') ? 'btn-warning' : 'btn-outline-secondary'"
                     @click="setTemperature('warm')"
                 >
                     WARM
                 </button>
                 <button
                     type="button"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium transition"
-                    :class="isActive('cold') ? 'bg-sky-600 text-white' : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'"
+                    class="btn btn-sm"
+                    :class="isActive('cold') ? 'btn-info' : 'btn-outline-secondary'"
                     @click="setTemperature('cold')"
                 >
                     COLD
                 </button>
             </div>
 
-            <form
-                class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200"
-                @submit.prevent="applyFilters"
-            >
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Search</label>
-                        <input
-                            v-model="local.q"
-                            type="search"
-                            placeholder="Name, email, phone..."
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
-                    </div>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form @submit.prevent="applyFilters">
+                        <div class="row g-3">
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Search</label>
+                                <input
+                                    v-model="local.q"
+                                    type="search"
+                                    placeholder="Name, email, phone..."
+                                    class="form-control form-control-sm"
+                                />
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Country</label>
-                        <select
-                            v-model="local.country"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option value="">All countries</option>
-                            <option v-for="country in filterOptions.countries" :key="country" :value="country">
-                                {{ country }}
-                            </option>
-                        </select>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Country</label>
+                                <select
+                                    v-model="local.country"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">All countries</option>
+                                    <option v-for="country in filterOptions.countries" :key="country" :value="country">
+                                        {{ country }}
+                                    </option>
+                                </select>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">City</label>
-                        <input
-                            v-model="local.city"
-                            type="search"
-                            list="lead-cities"
-                            placeholder="Search city..."
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
-                        <datalist id="lead-cities">
-                            <option v-for="city in filterOptions.cities" :key="city" :value="city" />
-                        </datalist>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">City</label>
+                                <input
+                                    v-model="local.city"
+                                    type="search"
+                                    list="lead-cities"
+                                    placeholder="Search city..."
+                                    class="form-control form-control-sm"
+                                />
+                                <datalist id="lead-cities">
+                                    <option v-for="city in filterOptions.cities" :key="city" :value="city" />
+                                </datalist>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Area</label>
-                        <input
-                            v-model="local.area"
-                            type="search"
-                            list="lead-areas"
-                            placeholder="Search area..."
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                        />
-                        <datalist id="lead-areas">
-                            <option v-for="area in filterOptions.areas" :key="area" :value="area" />
-                        </datalist>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Area</label>
+                                <input
+                                    v-model="local.area"
+                                    type="search"
+                                    list="lead-areas"
+                                    placeholder="Search area..."
+                                    class="form-control form-control-sm"
+                                />
+                                <datalist id="lead-areas">
+                                    <option v-for="area in filterOptions.areas" :key="area" :value="area" />
+                                </datalist>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Scrape keyword</label>
-                        <select
-                            v-model="local.keyword"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option value="">All keywords</option>
-                            <option v-for="keyword in filterOptions.keywords" :key="keyword" :value="keyword">
-                                {{ keyword }}
-                            </option>
-                        </select>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Scrape keyword</label>
+                                <select
+                                    v-model="local.keyword"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">All keywords</option>
+                                    <option v-for="keyword in filterOptions.keywords" :key="keyword" :value="keyword">
+                                        {{ keyword }}
+                                    </option>
+                                </select>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Source</label>
-                        <select
-                            v-model="local.source"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option value="">All sources</option>
-                            <option v-for="source in filterOptions.sources" :key="source.value" :value="source.value">
-                                {{ source.label }}
-                            </option>
-                        </select>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Source</label>
+                                <select
+                                    v-model="local.source"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">All sources</option>
+                                    <option v-for="source in filterOptions.sources" :key="source.value" :value="source.value">
+                                        {{ source.label }}
+                                    </option>
+                                </select>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Pitch type</label>
-                        <select
-                            v-model="local.pitch_type"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option value="">All pitch types</option>
-                            <option v-for="pitch in filterOptions.pitch_types" :key="pitch.value" :value="pitch.value">
-                                {{ pitch.label }}
-                            </option>
-                        </select>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Pitch type</label>
+                                <select
+                                    v-model="local.pitch_type"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">All pitch types</option>
+                                    <option v-for="pitch in filterOptions.pitch_types" :key="pitch.value" :value="pitch.value">
+                                        {{ pitch.label }}
+                                    </option>
+                                </select>
+                            </div>
 
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Website</label>
-                        <select
-                            v-model="local.has_website"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option value="">Any</option>
-                            <option value="yes">Has website</option>
-                            <option value="no">No website</option>
-                        </select>
-                    </div>
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Website</label>
+                                <select
+                                    v-model="local.has_website"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option value="">Any</option>
+                                    <option value="yes">Has website</option>
+                                    <option value="no">No website</option>
+                                </select>
+                            </div>
 
-                    <template v-if="showRedditFilters">
-                        <div>
-                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Subreddit</label>
-                            <select
-                                v-model="local.subreddit"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                @change="onSelectChange"
-                            >
-                                <option value="">All subreddits</option>
-                                <option v-for="subreddit in filterOptions.subreddits" :key="subreddit" :value="subreddit">
-                                    r/{{ subreddit }}
-                                </option>
-                            </select>
+                            <template v-if="showRedditFilters">
+                                <div class="col-md-6 col-lg-4 col-xl">
+                                    <label class="form-label">Subreddit</label>
+                                    <select
+                                        v-model="local.subreddit"
+                                        class="form-select form-select-sm"
+                                        @change="onSelectChange"
+                                    >
+                                        <option value="">All subreddits</option>
+                                        <option v-for="subreddit in filterOptions.subreddits" :key="subreddit" :value="subreddit">
+                                            r/{{ subreddit }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-4 col-xl">
+                                    <label class="form-label">Reddit intent</label>
+                                    <select
+                                        v-model="local.lead_kind"
+                                        class="form-select form-select-sm"
+                                        @change="onSelectChange"
+                                    >
+                                        <option value="">All intents</option>
+                                        <option v-for="kind in filterOptions.lead_kinds" :key="kind.value" :value="kind.value">
+                                            {{ kind.label }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-4 col-xl">
+                                    <label class="form-label">Posted</label>
+                                    <select
+                                        v-model="local.posted_within"
+                                        class="form-select form-select-sm"
+                                        @change="onSelectChange"
+                                    >
+                                        <option value="">Any time</option>
+                                        <option v-for="window in filterOptions.posted_within" :key="window.value" :value="window.value">
+                                            {{ window.label }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </template>
+
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Sort</label>
+                                <select
+                                    v-model="local.sort"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option v-for="sort in filterOptions.sorts" :key="sort.value" :value="sort.value">
+                                        {{ sort.label }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 col-lg-4 col-xl">
+                                <label class="form-label">Per page</label>
+                                <select
+                                    v-model.number="local.per_page"
+                                    class="form-select form-select-sm"
+                                    @change="onSelectChange"
+                                >
+                                    <option :value="10">10</option>
+                                    <option :value="15">15</option>
+                                    <option :value="25">25</option>
+                                    <option :value="50">50</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Reddit intent</label>
-                            <select
-                                v-model="local.lead_kind"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                @change="onSelectChange"
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                Apply filters
+                            </button>
+                            <button
+                                v-if="hasActiveFilters"
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                @click="clearFilters"
                             >
-                                <option value="">All intents</option>
-                                <option v-for="kind in filterOptions.lead_kinds" :key="kind.value" :value="kind.value">
-                                    {{ kind.label }}
-                                </option>
-                            </select>
+                                Clear all
+                            </button>
                         </div>
-
-                        <div>
-                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Posted</label>
-                            <select
-                                v-model="local.posted_within"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                @change="onSelectChange"
-                            >
-                                <option value="">Any time</option>
-                                <option v-for="window in filterOptions.posted_within" :key="window.value" :value="window.value">
-                                    {{ window.label }}
-                                </option>
-                            </select>
-                        </div>
-                    </template>
-
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Sort</label>
-                        <select
-                            v-model="local.sort"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option v-for="sort in filterOptions.sorts" :key="sort.value" :value="sort.value">
-                                {{ sort.label }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500">Per page</label>
-                        <select
-                            v-model.number="local.per_page"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            @change="onSelectChange"
-                        >
-                            <option :value="10">10</option>
-                            <option :value="15">15</option>
-                            <option :value="25">25</option>
-                            <option :value="50">50</option>
-                        </select>
-                    </div>
+                    </form>
                 </div>
-
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <button
-                        type="submit"
-                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-                    >
-                        Apply filters
-                    </button>
-                    <button
-                        v-if="hasActiveFilters"
-                        type="button"
-                        class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-                        @click="clearFilters"
-                    >
-                        Clear all
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
 
-        <div
-            v-if="bulkResult"
-            class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
-        >
+        <div v-if="bulkResult" class="alert alert-success mb-4" role="alert">
             Queued <strong>{{ bulkResult.queued }}</strong> voice call{{ bulkResult.queued === 1 ? '' : 's' }}.
             <span v-if="bulkResult.skipped > 0">
                 Skipped {{ bulkResult.skipped }} (duplicate active call, missing phone, or limit reached).
@@ -482,20 +477,22 @@ const locationLabel = (lead) => {
 
         <div
             v-if="page.props.errors?.bulk_voice_call"
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            class="alert alert-danger mb-4"
+            role="alert"
         >
             {{ page.props.errors.bulk_voice_call }}
         </div>
 
         <div
             v-if="voiceCallOptions.can_start_voice_call && selectedIds.length > 0"
-            class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3"
+            class="alert alert-primary d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4"
+            role="alert"
         >
-            <div class="text-sm text-violet-900">
-                <span class="font-medium">{{ selectedIds.length }}</span> lead{{ selectedIds.length === 1 ? '' : 's' }} selected
-                <span class="text-violet-700">(max {{ voiceCallOptions.max_bulk_leads }} per batch)</span>
+            <div class="small mb-0">
+                <span class="fw-medium">{{ selectedIds.length }}</span> lead{{ selectedIds.length === 1 ? '' : 's' }} selected
+                <span class="text-muted">(max {{ voiceCallOptions.max_bulk_leads }} per batch)</span>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-2">
                 <SecondaryButton type="button" @click="clearSelection">Clear</SecondaryButton>
                 <PrimaryButton type="button" @click="openBulkCallModal">
                     Start bulk AI voice calls
@@ -503,109 +500,110 @@ const locationLabel = (lead) => {
             </div>
         </div>
 
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-                <div class="text-sm text-slate-600">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="small text-muted mb-0">
                     Showing
-                    <span class="font-medium text-slate-900">{{ leads.from ?? 0 }}</span>
+                    <span class="fw-medium text-body">{{ leads.from ?? 0 }}</span>
                     to
-                    <span class="font-medium text-slate-900">{{ leads.to ?? 0 }}</span>
+                    <span class="fw-medium text-body">{{ leads.to ?? 0 }}</span>
                     of
-                    <span class="font-medium text-slate-900">{{ leads.total }}</span>
+                    <span class="fw-medium text-body">{{ leads.total }}</span>
                     leads
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
+
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th v-if="voiceCallOptions.can_start_voice_call" class="px-4 py-3 text-left">
+                            <th v-if="voiceCallOptions.can_start_voice_call">
                                 <input
                                     type="checkbox"
-                                    class="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                                    class="form-check-input"
                                     :checked="allOnPageSelected"
                                     :indeterminate="someOnPageSelected && !allOnPageSelected"
                                     @change="toggleAllOnPage"
                                 />
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Lead</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Location</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Contact</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Website</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Google</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Pitch</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Source</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Score</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Verified</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Temp</th>
+                            <th>Lead</th>
+                            <th>Location</th>
+                            <th>Contact</th>
+                            <th>Website</th>
+                            <th>Google</th>
+                            <th>Pitch</th>
+                            <th>Source</th>
+                            <th>Score</th>
+                            <th>Verified</th>
+                            <th>Temp</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200">
-                        <tr v-for="lead in leads.data" :key="lead.id" class="hover:bg-slate-50">
-                            <td v-if="voiceCallOptions.can_start_voice_call" class="px-4 py-3">
+                    <tbody>
+                        <tr v-for="lead in leads.data" :key="lead.id">
+                            <td v-if="voiceCallOptions.can_start_voice_call">
                                 <input
                                     type="checkbox"
-                                    class="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                                    class="form-check-input"
                                     :checked="selectedIds.includes(lead.id)"
                                     :disabled="!lead.phone && !selectedIds.includes(lead.id)"
                                     @change="toggleLead(lead.id)"
                                 />
                             </td>
-                            <td class="px-4 py-3 text-sm">
-                                <Link :href="route('leads.show', lead.id)" class="font-medium text-indigo-600 hover:text-indigo-800">
+                            <td>
+                                <Link :href="route('leads.show', lead.id)" class="fw-medium link-primary">
                                     {{ lead.full_name }}
                                 </Link>
-                                <div v-if="lead.scrape_keyword" class="mt-0.5 text-xs text-slate-400">
+                                <div v-if="lead.scrape_keyword" class="small text-muted">
                                     {{ lead.scrape_keyword }}
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
-                                <div v-if="locationLabel(lead)" class="max-w-xs truncate">
+                            <td>
+                                <div v-if="locationLabel(lead)" class="text-truncate" style="max-width: 12rem;">
                                     {{ locationLabel(lead) }}
                                 </div>
                                 <span v-else>—</span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
+                            <td>
                                 <div>{{ lead.email || '—' }}</div>
-                                <div v-if="lead.phone" class="text-xs text-slate-500">{{ lead.phone }}</div>
+                                <div v-if="lead.phone" class="small text-muted">{{ lead.phone }}</div>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
+                            <td>
                                 <a
                                     v-if="lead.website"
                                     :href="lead.website"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-indigo-600 hover:text-indigo-800"
+                                    class="link-primary"
                                 >
                                     Visit
                                 </a>
-                                <span v-else class="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                                <span v-else class="badge bg-label-danger">
                                     No website
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
+                            <td>
                                 <div v-if="lead.rating">
                                     {{ lead.rating }} ★
-                                    <span v-if="lead.review_count" class="text-xs text-slate-500">
+                                    <span v-if="lead.review_count" class="small text-muted">
                                         ({{ lead.review_count }})
                                     </span>
                                 </div>
                                 <span v-else>—</span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
-                                <div v-if="lead.pitch_summary" class="max-w-56">
-                                    <div class="font-medium text-slate-800">{{ lead.pitch_summary.service }}</div>
-                                    <div class="mt-0.5 text-xs capitalize text-slate-500">
+                            <td>
+                                <div v-if="lead.pitch_summary" style="max-width: 14rem;">
+                                    <div class="fw-medium">{{ lead.pitch_summary.service }}</div>
+                                    <div class="small text-muted text-capitalize">
                                         {{ lead.pitch_summary.priority }} priority
                                     </div>
                                 </div>
                                 <span v-else>—</span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-slate-700">{{ lead.source || '—' }}</td>
-                            <td class="px-4 py-3 text-sm text-slate-700">
+                            <td>{{ lead.source || '—' }}</td>
+                            <td>
                                 <div v-if="lead.latest_score">
                                     <div>{{ lead.latest_score.score }} ({{ lead.latest_score.score_grade }})</div>
-                                    <div class="text-xs text-slate-500">
+                                    <div class="small text-muted">
                                         I{{ lead.latest_score.intent_score ?? '—' }}
                                         O{{ lead.latest_score.opportunity_score ?? '—' }}
                                         A{{ lead.latest_score.authenticity_score ?? '—' }}
@@ -613,15 +611,15 @@ const locationLabel = (lead) => {
                                 </div>
                                 <span v-else>—</span>
                             </td>
-                            <td class="px-4 py-3 text-sm">
+                            <td>
                                 <VerificationBadge :status="lead.verification_status" size="xs" />
                             </td>
-                            <td class="px-4 py-3 text-sm">
+                            <td>
                                 <TemperatureBadge :temperature="lead.latest_score?.temperature" />
                             </td>
                         </tr>
                         <tr v-if="leads.data.length === 0">
-                            <td :colspan="voiceCallOptions.can_start_voice_call ? 11 : 10" class="px-4 py-8 text-center text-sm text-slate-500">
+                            <td :colspan="voiceCallOptions.can_start_voice_call ? 11 : 10" class="text-center text-muted py-5">
                                 No leads match these filters.
                             </td>
                         </tr>
@@ -629,25 +627,33 @@ const locationLabel = (lead) => {
                 </table>
             </div>
 
-            <div v-if="leads.links?.length > 3" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
-                <div class="text-sm text-slate-500">
+            <div
+                v-if="leads.links?.length > 3"
+                class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 border-top"
+            >
+                <div class="small text-muted">
                     Page {{ leads.current_page }} of {{ leads.last_page }}
                 </div>
-                <div class="flex flex-wrap gap-1">
-                    <component
-                        :is="link.url ? Link : 'span'"
-                        v-for="link in leads.links"
-                        :key="link.label"
-                        :href="link.url"
-                        class="rounded-md px-3 py-1.5 text-sm"
-                        :class="link.active
-                            ? 'bg-indigo-600 text-white'
-                            : link.url
-                                ? 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
-                                : 'cursor-not-allowed bg-slate-50 text-slate-300'"
-                        v-html="link.label"
-                    />
-                </div>
+                <nav aria-label="Leads pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li
+                            v-for="link in leads.links"
+                            :key="`${link.label}-${link.url}`"
+                            class="page-item"
+                            :class="{
+                                active: link.active,
+                                disabled: !link.url,
+                            }"
+                        >
+                            <component
+                                :is="link.url ? Link : 'span'"
+                                :href="link.url"
+                                class="page-link"
+                                v-html="link.label"
+                            />
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
 

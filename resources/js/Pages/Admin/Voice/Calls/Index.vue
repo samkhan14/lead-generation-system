@@ -8,6 +8,17 @@ defineProps({
     statusOptions: { type: Array, default: () => [] },
     providerOptions: { type: Array, default: () => [] },
 });
+
+const statusClass = (status) => ({
+    completed: 'bg-label-success',
+    in_progress: 'bg-label-info',
+    ringing: 'bg-label-info',
+    queued: 'bg-label-secondary',
+    pending: 'bg-label-primary',
+    failed: 'bg-label-danger',
+    cancelled: 'bg-label-secondary',
+    no_answer: 'bg-label-warning',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
@@ -15,30 +26,32 @@ defineProps({
     <AdminLayout>
         <template #header>
             <div>
-                <h1 class="text-xl font-semibold text-slate-900">Voice Calls</h1>
-                <p class="text-sm text-slate-500">Outbound and inbound call history</p>
+                <h4 class="mb-0 fw-bold">Voice Calls</h4>
+                <p class="mb-0 small text-muted">Outbound and inbound call history</p>
             </div>
         </template>
 
         <DataTable title="Calls" :is-empty="!calls.data.length" empty-message="No voice calls logged yet.">
             <template #head>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Time</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Lead</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Employee</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">To</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
+                    <th>Time</th>
+                    <th>Lead</th>
+                    <th>Employee</th>
+                    <th>To</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </template>
-            <tr v-for="call in calls.data" :key="call.id" class="hover:bg-slate-50">
-                <td class="px-4 py-3 text-sm text-slate-500">{{ call.created_at ? new Date(call.created_at).toLocaleString() : '—' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ call.lead?.full_name ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ call.employee?.name ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ call.to_number ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ call.status?.replace('_', ' ') }}</td>
-                <td class="px-4 py-3 text-right">
-                    <Link :href="route('admin.voice.calls.show', call.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View</Link>
+            <tr v-for="call in calls.data" :key="call.id">
+                <td class="small text-muted text-nowrap">{{ call.created_at ? new Date(call.created_at).toLocaleString() : '—' }}</td>
+                <td>{{ call.lead?.full_name ?? '—' }}</td>
+                <td>{{ call.employee?.name ?? '—' }}</td>
+                <td>{{ call.to_number ?? '—' }}</td>
+                <td>
+                    <span class="badge rounded-pill text-capitalize" :class="statusClass(call.status)">{{ call.status?.replace('_', ' ') }}</span>
+                </td>
+                <td class="text-end">
+                    <Link :href="route('admin.voice.calls.show', call.id)" class="link-primary">View</Link>
                 </td>
             </tr>
         </DataTable>

@@ -28,77 +28,47 @@ const successRate = computed(() => {
     >
         <div
             v-if="job && job.status !== 'pending' && job.status !== 'running'"
-            class="fixed bottom-6 right-6 z-50 w-80 rounded-xl shadow-2xl border"
-            :class="isCompleted ? 'bg-white border-emerald-200' : 'bg-white border-red-200'"
+            class="toast toast-placement-ex show position-fixed bottom-0 end-0 m-4"
+            style="width: 320px; z-index: 1090;"
         >
             <div
-                class="flex items-start gap-3 p-4 rounded-t-xl"
-                :class="isCompleted ? 'bg-emerald-50' : 'bg-red-50'"
+                class="toast-header"
+                :class="isCompleted ? 'bg-label-success' : 'bg-label-danger'"
             >
-                <div
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                    :class="isCompleted ? 'bg-emerald-100' : 'bg-red-100'"
-                >
-                    <svg
-                        v-if="isCompleted"
-                        class="h-5 w-5 text-emerald-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <svg
-                        v-else
-                        class="h-5 w-5 text-red-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                <i
+                    class="me-2"
+                    :class="isCompleted ? 'ri-checkbox-circle-line text-success' : 'ri-error-warning-line text-danger'"
+                />
+                <div class="me-auto">
+                    <strong class="me-auto">{{ isCompleted ? 'Scrape completed!' : 'Scrape failed' }}</strong>
+                    <div class="small text-muted">{{ job.search_label ?? job.keyword }}</div>
                 </div>
-
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold" :class="isCompleted ? 'text-emerald-800' : 'text-red-800'">
-                        {{ isCompleted ? 'Scrape completed!' : 'Scrape failed' }}
-                    </p>
-                    <p class="text-xs mt-0.5" :class="isCompleted ? 'text-emerald-600' : 'text-red-600'">
-                        {{ job.search_label ?? job.keyword }}
-                    </p>
-                </div>
-
-                <button
-                    class="shrink-0 rounded p-0.5 hover:bg-slate-200 transition-colors"
-                    @click="emit('close')"
-                >
-                    <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <button type="button" class="btn-close" aria-label="Close" @click="emit('close')" />
             </div>
 
-            <div v-if="isCompleted" class="p-4 grid grid-cols-3 gap-2 text-center text-xs">
-                <div class="rounded-lg bg-emerald-50 p-2">
-                    <div class="text-lg font-bold text-emerald-700">{{ job.created_count }}</div>
-                    <div class="text-slate-500">Created</div>
-                </div>
-                <div class="rounded-lg bg-amber-50 p-2">
-                    <div class="text-lg font-bold text-amber-700">{{ job.duplicate_count }}</div>
-                    <div class="text-slate-500">Duplicates</div>
-                </div>
-                <div class="rounded-lg bg-red-50 p-2">
-                    <div class="text-lg font-bold text-red-700">{{ job.failed_count }}</div>
-                    <div class="text-slate-500">Failed</div>
+            <div v-if="isCompleted" class="toast-body">
+                <div class="row g-2 text-center small">
+                    <div class="col-4">
+                        <div class="fw-bold text-success">{{ job.created_count }}</div>
+                        <div class="text-muted">Created</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-warning">{{ job.duplicate_count }}</div>
+                        <div class="text-muted">Duplicates</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-bold text-danger">{{ job.failed_count }}</div>
+                        <div class="text-muted">Failed</div>
+                    </div>
                 </div>
             </div>
 
-            <div v-if="isFailed" class="p-4">
-                <p class="text-xs text-slate-500 line-clamp-2">{{ job.error_message ?? 'Unknown error.' }}</p>
+            <div v-if="isFailed" class="toast-body">
+                <p class="small text-muted mb-0">{{ job.error_message ?? 'Unknown error.' }}</p>
             </div>
 
-            <div class="border-t border-slate-100 px-4 py-2 flex items-center justify-between text-xs text-slate-500">
-                <span v-if="job.scraper_used" class="capitalize">via {{ job.scraper_used?.replace('_', ' ') }}</span>
+            <div class="border-top px-3 py-2 d-flex justify-content-between small text-muted">
+                <span v-if="job.scraper_used" class="text-capitalize">via {{ job.scraper_used?.replace('_', ' ') }}</span>
                 <span v-else>&nbsp;</span>
                 <span v-if="isCompleted">{{ successRate }}% success rate</span>
             </div>

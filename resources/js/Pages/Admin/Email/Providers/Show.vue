@@ -1,6 +1,7 @@
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import EmailProviderFormModal from '@/Components/Admin/EmailProviderFormModal.vue';
+import DangerButton from '@/Components/DangerButton.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useAuth } from '@/composables/useAuth';
 import { Head, router, usePage } from '@inertiajs/vue3';
@@ -26,31 +27,53 @@ const destroyProvider = () => {
     <Head :title="provider.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">{{ provider.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ provider.slug }} · priority {{ provider.priority }}</p>
+                    <h4 class="mb-0 fw-bold">{{ provider.name }}</h4>
+                    <p class="small text-muted mb-0">{{ provider.slug }} · priority {{ provider.priority }}</p>
                 </div>
-                <div class="flex gap-2">
+                <div class="d-flex gap-2">
                     <PrimaryButton v-if="can('email.providers.update')" type="button" @click="showEditModal = true">Edit</PrimaryButton>
-                    <button v-if="can('email.providers.delete')" type="button" class="rounded-md border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50" @click="destroyProvider">Delete</button>
+                    <DangerButton v-if="can('email.providers.delete')" type="button" @click="destroyProvider">Delete</DangerButton>
                 </div>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
 
-        <div class="grid gap-6 lg:grid-cols-2">
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <h2 class="font-semibold text-slate-900">Configuration</h2>
-                <dl class="mt-4 space-y-3 text-sm">
-                    <div class="flex justify-between"><dt class="text-slate-500">Status</dt><dd class="capitalize text-slate-800">{{ provider.status }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Usable</dt><dd :class="provider.is_usable ? 'text-emerald-600' : 'text-red-600'">{{ provider.is_usable ? 'Yes' : 'No' }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">API key</dt><dd>{{ provider.has_api_key ? 'Configured' : 'Not set' }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">From email</dt><dd>{{ provider.default_from_email || '—' }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">From name</dt><dd>{{ provider.default_from_name || '—' }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Total sends</dt><dd>{{ provider.sends_count ?? 0 }}</dd></div>
-                </dl>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Configuration</h5>
+                        <dl class="row g-3 mb-0 small">
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Status</dt>
+                                <dd class="mb-0 text-capitalize">{{ provider.status }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Usable</dt>
+                                <dd class="mb-0" :class="provider.is_usable ? 'text-success' : 'text-danger'">{{ provider.is_usable ? 'Yes' : 'No' }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">API key</dt>
+                                <dd class="mb-0">{{ provider.has_api_key ? 'Configured' : 'Not set' }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">From email</dt>
+                                <dd class="mb-0">{{ provider.default_from_email || '—' }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">From name</dt>
+                                <dd class="mb-0">{{ provider.default_from_name || '—' }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Total sends</dt>
+                                <dd class="mb-0">{{ provider.sends_count ?? 0 }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
             </div>
         </div>
 

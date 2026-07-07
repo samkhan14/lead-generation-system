@@ -79,18 +79,23 @@ const close = () => {
 
 <template>
     <Modal :show="show" max-width="lg" @close="close">
-        <div class="p-6">
-            <h2 class="text-lg font-semibold text-slate-900">{{ title }}</h2>
-            <p class="mt-1 text-sm text-slate-500">Configure LLM provider credentials and runtime settings.</p>
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">{{ title }}</h5>
+                <p class="text-muted small mb-0">Configure LLM provider credentials and runtime settings.</p>
+            </div>
+            <button type="button" class="btn-close" aria-label="Close" @click="close" />
+        </div>
 
-            <form class="mt-6 space-y-4" @submit.prevent="submit">
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
+        <form @submit.prevent="submit">
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
                         <InputLabel for="provider_slug" value="Provider" />
                         <select
                             id="provider_slug"
                             v-model="form.slug"
-                            class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            class="form-select"
                             :disabled="mode === 'edit'"
                             required
                         >
@@ -101,63 +106,59 @@ const close = () => {
                         </select>
                         <InputError class="mt-2" :message="form.errors.slug" />
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6">
                         <InputLabel for="provider_name" value="Display name" />
-                        <TextInput id="provider_name" v-model="form.name" class="mt-1 block w-full" required />
+                        <TextInput id="provider_name" v-model="form.name" required />
                         <InputError class="mt-2" :message="form.errors.name" />
                     </div>
-                </div>
 
-                <div>
-                    <InputLabel for="provider_api_key" :value="mode === 'edit' ? 'API key (leave blank to keep current)' : 'API key'" />
-                    <TextInput id="provider_api_key" v-model="form.api_key" type="password" class="mt-1 block w-full" :required="mode === 'create'" autocomplete="off" />
-                    <InputError class="mt-2" :message="form.errors.api_key" />
-                </div>
+                    <div class="col-12">
+                        <InputLabel for="provider_api_key" :value="mode === 'edit' ? 'API key (leave blank to keep current)' : 'API key'" />
+                        <TextInput id="provider_api_key" v-model="form.api_key" type="password" :required="mode === 'create'" autocomplete="off" />
+                        <InputError class="mt-2" :message="form.errors.api_key" />
+                    </div>
 
-                <div>
-                    <InputLabel for="provider_api_base_url" value="API base URL (optional)" />
-                    <TextInput id="provider_api_base_url" v-model="form.api_base_url" class="mt-1 block w-full" placeholder="https://..." />
-                    <InputError class="mt-2" :message="form.errors.api_base_url" />
-                </div>
+                    <div class="col-12">
+                        <InputLabel for="provider_api_base_url" value="API base URL (optional)" />
+                        <TextInput id="provider_api_base_url" v-model="form.api_base_url" placeholder="https://..." />
+                        <InputError class="mt-2" :message="form.errors.api_base_url" />
+                    </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
+                    <div class="col-12 col-md-6">
                         <InputLabel for="provider_priority" value="Priority" />
-                        <TextInput id="provider_priority" v-model="form.priority" type="number" min="1" class="mt-1 block w-full" required />
+                        <TextInput id="provider_priority" v-model="form.priority" type="number" min="1" required />
                         <InputError class="mt-2" :message="form.errors.priority" />
                     </div>
-                    <div>
+                    <div class="col-12 col-md-6">
                         <InputLabel for="provider_status" value="Status" />
-                        <select id="provider_status" v-model="form.status" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select id="provider_status" v-model="form.status" class="form-select">
                             <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                         </select>
                         <InputError class="mt-2" :message="form.errors.status" />
                     </div>
-                </div>
 
-                <div class="grid gap-4 sm:grid-cols-3">
-                    <div>
+                    <div class="col-12 col-md-4">
                         <InputLabel for="provider_rpm" value="Rate limit (RPM)" />
-                        <TextInput id="provider_rpm" v-model="form.rate_limit_rpm" type="number" min="1" class="mt-1 block w-full" />
+                        <TextInput id="provider_rpm" v-model="form.rate_limit_rpm" type="number" min="1" />
                         <InputError class="mt-2" :message="form.errors.rate_limit_rpm" />
                     </div>
-                    <div>
+                    <div class="col-12 col-md-4">
                         <InputLabel for="provider_timeout" value="Timeout (s)" />
-                        <TextInput id="provider_timeout" v-model="form.timeout_seconds" type="number" min="5" class="mt-1 block w-full" required />
+                        <TextInput id="provider_timeout" v-model="form.timeout_seconds" type="number" min="5" required />
                         <InputError class="mt-2" :message="form.errors.timeout_seconds" />
                     </div>
-                    <div>
+                    <div class="col-12 col-md-4">
                         <InputLabel for="provider_retry" value="Retries" />
-                        <TextInput id="provider_retry" v-model="form.retry_count" type="number" min="0" class="mt-1 block w-full" required />
+                        <TextInput id="provider_retry" v-model="form.retry_count" type="number" min="0" required />
                         <InputError class="mt-2" :message="form.errors.retry_count" />
                     </div>
                 </div>
+            </div>
 
-                <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
-                    <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
-                    <PrimaryButton type="submit" :disabled="form.processing">{{ submitLabel }}</PrimaryButton>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer">
+                <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
+                <PrimaryButton type="submit" :disabled="form.processing">{{ submitLabel }}</PrimaryButton>
+            </div>
+        </form>
     </Modal>
 </template>

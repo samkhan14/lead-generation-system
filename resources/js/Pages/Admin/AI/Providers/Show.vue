@@ -28,65 +28,78 @@ const confirmDelete = () => {
 };
 
 const statusClass = (status) => ({
-    active: 'bg-emerald-100 text-emerald-800',
-    disabled: 'bg-slate-100 text-slate-600',
-    degraded: 'bg-amber-100 text-amber-800',
-}[status] ?? 'bg-slate-100 text-slate-600');
+    active: 'bg-label-success',
+    disabled: 'bg-label-secondary',
+    degraded: 'bg-label-warning',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
     <Head :title="provider.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
-                    <Link :href="route('admin.ai.providers.index')" class="text-sm text-slate-500 hover:text-slate-700">← Back to providers</Link>
-                    <h1 class="mt-1 text-xl font-semibold text-slate-900">{{ provider.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ provider.slug }}</p>
+                    <Link :href="route('admin.ai.providers.index')" class="small text-muted text-decoration-none">Back to providers</Link>
+                    <h1 class="h4 mb-1 mt-1">{{ provider.name }}</h1>
+                    <p class="text-muted mb-0">{{ provider.slug }}</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <PrimaryButton v-if="can('ai.providers.update')" type="button" @click="showEditModal = true">Edit</PrimaryButton>
                     <DangerButton v-if="can('ai.providers.delete')" type="button" @click="showDeleteModal = true">Delete</DangerButton>
                 </div>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div v-if="page.props.flash.success" class="alert alert-success" role="alert">
             {{ page.props.flash.success }}
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            <section class="space-y-6 lg:col-span-2">
-                <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 class="text-base font-semibold text-slate-900">Configuration</h2>
-                    <dl class="mt-4 grid gap-4 sm:grid-cols-2 text-sm">
-                        <div><dt class="text-slate-500">Status</dt><dd class="mt-1"><span class="rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" :class="statusClass(provider.status)">{{ provider.status }}</span></dd></div>
-                        <div><dt class="text-slate-500">API key</dt><dd class="mt-1 font-medium" :class="provider.has_api_key ? 'text-emerald-600' : 'text-red-600'">{{ provider.has_api_key ? 'Configured' : 'Not set' }}</dd></div>
-                        <div><dt class="text-slate-500">Priority</dt><dd class="mt-1 font-medium text-slate-900">{{ provider.priority }}</dd></div>
-                        <div><dt class="text-slate-500">Rate limit</dt><dd class="mt-1 font-medium text-slate-900">{{ provider.rate_limit_rpm ?? '—' }} RPM</dd></div>
-                        <div><dt class="text-slate-500">Timeout</dt><dd class="mt-1 font-medium text-slate-900">{{ provider.timeout_seconds }}s</dd></div>
-                        <div><dt class="text-slate-500">Retries</dt><dd class="mt-1 font-medium text-slate-900">{{ provider.retry_count }}</dd></div>
-                        <div class="sm:col-span-2"><dt class="text-slate-500">API base URL</dt><dd class="mt-1 font-medium text-slate-900">{{ provider.api_base_url || 'Default' }}</dd></div>
-                    </dl>
+        <div class="row g-4">
+            <section class="col-12 col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row g-4 mb-0">
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">Status</dt><dd class="mb-0 mt-1"><span class="badge text-capitalize" :class="statusClass(provider.status)">{{ provider.status }}</span></dd></div>
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">API key</dt><dd class="fw-medium mb-0 mt-1" :class="provider.has_api_key ? 'text-success' : 'text-danger'">{{ provider.has_api_key ? 'Configured' : 'Not set' }}</dd></div>
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">Priority</dt><dd class="fw-medium mb-0 mt-1">{{ provider.priority }}</dd></div>
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">Rate limit</dt><dd class="fw-medium mb-0 mt-1">{{ provider.rate_limit_rpm ?? 'None' }} RPM</dd></div>
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">Timeout</dt><dd class="fw-medium mb-0 mt-1">{{ provider.timeout_seconds }}s</dd></div>
+                            <div class="col-12 col-sm-6"><dt class="text-muted small">Retries</dt><dd class="fw-medium mb-0 mt-1">{{ provider.retry_count }}</dd></div>
+                            <div class="col-12"><dt class="text-muted small">API base URL</dt><dd class="fw-medium mb-0 mt-1">{{ provider.api_base_url || 'Default' }}</dd></div>
+                        </dl>
+                    </div>
                 </div>
             </section>
-            <aside class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-base font-semibold text-slate-900">Models</h2>
-                <p class="mt-2 text-2xl font-semibold text-slate-900">{{ provider.models_count ?? 0 }}</p>
-                <Link v-if="can('ai.models.view')" :href="route('admin.ai.models.index', { ai_provider_id: provider.id })" class="mt-4 inline-block text-sm text-indigo-600 hover:text-indigo-800">View models →</Link>
+            <aside class="col-12 col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Models</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="display-6 fw-semibold mb-3">{{ provider.models_count ?? 0 }}</p>
+                        <Link v-if="can('ai.models.view')" :href="route('admin.ai.models.index', { ai_provider_id: provider.id })" class="btn btn-outline-primary">View models</Link>
+                    </div>
+                </div>
             </aside>
         </div>
 
         <AiProviderFormModal :show="showEditModal" mode="edit" :provider="provider" :status-options="statusOptions" :slug-options="slugOptions" @close="showEditModal = false" />
 
         <Modal :show="showDeleteModal" max-width="md" @close="showDeleteModal = false">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-slate-900">Delete provider?</h2>
-                <p class="mt-2 text-sm text-slate-600">This will remove {{ provider.name }} and all associated models.</p>
-                <div class="mt-6 flex justify-end gap-3">
-                    <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
-                    <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
-                </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Delete provider?</h5>
+                <button type="button" class="btn-close" aria-label="Close" @click="showDeleteModal = false" />
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">This will remove {{ provider.name }} and all associated models.</p>
+            </div>
+            <div class="modal-footer">
+                <SecondaryButton type="button" @click="showDeleteModal = false">Cancel</SecondaryButton>
+                <DangerButton type="button" :disabled="deleteForm.processing" @click="confirmDelete">Delete</DangerButton>
             </div>
         </Modal>
     </AdminLayout>

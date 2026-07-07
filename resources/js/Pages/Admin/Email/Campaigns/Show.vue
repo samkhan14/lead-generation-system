@@ -36,12 +36,12 @@ const dispatchCampaign = () => {
     <Head :title="campaign.name" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">{{ campaign.name }}</h1>
-                    <p class="text-sm text-slate-500">{{ campaign.subject }}</p>
+                    <h4 class="mb-0 fw-bold">{{ campaign.name }}</h4>
+                    <p class="small text-muted mb-0">{{ campaign.subject }}</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <Link v-if="campaign.status === 'draft' && can('email.campaigns.update')" :href="route('admin.email.campaigns.edit', campaign.id)">
                         <SecondaryButton type="button">Edit</SecondaryButton>
                     </Link>
@@ -51,33 +51,57 @@ const dispatchCampaign = () => {
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
 
-        <div v-if="showTestForm" class="mb-6 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
-            <form class="flex flex-wrap items-end gap-3" @submit.prevent="sendTest">
-                <div class="min-w-[240px] flex-1">
-                    <label class="text-sm font-medium text-slate-700">Test recipient email</label>
-                    <TextInput v-model="testForm.to_email" type="email" class="mt-1 block w-full" required />
-                </div>
-                <PrimaryButton :disabled="testForm.processing">Queue test email</PrimaryButton>
-            </form>
-            <p v-if="testForm.errors.to_email" class="mt-2 text-sm text-red-600">{{ testForm.errors.to_email }}</p>
-            <p v-if="testForm.errors.test_email" class="mt-2 text-sm text-red-600">{{ testForm.errors.test_email }}</p>
+        <div v-if="showTestForm" class="card border-primary mb-4">
+            <div class="card-body">
+                <form class="row g-3 align-items-end" @submit.prevent="sendTest">
+                    <div class="col-md flex-grow-1">
+                        <label class="form-label">Test recipient email</label>
+                        <TextInput v-model="testForm.to_email" type="email" class="mt-1" required />
+                    </div>
+                    <div class="col-md-auto">
+                        <PrimaryButton :disabled="testForm.processing">Queue test email</PrimaryButton>
+                    </div>
+                </form>
+                <p v-if="testForm.errors.to_email" class="text-danger small mt-2 mb-0">{{ testForm.errors.to_email }}</p>
+                <p v-if="testForm.errors.test_email" class="text-danger small mt-2 mb-0">{{ testForm.errors.test_email }}</p>
+            </div>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-3">
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-1">
-                <h2 class="font-semibold text-slate-900">Details</h2>
-                <dl class="mt-4 space-y-2 text-sm">
-                    <div class="flex justify-between"><dt class="text-slate-500">Status</dt><dd class="capitalize">{{ campaign.status }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">AI enhanced</dt><dd>{{ campaign.ai_enhanced ? 'Yes' : 'No' }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">Sends</dt><dd>{{ campaign.sends_count ?? 0 }}</dd></div>
-                    <div class="flex justify-between"><dt class="text-slate-500">From</dt><dd>{{ campaign.from_email || 'Provider default' }}</dd></div>
-                </dl>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Details</h5>
+                        <dl class="row g-2 mb-0 small">
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Status</dt>
+                                <dd class="mb-0 text-capitalize">{{ campaign.status }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">AI enhanced</dt>
+                                <dd class="mb-0">{{ campaign.ai_enhanced ? 'Yes' : 'No' }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">Sends</dt>
+                                <dd class="mb-0">{{ campaign.sends_count ?? 0 }}</dd>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <dt class="text-muted mb-0">From</dt>
+                                <dd class="mb-0">{{ campaign.from_email || 'Provider default' }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
             </div>
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
-                <h2 class="font-semibold text-slate-900">Preview</h2>
-                <div class="prose prose-sm mt-4 max-w-none rounded-lg border border-slate-200 bg-slate-50 p-4" v-html="campaign.html_body" />
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Preview</h5>
+                        <div class="border rounded p-3 bg-body-secondary small" v-html="campaign.html_body" />
+                    </div>
+                </div>
             </div>
         </div>
     </AdminLayout>

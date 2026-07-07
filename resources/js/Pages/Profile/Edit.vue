@@ -20,25 +20,30 @@ defineProps({
 
     <AdminLayout>
         <template #header>
-            <h1 class="text-xl font-semibold text-slate-900">Profile</h1>
+            <h4 class="mb-0 fw-bold">Profile</h4>
         </template>
 
-        <div class="mx-auto max-w-3xl space-y-6">
-                <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-8">
+        <div class="mx-auto vstack gap-4" style="max-width: 48rem;">
+            <div class="card">
+                <div class="card-body p-4 p-md-6">
                     <UpdateProfileInformationForm
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
-                        class="max-w-xl"
                     />
                 </div>
+            </div>
 
-                <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-8">
-                    <UpdatePasswordForm class="max-w-xl" />
+            <div class="card">
+                <div class="card-body p-4 p-md-6">
+                    <UpdatePasswordForm />
                 </div>
+            </div>
 
-                <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-8">
-                    <DeleteUserForm class="max-w-xl" />
+            <div class="card">
+                <div class="card-body p-4 p-md-6">
+                    <DeleteUserForm />
                 </div>
+            </div>
         </div>
     </AdminLayout>
 </template>

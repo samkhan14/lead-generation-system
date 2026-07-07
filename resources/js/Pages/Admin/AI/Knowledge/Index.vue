@@ -27,58 +27,76 @@ const reload = () => {
         status: local.value.status || undefined,
     }, { preserveState: true, replace: true });
 };
+
+const statusClass = (status) => ({
+    active: 'bg-label-success',
+    draft: 'bg-label-warning',
+    archived: 'bg-label-secondary',
+    disabled: 'bg-label-secondary',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
     <Head title="Knowledge Base" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">Knowledge Base</h1>
-                    <p class="text-sm text-slate-500">Supplementary knowledge for AI employees</p>
+                    <h1 class="h4 mb-1">Knowledge Base</h1>
+                    <p class="text-muted mb-0">Supplementary knowledge for AI employees</p>
                 </div>
                 <PrimaryButton v-if="can('ai.knowledge.create')" type="button" @click="showCreateModal = true">Add entry</PrimaryButton>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success" role="alert">{{ page.props.flash.success }}</div>
 
         <DataTable title="Entries" :is-empty="!entries.data.length" empty-message="No knowledge entries yet.">
             <template #toolbar>
-                <div class="flex flex-wrap items-end gap-3">
-                    <div class="min-w-[200px] flex-1">
-                        <label class="text-xs font-medium text-slate-500">Search</label>
-                        <input v-model="local.q" type="search" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @keyup.enter="reload" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md">
+                        <label class="form-label">Search</label>
+                        <input v-model="local.q" type="search" class="form-control" @keyup.enter="reload" />
                     </div>
-                    <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Status</label>
+                        <select v-model="local.status" class="form-select" @change="reload">
+                            <option value="">All</option>
+                            <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    </div>
                 </div>
             </template>
             <template #head>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Entry</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Category</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Entry</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Category</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Status</th>
+                    <th class="text-end text-uppercase small fw-semibold text-muted">Actions</th>
                 </tr>
             </template>
-            <tr v-for="entry in entries.data" :key="entry.id" class="hover:bg-slate-50">
-                <td class="px-4 py-3">
-                    <div class="font-medium text-slate-900">{{ entry.name }}</div>
-                    <div class="text-xs text-slate-500">{{ entry.slug }}</div>
+            <tr v-for="entry in entries.data" :key="entry.id">
+                <td>
+                    <div class="fw-medium">{{ entry.name }}</div>
+                    <div class="small text-muted">{{ entry.slug }}</div>
                 </td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ entry.category?.replace('_', ' ') }}</td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ entry.status }}</td>
-                <td class="px-4 py-3 text-right">
-                    <Link :href="route('admin.ai.knowledge.show', entry.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View</Link>
+                <td><span class="badge bg-label-primary text-capitalize">{{ entry.category?.replace('_', ' ') }}</span></td>
+                <td><span class="badge text-capitalize" :class="statusClass(entry.status)">{{ entry.status }}</span></td>
+                <td class="text-end">
+                    <Link :href="route('admin.ai.knowledge.show', entry.id)" class="btn btn-sm btn-outline-primary">View</Link>
                 </td>
             </tr>
             <template #footer>
-                <div v-if="entries.links?.length > 3" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-6">
-                    <p class="text-sm text-slate-500">Showing {{ entries.from ?? 0 }}–{{ entries.to ?? 0 }} of {{ entries.total }}</p>
-                    <div class="flex flex-wrap gap-1">
-                        <Link v-for="link in entries.links" :key="link.label" :href="link.url || '#'" class="rounded px-3 py-1 text-sm" :class="[link.active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100', !link.url ? 'pointer-events-none opacity-40' : '']" v-html="link.label" />
-                    </div>
+                <div v-if="entries.links?.length > 3" class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <p class="text-muted mb-0 small">Showing {{ entries.from ?? 0 }}-{{ entries.to ?? 0 }} of {{ entries.total }}</p>
+                    <ul class="pagination pagination-sm mb-0 flex-wrap">
+                        <li v-for="link in entries.links" :key="link.label" class="page-item" :class="{ active: link.active, disabled: !link.url }">
+                            <Link :href="link.url || '#'" class="page-link" v-html="link.label" />
+                        </li>
+                    </ul>
                 </div>
             </template>
         </DataTable>

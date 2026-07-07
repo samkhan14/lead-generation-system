@@ -32,67 +32,77 @@ const reload = () => {
         ai_provider_id: local.value.ai_provider_id || undefined,
     }, { preserveState: true, replace: true });
 };
+
+const statusClass = (status) => ({
+    active: 'bg-label-success',
+    disabled: 'bg-label-secondary',
+    deprecated: 'bg-label-warning',
+}[status] ?? 'bg-label-secondary');
 </script>
 
 <template>
     <Head title="AI Models" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">AI Models</h1>
-                    <p class="text-sm text-slate-500">Model catalog per provider with pricing</p>
+                    <h1 class="h4 mb-1">AI Models</h1>
+                    <p class="text-muted mb-0">Model catalog per provider with pricing</p>
                 </div>
                 <PrimaryButton v-if="can('ai.models.create')" type="button" @click="showCreateModal = true">Add model</PrimaryButton>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success" role="alert">{{ page.props.flash.success }}</div>
 
         <DataTable title="Models" :is-empty="!models.data.length" empty-message="No models configured yet.">
             <template #toolbar>
-                <div class="flex flex-wrap items-end gap-3">
-                    <div class="min-w-[200px] flex-1">
-                        <label class="text-xs font-medium text-slate-500">Search</label>
-                        <input v-model="local.q" type="search" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @keyup.enter="reload" />
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md">
+                        <label class="form-label">Search</label>
+                        <input v-model="local.q" type="search" class="form-control" @keyup.enter="reload" />
                     </div>
-                    <div>
-                        <label class="text-xs font-medium text-slate-500">Provider</label>
-                        <select v-model="local.ai_provider_id" class="mt-1 block rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" @change="reload">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Provider</label>
+                        <select v-model="local.ai_provider_id" class="form-select" @change="reload">
                             <option value="">All</option>
                             <option v-for="option in providerOptions" :key="option.id" :value="option.id">{{ option.name }}</option>
                         </select>
                     </div>
-                    <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    <div class="col-12 col-md-auto">
+                        <SecondaryButton type="button" @click="reload">Apply</SecondaryButton>
+                    </div>
                 </div>
             </template>
             <template #head>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Model</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Provider</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Max tokens</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Model</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Provider</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Status</th>
+                    <th class="text-uppercase small fw-semibold text-muted">Max tokens</th>
+                    <th class="text-end text-uppercase small fw-semibold text-muted">Actions</th>
                 </tr>
             </template>
-            <tr v-for="model in models.data" :key="model.id" class="hover:bg-slate-50">
-                <td class="px-4 py-3">
-                    <div class="font-medium text-slate-900">{{ model.name }}</div>
-                    <div class="text-xs text-slate-500">{{ model.slug }}</div>
+            <tr v-for="model in models.data" :key="model.id">
+                <td>
+                    <div class="fw-medium">{{ model.name }}</div>
+                    <div class="small text-muted">{{ model.slug }}</div>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ model.provider?.name ?? '—' }}</td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ model.status }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ model.max_tokens?.toLocaleString() ?? '—' }}</td>
-                <td class="px-4 py-3 text-right">
-                    <Link :href="route('admin.ai.models.show', model.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View</Link>
+                <td class="text-muted">{{ model.provider?.name ?? 'None' }}</td>
+                <td><span class="badge text-capitalize" :class="statusClass(model.status)">{{ model.status }}</span></td>
+                <td class="text-muted">{{ model.max_tokens?.toLocaleString() ?? 'None' }}</td>
+                <td class="text-end">
+                    <Link :href="route('admin.ai.models.show', model.id)" class="btn btn-sm btn-outline-primary">View</Link>
                 </td>
             </tr>
             <template #footer>
-                <div v-if="models.links?.length > 3" class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-6">
-                    <p class="text-sm text-slate-500">Showing {{ models.from ?? 0 }}–{{ models.to ?? 0 }} of {{ models.total }}</p>
-                    <div class="flex flex-wrap gap-1">
-                        <Link v-for="link in models.links" :key="link.label" :href="link.url || '#'" class="rounded px-3 py-1 text-sm" :class="[link.active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100', !link.url ? 'pointer-events-none opacity-40' : '']" v-html="link.label" />
-                    </div>
+                <div v-if="models.links?.length > 3" class="card-footer d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <p class="text-muted mb-0 small">Showing {{ models.from ?? 0 }}-{{ models.to ?? 0 }} of {{ models.total }}</p>
+                    <ul class="pagination pagination-sm mb-0 flex-wrap">
+                        <li v-for="link in models.links" :key="link.label" class="page-item" :class="{ active: link.active, disabled: !link.url }">
+                            <Link :href="link.url || '#'" class="page-link" v-html="link.label" />
+                        </li>
+                    </ul>
                 </div>
             </template>
         </DataTable>

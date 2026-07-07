@@ -155,175 +155,196 @@ const close = () => { form.clearErrors(); emit('close'); };
 
 <template>
     <Modal :show="show" max-width="3xl" @close="close">
-        <div class="max-h-[90vh] overflow-y-auto p-6">
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold text-slate-900">{{ title }}</h2>
-                <p class="mt-1 text-sm text-slate-500">
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title">{{ title }}</h5>
+                <p class="mb-0 small text-muted">
                     Business knowledge for AI voice, email, and proposal agents.
                 </p>
             </div>
+            <button type="button" class="btn-close" aria-label="Close" @click="close" />
+        </div>
 
-            <form class="space-y-8" @submit.prevent="submit">
-                <section class="space-y-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Identity</h3>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
+        <form @submit.prevent="submit">
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <section class="mb-4">
+                    <h6 class="text-muted text-uppercase small mb-3">Identity</h6>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
                             <InputLabel for="service_name" value="Service name" />
-                            <TextInput id="service_name" v-model="form.name" class="mt-1 block w-full" required />
+                            <TextInput id="service_name" v-model="form.name" class="mt-1" required />
                             <InputError class="mt-2" :message="form.errors.name" />
                         </div>
-                        <div>
+                        <div class="col-sm-6">
                             <InputLabel for="service_slug" value="Slug" />
-                            <TextInput id="service_slug" v-model="form.slug" class="mt-1 block w-full" placeholder="auto-generated if empty" />
+                            <TextInput id="service_slug" v-model="form.slug" class="mt-1" placeholder="auto-generated if empty" />
                             <InputError class="mt-2" :message="form.errors.slug" />
                         </div>
-                    </div>
-                    <div>
-                        <InputLabel for="service_short_description" value="Short description (cards, voice intro)" />
-                        <textarea id="service_short_description" v-model="form.short_description" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                        <InputError class="mt-2" :message="form.errors.short_description" />
-                    </div>
-                    <div>
-                        <InputLabel for="service_description" value="Summary description (legacy / search)" />
-                        <textarea id="service_description" v-model="form.description" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                        <InputError class="mt-2" :message="form.errors.description" />
-                    </div>
-                    <div>
-                        <InputLabel for="service_detailed_description" value="Detailed description (AI sales context)" />
-                        <textarea id="service_detailed_description" v-model="form.detailed_description" rows="5" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                        <InputError class="mt-2" :message="form.errors.detailed_description" />
-                    </div>
-                </section>
-
-                <section class="space-y-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Audience & problems</h3>
-                    <div>
-                        <InputLabel for="service_target_audience" value="Target audience (one per line)" />
-                        <textarea id="service_target_audience" v-model="targetAudienceLines" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                    <div>
-                        <InputLabel for="service_icp" value="Ideal customer profile" />
-                        <textarea id="service_icp" v-model="form.ideal_customer_profile" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                    <div>
-                        <InputLabel for="service_problems" value="Business problems solved (one per line)" />
-                        <textarea id="service_problems" v-model="problemsLines" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                        <div class="col-12">
+                            <InputLabel for="service_short_description" value="Short description (cards, voice intro)" />
+                            <textarea id="service_short_description" v-model="form.short_description" rows="2" class="form-control mt-1" />
+                            <InputError class="mt-2" :message="form.errors.short_description" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="service_description" value="Summary description (legacy / search)" />
+                            <textarea id="service_description" v-model="form.description" rows="2" class="form-control mt-1" />
+                            <InputError class="mt-2" :message="form.errors.description" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="service_detailed_description" value="Detailed description (AI sales context)" />
+                            <textarea id="service_detailed_description" v-model="form.detailed_description" rows="5" class="form-control mt-1" />
+                            <InputError class="mt-2" :message="form.errors.detailed_description" />
+                        </div>
                     </div>
                 </section>
 
-                <section class="space-y-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Offering</h3>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
+                <section class="mb-4">
+                    <h6 class="text-muted text-uppercase small mb-3">Audience & problems</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <InputLabel for="service_target_audience" value="Target audience (one per line)" />
+                            <textarea id="service_target_audience" v-model="targetAudienceLines" rows="3" class="form-control mt-1" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="service_icp" value="Ideal customer profile" />
+                            <textarea id="service_icp" v-model="form.ideal_customer_profile" rows="3" class="form-control mt-1" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="service_problems" value="Business problems solved (one per line)" />
+                            <textarea id="service_problems" v-model="problemsLines" rows="4" class="form-control mt-1" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mb-4">
+                    <h6 class="text-muted text-uppercase small mb-3">Offering</h6>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
                             <InputLabel for="service_features" value="Features (one per line)" />
-                            <textarea id="service_features" v-model="featureLines" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                            <textarea id="service_features" v-model="featureLines" rows="4" class="form-control mt-1" />
                         </div>
-                        <div>
+                        <div class="col-sm-6">
                             <InputLabel for="service_benefits" value="Benefits (one per line)" />
-                            <textarea id="service_benefits" v-model="benefitLines" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                            <textarea id="service_benefits" v-model="benefitLines" rows="4" class="form-control mt-1" />
                         </div>
-                    </div>
-                    <div>
-                        <InputLabel for="service_deliverables" value="Deliverables (one per line)" />
-                        <textarea id="service_deliverables" v-model="deliverableLines" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-3">
-                        <div>
+                        <div class="col-12">
+                            <InputLabel for="service_deliverables" value="Deliverables (one per line)" />
+                            <textarea id="service_deliverables" v-model="deliverableLines" rows="3" class="form-control mt-1" />
+                        </div>
+                        <div class="col-md-4">
                             <InputLabel for="service_timeline" value="Typical timeline" />
-                            <TextInput id="service_timeline" v-model="form.typical_timeline" class="mt-1 block w-full" placeholder="e.g. 6–10 weeks" />
+                            <TextInput id="service_timeline" v-model="form.typical_timeline" class="mt-1" placeholder="e.g. 6–10 weeks" />
                         </div>
-                        <div>
+                        <div class="col-md-4">
                             <InputLabel for="service_complexity" value="Complexity" />
-                            <select id="service_complexity" v-model="form.complexity_level" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <select id="service_complexity" v-model="form.complexity_level" class="form-select mt-1">
                                 <option value="">Not set</option>
                                 <option v-for="option in complexityOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="col-md-4">
                             <InputLabel for="service_sort_order" value="Sort order" />
-                            <TextInput id="service_sort_order" v-model.number="form.sort_order" type="number" min="0" class="mt-1 block w-full" />
+                            <TextInput id="service_sort_order" v-model.number="form.sort_order" type="number" min="0" class="mt-1" />
                         </div>
-                    </div>
-                    <div>
-                        <InputLabel for="service_pricing_notes" value="Pricing notes (no fixed prices)" />
-                        <textarea id="service_pricing_notes" v-model="form.pricing_notes" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                </section>
-
-                <section class="space-y-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Sales playbook</h3>
-                    <div>
-                        <InputLabel for="service_discovery" value="Discovery questions (one per line)" />
-                        <textarea id="service_discovery" v-model="discoveryLines" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                    <div>
-                        <InputLabel for="service_quotation" value="Required before quotation (one per line)" />
-                        <textarea id="service_quotation" v-model="quotationLines" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
-                    </div>
-                    <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <InputLabel value="FAQs" />
-                            <button type="button" class="text-sm text-indigo-600 hover:text-indigo-800" @click="addFaq">+ Add FAQ</button>
-                        </div>
-                        <div class="space-y-3">
-                            <div v-for="(faq, index) in form.faqs" :key="`faq-${index}`" class="rounded-lg border border-slate-200 p-3">
-                                <TextInput v-model="faq.question" class="block w-full" placeholder="Question" />
-                                <textarea v-model="faq.answer" rows="2" class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Answer" />
-                                <button type="button" class="mt-2 text-xs text-slate-500 hover:text-red-600" @click="removeFaq(index)">Remove</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <InputLabel value="Objections & handling" />
-                            <button type="button" class="text-sm text-indigo-600 hover:text-indigo-800" @click="addObjection">+ Add objection</button>
-                        </div>
-                        <div class="space-y-3">
-                            <div v-for="(item, index) in form.objections" :key="`objection-${index}`" class="rounded-lg border border-slate-200 p-3">
-                                <TextInput v-model="item.objection" class="block w-full" placeholder="Objection" />
-                                <textarea v-model="item.response" rows="2" class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Approved response" />
-                                <button type="button" class="mt-2 text-xs text-slate-500 hover:text-red-600" @click="removeObjection(index)">Remove</button>
-                            </div>
+                        <div class="col-12">
+                            <InputLabel for="service_pricing_notes" value="Pricing notes (no fixed prices)" />
+                            <textarea id="service_pricing_notes" v-model="form.pricing_notes" rows="2" class="form-control mt-1" />
                         </div>
                     </div>
                 </section>
 
-                <section class="space-y-4">
-                    <h3 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Metadata & relations</h3>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
+                <section class="mb-4">
+                    <h6 class="text-muted text-uppercase small mb-3">Sales playbook</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <InputLabel for="service_discovery" value="Discovery questions (one per line)" />
+                            <textarea id="service_discovery" v-model="discoveryLines" rows="4" class="form-control mt-1" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="service_quotation" value="Required before quotation (one per line)" />
+                            <textarea id="service_quotation" v-model="quotationLines" rows="3" class="form-control mt-1" />
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <InputLabel value="FAQs" class="mb-0" />
+                                <button type="button" class="btn btn-sm btn-text-primary" @click="addFaq">+ Add FAQ</button>
+                            </div>
+                            <div class="vstack gap-3">
+                                <div v-for="(faq, index) in form.faqs" :key="`faq-${index}`" class="card">
+                                    <div class="card-body">
+                                        <TextInput v-model="faq.question" placeholder="Question" />
+                                        <textarea v-model="faq.answer" rows="2" class="form-control mt-2" placeholder="Answer" />
+                                        <button type="button" class="btn btn-sm btn-text-danger mt-2" @click="removeFaq(index)">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <InputLabel value="Objections & handling" class="mb-0" />
+                                <button type="button" class="btn btn-sm btn-text-primary" @click="addObjection">+ Add objection</button>
+                            </div>
+                            <div class="vstack gap-3">
+                                <div v-for="(item, index) in form.objections" :key="`objection-${index}`" class="card">
+                                    <div class="card-body">
+                                        <TextInput v-model="item.objection" placeholder="Objection" />
+                                        <textarea v-model="item.response" rows="2" class="form-control mt-2" placeholder="Approved response" />
+                                        <button type="button" class="btn btn-sm btn-text-danger mt-2" @click="removeObjection(index)">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h6 class="text-muted text-uppercase small mb-3">Metadata & relations</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             <InputLabel for="service_technologies" value="Technologies (one per line)" />
-                            <textarea id="service_technologies" v-model="technologyLines" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                            <textarea id="service_technologies" v-model="technologyLines" rows="3" class="form-control mt-1" />
                         </div>
-                        <div>
+                        <div class="col-md-6">
                             <InputLabel for="service_tags" value="Industry tags (one per line)" />
-                            <textarea id="service_tags" v-model="tagLines" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                            <textarea id="service_tags" v-model="tagLines" rows="3" class="form-control mt-1" />
                         </div>
-                    </div>
-                    <div class="grid gap-4 lg:grid-cols-3">
-                        <div v-for="relation in [{ field: 'cross_sell_ids', label: 'Cross-sell' }, { field: 'upsell_ids', label: 'Upsell' }, { field: 'related_service_ids', label: 'Related' }]" :key="relation.field">
+                        <div
+                            v-for="relation in [{ field: 'cross_sell_ids', label: 'Cross-sell' }, { field: 'upsell_ids', label: 'Upsell' }, { field: 'related_service_ids', label: 'Related' }]"
+                            :key="relation.field"
+                            class="col-lg-4"
+                        >
                             <InputLabel :value="relation.label" />
-                            <div class="mt-2 max-h-36 space-y-2 overflow-y-auto rounded-lg border border-slate-200 p-3">
-                                <label v-for="option in serviceOptions.filter((item) => item.id !== service?.id)" :key="`${relation.field}-${option.id}`" class="flex items-center gap-2 text-sm text-slate-700">
-                                    <input type="checkbox" :checked="isSelected(relation.field, option.id)" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" @change="toggleRelation(relation.field, option.id)" />
-                                    <span>{{ option.name }}</span>
-                                </label>
+                            <div class="border rounded p-3 mt-1" style="max-height: 9rem; overflow-y: auto;">
+                                <div
+                                    v-for="option in serviceOptions.filter((item) => item.id !== service?.id)"
+                                    :key="`${relation.field}-${option.id}`"
+                                    class="form-check"
+                                >
+                                    <input
+                                        :id="`${relation.field}-${option.id}`"
+                                        type="checkbox"
+                                        class="form-check-input"
+                                        :checked="isSelected(relation.field, option.id)"
+                                        @change="toggleRelation(relation.field, option.id)"
+                                    />
+                                    <label :for="`${relation.field}-${option.id}`" class="form-check-label">{{ option.name }}</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <InputLabel for="service_status" value="Status" />
-                        <select id="service_status" v-model="form.status" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:w-48">
-                            <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                        </select>
+                        <div class="col-12">
+                            <InputLabel for="service_status" value="Status" />
+                            <select id="service_status" v-model="form.status" class="form-select mt-1" style="max-width: 12rem;">
+                                <option v-for="option in statusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+                            </select>
+                        </div>
                     </div>
                 </section>
+            </div>
 
-                <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
-                    <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
-                    <PrimaryButton type="submit" :disabled="form.processing">{{ submitLabel }}</PrimaryButton>
-                </div>
-            </form>
-        </div>
+            <div class="modal-footer">
+                <SecondaryButton type="button" @click="close">Cancel</SecondaryButton>
+                <PrimaryButton type="submit" :disabled="form.processing">{{ submitLabel }}</PrimaryButton>
+            </div>
+        </form>
     </Modal>
 </template>

@@ -22,37 +22,39 @@ const showCreateModal = ref(false);
     <Head title="Email Providers" />
     <AdminLayout>
         <template #header>
-            <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">Email Providers</h1>
-                    <p class="text-sm text-slate-500">Resend, SMTP, and log drivers</p>
+                    <h4 class="mb-0 fw-bold">Email Providers</h4>
+                    <p class="small text-muted mb-0">Resend, SMTP, and log drivers</p>
                 </div>
                 <PrimaryButton v-if="can('email.providers.create')" type="button" @click="showCreateModal = true">Add provider</PrimaryButton>
             </div>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
 
         <DataTable title="Email providers" :is-empty="!providers.data.length" empty-message="No email providers configured yet.">
             <template #head>
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Provider</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Usable</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">Sends</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-slate-500">Actions</th>
+                    <th>Provider</th>
+                    <th>Status</th>
+                    <th>Usable</th>
+                    <th>Sends</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </template>
-            <tr v-for="provider in providers.data" :key="provider.id" class="hover:bg-slate-50">
-                <td class="px-4 py-3">
-                    <div class="font-medium text-slate-900">{{ provider.name }}</div>
-                    <div class="text-xs text-slate-500">{{ provider.slug }}</div>
+            <tr v-for="provider in providers.data" :key="provider.id">
+                <td>
+                    <div class="fw-medium">{{ provider.name }}</div>
+                    <div class="small text-muted">{{ provider.slug }}</div>
                 </td>
-                <td class="px-4 py-3 text-sm capitalize text-slate-600">{{ provider.status }}</td>
-                <td class="px-4 py-3 text-sm" :class="provider.is_usable ? 'text-emerald-600' : 'text-slate-400'">{{ provider.is_usable ? 'Yes' : 'No' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-600">{{ provider.sends_count ?? 0 }}</td>
-                <td class="px-4 py-3 text-right">
-                    <Link :href="route('admin.email.providers.show', provider.id)" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">View</Link>
+                <td>
+                    <span class="badge bg-label-secondary text-capitalize">{{ provider.status }}</span>
+                </td>
+                <td :class="provider.is_usable ? 'text-success' : 'text-muted'">{{ provider.is_usable ? 'Yes' : 'No' }}</td>
+                <td class="text-muted">{{ provider.sends_count ?? 0 }}</td>
+                <td class="text-end">
+                    <Link :href="route('admin.email.providers.show', provider.id)" class="link-primary small fw-medium">View</Link>
                 </td>
             </tr>
         </DataTable>

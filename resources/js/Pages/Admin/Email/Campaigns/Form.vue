@@ -72,55 +72,59 @@ const enhanceWithAi = () => {
     <Head :title="isEdit ? 'Edit Campaign' : 'New Campaign'" />
     <AdminLayout>
         <template #header>
-            <h1 class="text-xl font-semibold text-slate-900">{{ isEdit ? 'Edit campaign' : 'New email campaign' }}</h1>
+            <h4 class="mb-0 fw-bold">{{ isEdit ? 'Edit campaign' : 'New email campaign' }}</h4>
         </template>
 
-        <div v-if="page.props.flash.success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ page.props.flash.success }}</div>
-        <div v-if="form.errors.ai_enhance || enhanceForm.errors.ai_enhance" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ form.errors.ai_enhance || enhanceForm.errors.ai_enhance }}</div>
+        <div v-if="page.props.flash.success" class="alert alert-success mb-4" role="alert">{{ page.props.flash.success }}</div>
+        <div v-if="form.errors.ai_enhance || enhanceForm.errors.ai_enhance" class="alert alert-danger mb-4" role="alert">{{ form.errors.ai_enhance || enhanceForm.errors.ai_enhance }}</div>
 
-        <form class="mx-auto max-w-4xl space-y-6" @submit.prevent="submit">
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
-                        <InputLabel for="name" value="Campaign name" />
-                        <TextInput id="name" v-model="form.name" class="mt-1 block w-full" required />
-                        <InputError class="mt-1" :message="form.errors.name" />
-                    </div>
-                    <div class="sm:col-span-2">
-                        <InputLabel for="subject" value="Subject line" />
-                        <TextInput id="subject" v-model="form.subject" class="mt-1 block w-full" required />
-                        <InputError class="mt-1" :message="form.errors.subject" />
-                    </div>
-                    <div>
-                        <InputLabel for="from_email" value="From email (optional)" />
-                        <TextInput id="from_email" v-model="form.from_email" type="email" class="mt-1 block w-full" />
-                    </div>
-                    <div>
-                        <InputLabel for="from_name" value="From name (optional)" />
-                        <TextInput id="from_name" v-model="form.from_name" class="mt-1 block w-full" />
-                    </div>
-                    <div class="sm:col-span-2">
-                        <InputLabel for="provider" value="Preferred provider" />
-                        <select id="provider" v-model="form.email_provider_id" class="mt-1 block w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Auto (by priority)</option>
-                            <option v-for="p in providers.data" :key="p.id" :value="p.id">{{ p.name }} ({{ p.slug }})</option>
-                        </select>
+        <form class="mx-auto vstack gap-4" style="max-width: 56rem;" @submit.prevent="submit">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <InputLabel for="name" value="Campaign name" />
+                            <TextInput id="name" v-model="form.name" class="mt-1" required />
+                            <InputError class="mt-1" :message="form.errors.name" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="subject" value="Subject line" />
+                            <TextInput id="subject" v-model="form.subject" class="mt-1" required />
+                            <InputError class="mt-1" :message="form.errors.subject" />
+                        </div>
+                        <div class="col-sm-6">
+                            <InputLabel for="from_email" value="From email (optional)" />
+                            <TextInput id="from_email" v-model="form.from_email" type="email" class="mt-1" />
+                        </div>
+                        <div class="col-sm-6">
+                            <InputLabel for="from_name" value="From name (optional)" />
+                            <TextInput id="from_name" v-model="form.from_name" class="mt-1" />
+                        </div>
+                        <div class="col-12">
+                            <InputLabel for="provider" value="Preferred provider" />
+                            <select id="provider" v-model="form.email_provider_id" class="form-select mt-1">
+                                <option value="">Auto (by priority)</option>
+                                <option v-for="p in providers.data" :key="p.id" :value="p.id">{{ p.name }} ({{ p.slug }})</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <InputLabel value="Email body" class="!mb-0" />
-                    <SecondaryButton type="button" :disabled="enhanceForm.processing" @click="enhanceWithAi">
-                        {{ enhanceForm.processing ? 'Enhancing…' : '✨ Enhance with AI' }}
-                    </SecondaryButton>
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                        <InputLabel value="Email body" class="mb-0" />
+                        <SecondaryButton type="button" :disabled="enhanceForm.processing" @click="enhanceWithAi">
+                            {{ enhanceForm.processing ? 'Enhancing…' : '✨ Enhance with AI' }}
+                        </SecondaryButton>
+                    </div>
+                    <EmailHtmlEditor v-model="form.html_body" />
+                    <InputError class="mt-2" :message="form.errors.html_body" />
                 </div>
-                <EmailHtmlEditor v-model="form.html_body" />
-                <InputError class="mt-2" :message="form.errors.html_body" />
             </div>
 
-            <div class="flex justify-end gap-3">
+            <div class="d-flex justify-content-end gap-2">
                 <SecondaryButton type="button" @click="router.visit(route('admin.email.campaigns.index'))">Cancel</SecondaryButton>
                 <PrimaryButton :disabled="form.processing">{{ isEdit ? 'Save campaign' : 'Create campaign' }}</PrimaryButton>
             </div>
