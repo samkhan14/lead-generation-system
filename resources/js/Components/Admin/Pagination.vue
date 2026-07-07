@@ -62,32 +62,32 @@ const onPerPageChange = (event) => {
 <template>
     <div
         v-if="hasPages || perPage"
-        class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:px-6"
+        class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 border-top"
     >
-        <div class="text-sm text-slate-500">
+        <div class="text-muted small">
             <template v-if="paginator.total">
                 Showing
-                <span class="font-medium text-slate-900">{{ paginator.from ?? 0 }}</span>
+                <span class="fw-medium text-body">{{ paginator.from ?? 0 }}</span>
                 to
-                <span class="font-medium text-slate-900">{{ paginator.to ?? 0 }}</span>
+                <span class="fw-medium text-body">{{ paginator.to ?? 0 }}</span>
                 of
-                <span class="font-medium text-slate-900">{{ paginator.total }}</span>
+                <span class="fw-medium text-body">{{ paginator.total }}</span>
                 {{ itemLabel }}
             </template>
             <template v-else>
                 No {{ itemLabel }}
             </template>
-            <span v-if="paginator.last_page > 1" class="ml-2 text-slate-400">
+            <span v-if="paginator.last_page > 1" class="ms-2 text-muted">
                 · Page {{ paginator.current_page }} of {{ paginator.last_page }}
             </span>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <label v-if="perPage && routeName" class="flex items-center gap-2 text-sm text-slate-600">
-                <span class="whitespace-nowrap">Rows per page</span>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <label v-if="perPage && routeName" class="d-flex align-items-center gap-2 small text-muted mb-0">
+                <span class="text-nowrap">Rows per page</span>
                 <select
                     :value="perPage"
-                    class="rounded-md border-slate-300 py-1.5 pl-2 pr-8 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    class="form-select form-select-sm w-auto"
                     @change="onPerPageChange"
                 >
                     <option v-for="option in perPageOptions" :key="option" :value="option">
@@ -96,21 +96,26 @@ const onPerPageChange = (event) => {
                 </select>
             </label>
 
-            <div v-if="hasPages" class="flex flex-wrap gap-1">
-                <component
-                    :is="link.url ? Link : 'span'"
-                    v-for="link in paginator.links"
-                    :key="`${link.label}-${link.url}`"
-                    :href="link.url"
-                    class="rounded-md px-3 py-1.5 text-sm"
-                    :class="link.active
-                        ? 'bg-blue-600 text-white'
-                        : link.url
-                            ? 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
-                            : 'cursor-not-allowed bg-slate-50 text-slate-300'"
-                    v-html="link.label"
-                />
-            </div>
+            <nav v-if="hasPages" aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li
+                        v-for="link in paginator.links"
+                        :key="`${link.label}-${link.url}`"
+                        class="page-item"
+                        :class="{
+                            active: link.active,
+                            disabled: !link.url,
+                        }"
+                    >
+                        <component
+                            :is="link.url ? Link : 'span'"
+                            :href="link.url"
+                            class="page-link"
+                            v-html="link.label"
+                        />
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </template>

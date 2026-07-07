@@ -1,22 +1,33 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import useMaterio from '@/materio/composables/useMaterio';
 import { Link } from '@inertiajs/vue3';
+
+useMaterio({
+    htmlClass: 'layout-wide customizer-hide',
+    initMenu: false,
+});
 </script>
 
 <template>
-    <div
-        class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0"
-    >
-        <div>
-            <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
-            </Link>
-        </div>
+    <div class="container-xxl">
+        <div class="authentication-wrapper authentication-basic container-p-y">
+            <div class="authentication-inner">
+                <div class="card px-sm-6 px-0">
+                    <div class="card-body">
+                        <div class="app-brand justify-content-center mb-6">
+                            <Link href="/" class="app-brand-link gap-2">
+                                <span class="app-brand-logo demo">
+                                    <ApplicationLogo style="height: 32px; width: auto;" />
+                                </span>
+                                <span class="app-brand-text demo text-heading fw-bold">Lead CRM</span>
+                            </Link>
+                        </div>
 
-        <div
-            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg"
-        >
-            <slot />
+                        <slot />
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>

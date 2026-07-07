@@ -34,15 +34,15 @@ Tailwind remains enabled with **`preflight: false`** so Bootstrap reboot owns ba
 - [x] `npm run build` succeeds
 - [x] Materio CSS bundle ~601 KB (Bootstrap + Materio theme)
 - [x] `php artisan test` — 246 tests pass
+- [x] Phase 2: AdminLayout, GuestLayout, core components restyled
 - [ ] Manual: Remix icons render in browser (`ri-home-smile-line`)
 - [ ] Manual: Login → Dashboard → Leads flow works
-- [ ] Phase 2: `useMaterio()` wired in layouts
 
-### Next: Phase 2
+### Next: Phase 3
 
-Refactor `AdminLayout.vue`, `GuestLayout.vue`, and core components (`Modal`, buttons, inputs, `DataTable`).
+Migrate page modules (Leads, Dashboard, Admin CRUD) from Tailwind to Materio classes.
 
-See `phase-2-layout-shell-core-components.md`.
+See `phase-2-layout-shell-core-components.md` (complete) and Phase 3 specs in the migration plan.
 
 ### Materio source reference
 
