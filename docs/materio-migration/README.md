@@ -27,16 +27,17 @@ Branch: `feat/materio-ui`
 
 ### Coexistence
 
-Tailwind remains enabled with **`preflight: false`** so Bootstrap reboot owns base styles. Unmigrated pages keep Tailwind utilities.
+~~Tailwind remains enabled with **`preflight: false`** so Bootstrap reboot owns base styles.~~ **Phase 4 complete:** Tailwind removed; Materio/Bootstrap is the sole UI stack.
 
 ### Acceptance checklist
 
 - [x] `npm run build` succeeds
-- [x] Materio CSS bundle ~601 KB (Bootstrap + Materio theme)
+- [x] Materio CSS bundle (Bootstrap + Materio theme)
 - [x] `php artisan test` — 246 tests pass
 - [x] Phase 2: AdminLayout, GuestLayout, core components restyled
 - [x] Phase 3A: Leads, Dashboard, Scraper
 - [x] Phase 3B: Admin modules (Services, AI, Voice, Email) + Profile + Auth
+- [x] Phase 4: Welcome.vue migrated, Tailwind removed, orphaned Breeze layout deleted
 - [ ] Manual: Remix icons render in browser (`ri-home-smile-line`)
 - [ ] Manual: Admin CRUD flows (Services, AI providers, Email campaigns)
 - [ ] Manual: Login → Dashboard → Leads flow works
@@ -66,11 +67,16 @@ Also migrated in this pass (originally Phase 3C–3D):
 
 **Patterns:** `card` + `DataTable` toolbar, `badge bg-label-*`, `alert`, `modal-header/body/footer`, shared `Pagination`.
 
-### Next: Phase 4
+### Phase 4 complete (cleanup)
 
-- Migrate `Welcome.vue` (Laravel default landing — still Tailwind)
-- Remove Tailwind dependency when no pages use utilities
-- Final visual QA pass (`docs/manual-qa-checklist.md`)
+- **`Welcome.vue`** — Materio `GuestLayout` landing (login / register / dashboard)
+- **Tailwind removed** — `tailwindcss`, `@tailwindcss/*`, `tailwind.config.js`, `resources/css/app.css`
+- **Animations preserved** — moved to `resources/scss/materio/_app-overrides.scss`
+- **Orphan cleanup** — Breeze `AuthenticatedLayout`, `NavLink`, `ResponsiveNavLink` (deleted in Phase 2)
+
+### Manual QA
+
+Final visual pass: `docs/manual-qa-checklist.md`
 
 ### Materio source reference
 

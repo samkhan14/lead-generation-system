@@ -1,4 +1,3 @@
-import '../css/app.css';
 import '../scss/materio/app.scss';
 import './materio';
 import './bootstrap';
